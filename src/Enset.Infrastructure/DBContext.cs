@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+
+
 public class EnsetDbContext : DbContext
 {
     public EnsetDbContext(DbContextOptions<EnsetDbContext> options)

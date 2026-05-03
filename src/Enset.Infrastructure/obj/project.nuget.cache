@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "dgSpecHash": "MHj4CEomNMM=",
-  "success": false,
+  "dgSpecHash": "hME+NYmfKh0=",
+  "success": true,
   "projectFilePath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\simon\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
@@ -15,9 +15,9 @@
     "C:\\Users\\simon\\.nuget\\packages\\microsoft.codeanalysis.csharp.workspaces\\4.14.0\\microsoft.codeanalysis.csharp.workspaces.4.14.0.nupkg.sha512",
     "C:\\Users\\simon\\.nuget\\packages\\microsoft.codeanalysis.workspaces.common\\4.14.0\\microsoft.codeanalysis.workspaces.common.4.14.0.nupkg.sha512",
     "C:\\Users\\simon\\.nuget\\packages\\microsoft.codeanalysis.workspaces.msbuild\\4.14.0\\microsoft.codeanalysis.workspaces.msbuild.4.14.0.nupkg.sha512",
-    "C:\\Users\\simon\\.nuget\\packages\\microsoft.entityframeworkcore\\10.0.1\\microsoft.entityframeworkcore.10.0.1.nupkg.sha512",
-    "C:\\Users\\simon\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\10.0.1\\microsoft.entityframeworkcore.abstractions.10.0.1.nupkg.sha512",
-    "C:\\Users\\simon\\.nuget\\packages\\microsoft.entityframeworkcore.analyzers\\10.0.1\\microsoft.entityframeworkcore.analyzers.10.0.1.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\microsoft.entityframeworkcore\\10.0.4\\microsoft.entityframeworkcore.10.0.4.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\10.0.4\\microsoft.entityframeworkcore.abstractions.10.0.4.nupkg.sha512",
+    "C:\\Users\\simon\\.nuget\\packages\\microsoft.entityframeworkcore.analyzers\\10.0.4\\microsoft.entityframeworkcore.analyzers.10.0.4.nupkg.sha512",
     "C:\\Users\\simon\\.nuget\\packages\\microsoft.entityframeworkcore.design\\10.0.1\\microsoft.entityframeworkcore.design.10.0.1.nupkg.sha512",
     "C:\\Users\\simon\\.nuget\\packages\\microsoft.entityframeworkcore.relational\\10.0.4\\microsoft.entityframeworkcore.relational.10.0.4.nupkg.sha512",
     "C:\\Users\\simon\\.nuget\\packages\\microsoft.extensions.caching.abstractions\\10.0.4\\microsoft.extensions.caching.abstractions.10.0.4.nupkg.sha512",
@@ -57,7 +57,7 @@
     {
       "code": "NU1903",
       "level": "Warning",
-      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-37gx-xxp4-5rgx",
+      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.0 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-37gx-xxp4-5rgx.",
       "projectPath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
       "warningLevel": 1,
       "filePath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
@@ -69,22 +69,11 @@
     {
       "code": "NU1903",
       "level": "Warning",
-      "message": "Package 'System.Security.Cryptography.Xml' 9.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-w3x6-4m5h-cxqf",
+      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.0 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-w3x6-4m5h-cxqf.",
       "projectPath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
       "warningLevel": 1,
       "filePath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
       "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1605",
-      "level": "Error",
-      "message": "Warning As Error: Detected package downgrade: Microsoft.EntityFrameworkCore from 10.0.4 to 10.0.1. Reference the package directly from the project to select a different version. \r\n Enset.Infrastructure -> Npgsql.EntityFrameworkCore.PostgreSQL 10.0.1 -> Microsoft.EntityFrameworkCore (>= 10.0.4 && < 11.0.0) \r\n Enset.Infrastructure -> Microsoft.EntityFrameworkCore (>= 10.0.1)",
-      "projectPath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "filePath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "libraryId": "Microsoft.EntityFrameworkCore",
       "targetGraphs": [
         "net10.0"
       ]

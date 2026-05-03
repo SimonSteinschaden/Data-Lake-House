@@ -14,5 +14,4 @@ public class Project : BaseEntity
 
     public ICollection<Document> Documents { get; set; } = new List<Document>();
 
-    public ICollection<ImportJob> ImportJobs { get; set; } = new List<ImportJob>();
 }

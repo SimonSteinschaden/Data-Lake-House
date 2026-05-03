@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 
 public class Meter : BaseEntity
 {

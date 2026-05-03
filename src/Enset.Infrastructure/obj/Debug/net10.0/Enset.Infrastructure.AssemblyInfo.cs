@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Enset.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a182f604111b5e983e71ecff0be54d6495bad530")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+77e7995ec1737a16bad386209ea479eec8c0f617")]
 [assembly: System.Reflection.AssemblyProductAttribute("Enset.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Enset.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

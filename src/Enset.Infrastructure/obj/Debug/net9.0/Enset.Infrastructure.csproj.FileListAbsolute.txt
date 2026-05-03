@@ -1,0 +1,6 @@
+C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.Infrastructure\obj\Debug\net9.0\Enset.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.Infrastructure\obj\Debug\net9.0\Enset.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.Infrastructure\obj\Debug\net9.0\Enset.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.Infrastructure\obj\Debug\net9.0\Enset.Infrastructure.AssemblyInfo.cs
+C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.Infrastructure\obj\Debug\net9.0\Enset.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.Infrastructure\obj\Debug\net9.0\Enset.Infrastructure.sourcelink.json

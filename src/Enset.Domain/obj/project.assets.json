@@ -8,23 +8,23 @@
     "net10.0": []
   },
   "packageFolders": {
-    "C:\\Users\\simon\\.nuget\\packages\\": {},
+    "C:\\Users\\rdpadmin\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "c:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Domain\\Enset.Domain.csproj",
+      "projectUniqueName": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj",
       "projectName": "Enset.Domain",
-      "projectPath": "c:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Domain\\Enset.Domain.csproj",
-      "packagesPath": "C:\\Users\\simon\\.nuget\\packages\\",
-      "outputPath": "c:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Domain\\obj\\",
+      "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj",
+      "packagesPath": "C:\\Users\\rdpadmin\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\simon\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\rdpadmin\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],

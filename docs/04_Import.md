@@ -1,4 +1,4 @@
-```plantuml
+﻿```plantuml
 @startuml
 title ENSET Import-, Mapping- und Exportarchitektur
 
@@ -128,3 +128,45 @@ JsonExport --> Buyer
 
 @enduml
 ```
+
+# Aktuelle Import-Architektur
+
+## Verantwortlichkeiten nach Layer
+
+- src/Enset.Domain/ enthält das reine Domain-Modell (Meter, MeterReading, Building, Project, Customer, usw.).
+- src/Enset.Application/ enthält Import-DTOs, Enums, Models und Abstraktionen.
+- src/Enset.Infrastructure/ enthält den EF Core EnsetDbContext, konkrete Reader-/Mapper-Implementierungen und Services.
+
+## Relevante Dateien
+
+- src/Enset.Application/Imports/DTOs/MeterImportDto.cs
+- src/Enset.Application/Imports/DTOs/MeterReadingImportDto.cs
+- src/Enset.Application/Imports/Abstractions/IMeterReadingReader.cs
+- src/Enset.Application/Imports/Abstractions/IMeterReadingReaderFactory.cs
+- src/Enset.Application/Imports/Abstractions/IMeterLookupService.cs
+- src/Enset.Application/Imports/Abstractions/IMeterReadingMapper.cs
+- src/Enset.Application/Imports/Enums/ImportSourceType.cs
+- src/Enset.Application/Imports/Enums/ImportStatus.cs
+- src/Enset.Application/Imports/Enums/RawDataObjectType.cs
+- src/Enset.Application/Imports/Models/ImportJob.cs
+- src/Enset.Application/Imports/Models/RawDataObject.cs
+
+- src/Enset.Infrastructure/DBContext.cs
+- src/Enset.Infrastructure/Imports/CsvMeterReadingReader.cs
+- src/Enset.Infrastructure/Imports/Factory/MeterReadingReaderFactory.cs
+- src/Enset.Infrastructure/Imports/Services/MeterLookupService.cs
+- src/Enset.Infrastructure/Imports/Mapping/MeterReadingMapper.cs
+
+## Architekturelle Fakten
+
+- MeterReading ist ein Domain-Zeitreihenobjekt und erbt nicht von BaseEntity.
+- Meter erbt von BaseEntity und nutzt MeterNumber als fachliche Identität.
+- MeterId bleibt die technische interne GUID.
+- Importdateien dürfen MeterNumber verwenden, nicht aber die interne MeterId.
+- EnsetDbContext konfiguriert den Composite Key MeterId + Timestamp für MeterReading.
+- ImportJob und DataSource sind aktuell nicht Teil eines DbSet in EnsetDbContext.
+
+## Laufender Zustand
+
+- Build der drei Projekte ist möglich.
+- Enset.Domain, Enset.Application und Enset.Infrastructure sind aktuell fehlerfrei kompilierbar.

@@ -1,3 +1,10 @@
+using Enset.Application.Imports.Abstractions;
+using System.Linq;
+using Enset.Domain.Energy;
+using Microsoft.EntityFrameworkCore;
+
+namespace Enset.Infrastructure.Imports.Services;
+
 public class MeterLookupService : IMeterLookupService
 {
     private readonly EnsetDbContext _db;
@@ -10,11 +17,11 @@ public class MeterLookupService : IMeterLookupService
     public async Task<Dictionary<string, Guid>> GetMeterLookupAsync(
         CancellationToken cancellationToken = default)
     {
-        return await _db.Meters
+        return (await _db.Meters
             .Where(m => m.MeterNumber != null)
-            .ToDictionaryAsync(
-                m => m.MeterNumber,
-                m => m.Id,
-                cancellationToken);
+            .ToListAsync<Meter>(cancellationToken))
+            .ToDictionary(
+                m => m.MeterNumber!,
+                m => m.Id);
     }
 }

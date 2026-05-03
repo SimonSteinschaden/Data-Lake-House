@@ -1367,6 +1367,9 @@
       "Enset.Application/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "Enset.Domain": "1.0.0"
+        },
         "compile": {
           "bin/placeholder/Enset.Application.dll": {}
         },

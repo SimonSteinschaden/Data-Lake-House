@@ -1,3 +1,7 @@
+using Enset.Application.Imports.Enums;
+
+namespace Enset.Infrastructure.Imports.Services;
+
 public interface IImportService
 {
     Task ImportMeterReadingsAsync(

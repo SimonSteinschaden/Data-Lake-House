@@ -1,3 +1,6 @@
+using Enset.Application.Imports.DTOs;
+using Enset.Application.Imports.Abstractions;
+
 public class CsvMeterReadingReader : IMeterReadingReader
 {
     public IEnumerable<MeterReadingImportDto> Read(Stream stream)
@@ -14,8 +17,13 @@ public class CsvMeterReadingReader : IMeterReadingReader
 
             yield return new MeterReadingImportDto
             {
-                Timestamp = DateTime.Parse(parts[0]),
-                Value = decimal.Parse(parts[1])
+                MeterNumber = parts[0],
+                Timestamp = DateTime.Parse(parts[1]),
+                Value = decimal.Parse(parts[2]),
+                Unit = parts.Length > 3 ? parts[3] : null,
+                QualityFlag = parts.Length > 4 ? int.Parse(parts[4]) : null,
+                BuildingId = parts.Length > 5 && Guid.TryParse(parts[5], out var b) ? b : null,
+                CustomerId = parts.Length > 6 && Guid.TryParse(parts[6], out var c) ? c : null
             };
         }
     }

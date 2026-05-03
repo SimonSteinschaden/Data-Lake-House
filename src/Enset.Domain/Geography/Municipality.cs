@@ -1,3 +1,7 @@
+using Enset.Domain.Common;
+
+namespace Enset.Domain.Geography;
+
 public class Municipality : BaseEntity
 {
     public Guid RegionId { get; set; }

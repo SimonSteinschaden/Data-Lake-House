@@ -1,3 +1,5 @@
+namespace Enset.Domain.Energy;
+
 public class MeterReading
 {
     public Guid MeterId { get; set; }

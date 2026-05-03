@@ -1,3 +1,8 @@
+using Enset.Domain.Common;
+using Enset.Domain.Buildings;
+
+namespace Enset.Domain.Energy;
+
 public class EnergySystem : BaseEntity
 {
     public Guid BuildingId { get; set; }

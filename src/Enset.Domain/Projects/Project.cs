@@ -1,3 +1,10 @@
+using Enset.Domain.Common;
+using Enset.Domain.Customers;
+using Enset.Domain.Buildings;
+using Enset.Domain.Documents;
+
+namespace Enset.Domain.Projects;
+
 public class Project : BaseEntity
 {
     public Guid CustomerId { get; set; }

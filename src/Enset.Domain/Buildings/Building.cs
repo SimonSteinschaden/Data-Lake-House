@@ -1,3 +1,10 @@
+using Enset.Domain.Common;
+using Enset.Domain.Projects;
+using Enset.Domain.Geography;
+using Enset.Domain.Energy;
+
+namespace Enset.Domain.Buildings;
+
 public class Building : BaseEntity
 {
     public Guid ProjectId { get; set; }

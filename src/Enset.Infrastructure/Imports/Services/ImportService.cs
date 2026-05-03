@@ -1,3 +1,8 @@
+using Enset.Application.Imports.Abstractions;
+using Enset.Application.Imports.Enums;
+
+namespace Enset.Infrastructure.Imports.Services;
+
 public class ImportService : IImportService
 {
     private readonly IMeterReadingReaderFactory _readerFactory;

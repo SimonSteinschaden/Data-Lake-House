@@ -1,4 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using Enset.Domain.Customers;
+using Enset.Domain.Projects;
+using Enset.Domain.Buildings;
+using Enset.Domain.Energy;
+using Enset.Domain.Documents;
+using Enset.Domain.Analytics;
+
+namespace Enset.Infrastructure;
 
 public class EnsetDbContext : DbContext
 {
@@ -14,8 +22,8 @@ public class EnsetDbContext : DbContext
     public DbSet<MeterReading> MeterReadings => Set<MeterReading>();
 
     public DbSet<Document> Documents => Set<Document>();
-    public DbSet<ImportJob> ImportJobs => Set<ImportJob>();
-    public DbSet<DataSource> DataSources => Set<DataSource>();
+    // public DbSet<ImportJob> ImportJobs => Set<ImportJob>();
+    // public DbSet<DataSource> DataSources => Set<DataSource>();
 
     public DbSet<CalculationResult> CalculationResults => Set<CalculationResult>();
     public DbSet<BenchmarkDataset> BenchmarkDatasets => Set<BenchmarkDataset>();

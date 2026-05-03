@@ -1269,15 +1269,15 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
-      "System.Security.Cryptography.Pkcs/9.0.0": {
+      "System.Security.Cryptography.Pkcs/10.0.4": {
         "type": "package",
         "compile": {
-          "lib/net9.0/_._": {
+          "lib/net10.0/System.Security.Cryptography.Pkcs.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net9.0/System.Security.Cryptography.Pkcs.dll": {
+          "lib/net10.0/System.Security.Cryptography.Pkcs.dll": {
             "related": ".xml"
           }
         },
@@ -1285,7 +1285,7 @@
           "buildTransitive/net8.0/_._": {}
         },
         "runtimeTargets": {
-          "runtimes/win/lib/net9.0/System.Security.Cryptography.Pkcs.dll": {
+          "runtimes/win/lib/net10.0/System.Security.Cryptography.Pkcs.dll": {
             "assetType": "runtime",
             "rid": "win"
           }
@@ -1307,18 +1307,18 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
-      "System.Security.Cryptography.Xml/9.0.0": {
+      "System.Security.Cryptography.Xml/10.0.4": {
         "type": "package",
         "dependencies": {
-          "System.Security.Cryptography.Pkcs": "9.0.0"
+          "System.Security.Cryptography.Pkcs": "10.0.4"
         },
         "compile": {
-          "lib/net9.0/_._": {
+          "lib/net10.0/System.Security.Cryptography.Xml.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net9.0/System.Security.Cryptography.Xml.dll": {
+          "lib/net10.0/System.Security.Cryptography.Xml.dll": {
             "related": ".xml"
           }
         },
@@ -3431,20 +3431,21 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.Security.Cryptography.Pkcs/9.0.0": {
-      "sha512": "8tluJF8w9si+2yoHeL8rgVJS6lKvWomTDC8px65Z8MCzzdME5eaPtEQf4OfVGrAxB5fW93ncucy1+221O9EQaw==",
+    "System.Security.Cryptography.Pkcs/10.0.4": {
+      "sha512": "VrsUEYspyjp6JYu6I2e1v6hRIopSIP5gvPO/lGSsPql9BXd2mSXtcQmzQZ1cVvzT02oFxFU3vPH/FmhyoTCeOg==",
       "type": "package",
-      "path": "system.security.cryptography.pkcs/9.0.0",
+      "path": "system.security.cryptography.pkcs/10.0.4",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
-        "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
         "buildTransitive/net461/System.Security.Cryptography.Pkcs.targets",
         "buildTransitive/net462/_._",
         "buildTransitive/net8.0/_._",
         "buildTransitive/netcoreapp2.0/System.Security.Cryptography.Pkcs.targets",
+        "lib/net10.0/System.Security.Cryptography.Pkcs.dll",
+        "lib/net10.0/System.Security.Cryptography.Pkcs.xml",
         "lib/net462/System.Security.Cryptography.Pkcs.dll",
         "lib/net462/System.Security.Cryptography.Pkcs.xml",
         "lib/net8.0/System.Security.Cryptography.Pkcs.dll",
@@ -3455,11 +3456,13 @@
         "lib/netstandard2.0/System.Security.Cryptography.Pkcs.xml",
         "lib/netstandard2.1/System.Security.Cryptography.Pkcs.dll",
         "lib/netstandard2.1/System.Security.Cryptography.Pkcs.xml",
+        "runtimes/win/lib/net10.0/System.Security.Cryptography.Pkcs.dll",
+        "runtimes/win/lib/net10.0/System.Security.Cryptography.Pkcs.xml",
         "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll",
         "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.xml",
         "runtimes/win/lib/net9.0/System.Security.Cryptography.Pkcs.dll",
         "runtimes/win/lib/net9.0/System.Security.Cryptography.Pkcs.xml",
-        "system.security.cryptography.pkcs.9.0.0.nupkg.sha512",
+        "system.security.cryptography.pkcs.10.0.4.nupkg.sha512",
         "system.security.cryptography.pkcs.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -3498,20 +3501,21 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.Security.Cryptography.Xml/9.0.0": {
-      "sha512": "GQZn5wFd+pyOfwWaCbqxG7trQ5ox01oR8kYgWflgtux4HiUNihGEgG2TktRWyH+9bw7NoEju1D41H/upwQeFQw==",
+    "System.Security.Cryptography.Xml/10.0.4": {
+      "sha512": "itOxogsgNRAv2OO28CAAagTZZ6UlGuKFJ++Y2pWvK34VVVTKWB8vEuyESQeJ0drvRa2+nQKqBrZFv6/YIYyFyg==",
       "type": "package",
-      "path": "system.security.cryptography.xml/9.0.0",
+      "path": "system.security.cryptography.xml/10.0.4",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "Icon.png",
-        "LICENSE.TXT",
         "THIRD-PARTY-NOTICES.TXT",
         "buildTransitive/net461/System.Security.Cryptography.Xml.targets",
         "buildTransitive/net462/_._",
         "buildTransitive/net8.0/_._",
         "buildTransitive/netcoreapp2.0/System.Security.Cryptography.Xml.targets",
+        "lib/net10.0/System.Security.Cryptography.Xml.dll",
+        "lib/net10.0/System.Security.Cryptography.Xml.xml",
         "lib/net462/System.Security.Cryptography.Xml.dll",
         "lib/net462/System.Security.Cryptography.Xml.xml",
         "lib/net8.0/System.Security.Cryptography.Xml.dll",
@@ -3520,7 +3524,7 @@
         "lib/net9.0/System.Security.Cryptography.Xml.xml",
         "lib/netstandard2.0/System.Security.Cryptography.Xml.dll",
         "lib/netstandard2.0/System.Security.Cryptography.Xml.xml",
-        "system.security.cryptography.xml.9.0.0.nupkg.sha512",
+        "system.security.cryptography.xml.10.0.4.nupkg.sha512",
         "system.security.cryptography.xml.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -3587,27 +3591,28 @@
       "Enset.Domain >= 1.0.0",
       "Microsoft.EntityFrameworkCore >= 10.0.4",
       "Microsoft.EntityFrameworkCore.Design >= 10.0.1",
-      "Npgsql.EntityFrameworkCore.PostgreSQL >= 10.0.1"
+      "Npgsql.EntityFrameworkCore.PostgreSQL >= 10.0.1",
+      "System.Security.Cryptography.Xml >= 10.0.4"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\simon\\.nuget\\packages\\": {},
+    "C:\\Users\\rdpadmin\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
+      "projectUniqueName": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
       "projectName": "Enset.Infrastructure",
-      "projectPath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "packagesPath": "C:\\Users\\simon\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Infrastructure\\obj\\",
+      "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
+      "packagesPath": "C:\\Users\\rdpadmin\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\simon\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\rdpadmin\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -3622,8 +3627,8 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Domain\\Enset.Domain.csproj": {
-              "projectPath": "C:\\Users\\simon\\Desktop\\Repositories\\Data-Lake-House\\Data Lake House\\src\\Enset.Domain\\Enset.Domain.csproj"
+            "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj": {
+              "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj"
             }
           }
         }
@@ -3657,6 +3662,10 @@
           "Npgsql.EntityFrameworkCore.PostgreSQL": {
             "target": "Package",
             "version": "[10.0.1, )"
+          },
+          "System.Security.Cryptography.Xml": {
+            "target": "Package",
+            "version": "[10.0.4, )"
           }
         },
         "imports": [
@@ -3958,7 +3967,7 @@
       "code": "NU1903",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.0 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-37gx-xxp4-5rgx.",
+      "message": "Das Paket \"System.Security.Cryptography.Xml\" 10.0.4 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-37gx-xxp4-5rgx.",
       "libraryId": "System.Security.Cryptography.Xml",
       "targetGraphs": [
         "net10.0"
@@ -3968,7 +3977,7 @@
       "code": "NU1903",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.0 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-w3x6-4m5h-cxqf.",
+      "message": "Das Paket \"System.Security.Cryptography.Xml\" 10.0.4 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-w3x6-4m5h-cxqf.",
       "libraryId": "System.Security.Cryptography.Xml",
       "targetGraphs": [
         "net10.0"

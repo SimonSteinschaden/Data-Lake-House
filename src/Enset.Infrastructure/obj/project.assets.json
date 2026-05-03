@@ -1364,6 +1364,16 @@
           }
         }
       },
+      "Enset.Application/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Enset.Application.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Enset.Application.dll": {}
+        }
+      },
       "Enset.Domain/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -3576,6 +3586,11 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "Enset.Application/1.0.0": {
+      "type": "project",
+      "path": "../Enset.Application/Enset.Application.csproj",
+      "msbuildProject": "../Enset.Application/Enset.Application.csproj"
+    },
     "Enset.Domain/1.0.0": {
       "type": "project",
       "path": "../Enset.Domain/Enset.Domain.csproj",
@@ -3584,6 +3599,7 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "Enset.Application >= 1.0.0",
       "Enset.Domain >= 1.0.0",
       "Microsoft.EntityFrameworkCore >= 10.0.4",
       "Microsoft.EntityFrameworkCore.Design >= 10.0.1",
@@ -3622,6 +3638,9 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
+            "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Application\\Enset.Application.csproj": {
+              "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Application\\Enset.Application.csproj"
+            },
             "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj": {
               "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj"
             }

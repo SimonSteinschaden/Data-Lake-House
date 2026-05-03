@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Enset.Domain\Enset.Domain.csproj" />
+    <ProjectReference Include="..\Enset.Application\Enset.Application.csproj" />
   </ItemGroup>
 
     <ItemGroup>

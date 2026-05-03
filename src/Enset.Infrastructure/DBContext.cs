@@ -29,6 +29,15 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
     modelBuilder.Entity<MeterReading>()
         .HasIndex(x => x.Timestamp);
+
+    modelBuilder.Entity<Meter>()
+        .HasIndex(m => m.MeterNumber)
+        .IsUnique();
+
+    modelBuilder.Entity<Meter>()
+        .HasMany(m => m.Readings)
+        .WithOne(r => r.Meter)
+        .HasForeignKey(r => r.MeterId);
 }
 
 

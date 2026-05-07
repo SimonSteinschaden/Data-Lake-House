@@ -1,3 +1,8 @@
+using Enset.Domain.Common;
+using Enset.Domain.Projects;
+
+namespace Enset.Domain.Documents;
+
 public class Document : BaseEntity
 {
     public Guid ProjectId { get; set; }

@@ -178,3 +178,33 @@ package "Customers" {
 
 @enduml
 ```
+
+# Aktuelle Projektstruktur
+
+Die Implementierung wurde sauber nach Clean Architecture aufgeteilt:
+
+- `src/Enset.Domain/`
+  - Enthält ausschließlich Domain-Entities, Enums und reine Business-Logik.
+  - Keine Abhängigkeit auf EF Core, Infrastructure oder Application.
+  - Packages: `Common`, `Customers`, `Projects`, `Buildings`, `Energy`, `Documents`, `Analytics`, `Geography`, `Data`.
+
+- `src/Enset.Application/`
+  - Referenziert `Enset.Domain`.
+  - Enthält Import-DTOs, Abstraktionen, Enums und Prozessmodelle.
+  - Packages: `Imports/DTOs`, `Imports/Abstractions`, `Imports/Enums`, `Imports/Models`.
+
+- `src/Enset.Infrastructure/`
+  - Referenziert `Enset.Domain` und `Enset.Application`.
+  - Enthält EF Core `EnsetDbContext`, TimescaleDB-/PostgreSQL-Persistenz, Reader-Implementierungen, Mapper-Implementierungen und konkrete Services.
+  - Importlogik und Datenzugriff sind hier implementiert.
+
+## Wichtige Punkte
+
+- `MeterReading` ist ein Domain-Zeitreihenobjekt und erbt nicht von `BaseEntity`.
+- `MeterReading` verwendet den Composite Key `MeterId + Timestamp`.
+- `Meter` erbt von `BaseEntity` und verwendet `MeterNumber` als fachliche Identität.
+- `MeterId` bleibt die technische interne GUID.
+- Import-Dateien arbeiten mit `MeterNumber`, nicht mit der internen `MeterId`.
+- `EnsetDbContext` liegt ausschließlich in `src/Enset.Infrastructure/DBContext.cs`.
+- `ImportJob` und `DataSource` sind aktuell nicht als `DbSet` im DbContext enthalten.
+

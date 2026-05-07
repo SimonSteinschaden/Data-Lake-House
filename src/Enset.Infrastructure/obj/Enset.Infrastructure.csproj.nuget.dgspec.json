@@ -31,7 +31,11 @@
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
-            "projectReferences": {}
+            "projectReferences": {
+              "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj": {
+                "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj"
+              }
+            }
           }
         },
         "warningProperties": {

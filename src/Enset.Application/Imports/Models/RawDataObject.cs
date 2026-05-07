@@ -1,3 +1,7 @@
+using Enset.Application.Imports.Enums;
+
+namespace Enset.Application.Imports.Models;
+
 public class RawDataObject
 {
     public Guid Id { get; set; }

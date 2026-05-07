@@ -1,11 +1,30 @@
 {
   "version": 3,
   "targets": {
-    "net10.0": {}
+    "net10.0": {
+      "Enset.Domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Enset.Domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Enset.Domain.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "Enset.Domain/1.0.0": {
+      "type": "project",
+      "path": "../Enset.Domain/Enset.Domain.csproj",
+      "msbuildProject": "../Enset.Domain/Enset.Domain.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net10.0": []
+    "net10.0": [
+      "Enset.Domain >= 1.0.0"
+    ]
   },
   "packageFolders": {
     "C:\\Users\\rdpadmin\\.nuget\\packages\\": {},
@@ -38,7 +57,11 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj": {
+              "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Domain\\Enset.Domain.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

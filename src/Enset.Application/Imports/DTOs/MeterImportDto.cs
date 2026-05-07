@@ -1,3 +1,5 @@
+namespace Enset.Application.Imports.DTOs;
+
 public class MeterImportDto
 {
     public string MeterNumber { get; set; } = null!;

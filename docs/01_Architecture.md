@@ -1,3 +1,8 @@
+# Architekturüberblick
+
+Die aktuelle Repository-Implementierung umfasst den Backend-Kern mit Domain, Application und Infrastructure.
+Geplante Komponenten wie UI, API und Worker sind im Architekturdiagramm beschrieben, sind aber im Code bisher nicht enthalten.
+
 ```plantuml
 
 '--------------------------------------------------------------------------------------

@@ -4,8 +4,8 @@
 
 Das Backend ist sauber nach Clean Architecture getrennt:
 
-- src/Enset.Domain/
-  - Enthält ausschließlich Domain-Entities, Enums und reine Business-Logik.
+- `src/Enset.Domain/`
+  - Enthält Domain-Entities, Enums und das Basismodell.
   - Keine Abhängigkeit auf EF Core, Infrastructure oder Application.
   - Packages:
     - Common
@@ -18,56 +18,71 @@ Das Backend ist sauber nach Clean Architecture getrennt:
     - Geography
     - Data
 
-- src/Enset.Application/
-  - Referenziert Enset.Domain.
-  - Enthält Import-DTOs, Abstraktionen, Enums und Prozess-/Importmodelle.
+- `src/Enset.Application/`
+  - Referenziert `Enset.Domain`.
+  - Enthält Import-DTOs, Abstraktionen, Enums und Prozessmodelle.
   - Packages:
     - Imports/DTOs
     - Imports/Abstractions
     - Imports/Enums
     - Imports/Models
 
-- src/Enset.Infrastructure/
-  - Referenziert Enset.Domain und Enset.Application.
-  - Enthält EF Core EnsetDbContext, TimescaleDB-konforme Persistenz, Reader-Implementierungen, Mapper-Implementierungen und konkrete Services.
+- `src/Enset.Infrastructure/`
+  - Referenziert `Enset.Domain` und `Enset.Application`.
+  - Enthält EF Core `EnsetDbContext`, TimescaleDB-kompatible Persistenz, Reader-Implementierungen, Mapper-Implementierungen und konkrete Services.
   - Enthält auch Import-spezifische Infrastrukturklassen.
+
+## Technischer Stack
+
+- `TargetFramework`: `net10.0`
+- `Microsoft.EntityFrameworkCore` 10.0.4
+- `Npgsql.EntityFrameworkCore.PostgreSQL` 10.0.1
+- `Microsoft.EntityFrameworkCore.Design` 10.0.1
 
 ## Wichtige Architekturentscheidungen
 
-- MeterReading ist ein Timeseries-Entity und erbt **nicht** von BaseEntity.
-- MeterReading verwendet den Composite Key MeterId + Timestamp.
-- Meter erbt von BaseEntity und enthält MeterNumber als fachliche Identität.
-- MeterId bleibt technische interne GUID.
-- MeterNumber ist die fachliche/externe Identität und darf von Import-Dateien verwendet werden.
-- Excel/CSV/XML-Schichten dürfen keine interne MeterId verlangen.
+- `MeterReading` ist ein Zeitreihen-Entity und erbt **nicht** von `BaseEntity`.
+- `MeterReading` verwendet einen Composite Key aus `MeterId` und `Timestamp`.
+- `Meter` erbt von `BaseEntity` und nutzt `MeterNumber` als fachliche Identität.
+- `MeterId` bleibt die technische interne GUID.
+- `MeterNumber` ist die fachliche/externe Identität und darf von Import-Dateien verwendet werden.
+- Importquellen sollten `MeterNumber` verwenden, nicht `MeterId`.
 
 ## EnsetDbContext
 
-- Liegt in src/Enset.Infrastructure/DBContext.cs.
+- Befindet sich in `src/Enset.Infrastructure/DBContext.cs`.
 - Konfiguriert:
-  - MeterReading mit Composite Key MeterId + Timestamp.
-  - Meter mit Unique Index auf MeterNumber.
-  - Beziehung Meter -> MeterReading.
-- DbSet<ImportJob> und DbSet<DataSource> wurden aus dem DbContext entfernt, weil diese Modelle nicht als Domain-Persistenzobjekte in der aktuellen Architektur behandelt werden.
+  - `MeterReading` mit Composite Key `MeterId + Timestamp`.
+  - Index auf `MeterReading.Timestamp`.
+  - Einzigartigen Index auf `Meter.MeterNumber`.
+  - Beziehung `Meter` -> `MeterReading` über `MeterId`.
+- Enthält `DbSet` für:
+  - `Customers`, `Projects`, `Buildings`
+  - `EnergySystems`, `Meters`, `MeterReadings`
+  - `Documents`, `CalculationResults`, `BenchmarkDatasets`
+- `DbSet<ImportJob>` und `DbSet<DataSource>` sind aktuell aus dem DbContext auskommentiert.
 
 ## Import-Layer
 
-- Interfaces in Enset.Application/Imports/Abstractions:
-  - IMeterReadingReader
-  - IMeterReadingReaderFactory
-  - IMeterLookupService
-  - IMeterReadingMapper
-- DTOs in Enset.Application/Imports/DTOs:
-  - MeterImportDto
-  - MeterReadingImportDto
-- Implementierungen in Enset.Infrastructure/Imports:
-  - CsvMeterReadingReader
-  - MeterReadingReaderFactory
-  - MeterLookupService
-  - MeterReadingMapper
+- Abstraktionen in `Enset.Application/Imports/Abstractions`:
+  - `IMeterReadingReader`
+  - `IMeterReadingReaderFactory`
+  - `IMeterLookupService`
+  - `IMeterReadingMapper`
+- DTOs in `Enset.Application/Imports/DTOs`:
+  - `MeterImportDto`
+  - `MeterReadingImportDto`
+- Modelle in `Enset.Application/Imports/Models`:
+  - `ImportJob`
+  - `RawDataObject`
+- Implementierungen in `Enset.Infrastructure/Imports`:
+  - `CsvMeterReadingReader`
+  - `MeterReadingReaderFactory`
+  - `MeterLookupService`
+  - `MeterReadingMapper`
 
-## Build-Status
+## Status und Ausblick
 
-- dotnet restore und dotnet build sind erfolgreich für alle drei Projekte.
-- Es gibt keine Compile-Fehler mehr in Enset.Domain, Enset.Application oder Enset.Infrastructure.
-- Es bleiben nur Paket-Warnungen zur externen Bibliothek System.Security.Cryptography.Xml, die nicht Teil der Architekturänderung sind.
+- `dotnet restore` und `dotnet build` laufen aktuell für alle drei Projekte.
+- `Enset.Domain`, `Enset.Application` und `Enset.Infrastructure` sind kompilierbar.
+- Es ist derzeit keine API-Implementierung vorhanden; die Webschicht ist noch offen.

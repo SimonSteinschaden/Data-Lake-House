@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Enset.Infrastructure\Enset.Infrastructure.csproj" />
+    <ProjectReference Include="..\Enset.Application\Enset.Application.csproj" />
+    <ProjectReference Include="..\Enset.Domain\Enset.Domain.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

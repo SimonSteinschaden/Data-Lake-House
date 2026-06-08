@@ -1,7 +1,7 @@
-﻿using Enset.Infrastructure.Imports.Excel;
+﻿using Enset.Infrastructure.Imports.Readers;
 
 var filePath =
-    @"C:\Users\simon\Desktop\Repositories\Data-Lake-House\Externe Daten\Imports\meter-import.xlsx";
+    @"C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\Externe Daten\Lastprofil EEG.csv";
 
 if (!File.Exists(filePath))
 {
@@ -11,17 +11,14 @@ if (!File.Exists(filePath))
 
 using var stream = File.OpenRead(filePath);
 
-var reader = new ExcelMeterImportReader();
+var reader = new CsvMeterReadingReader();
 
-var meters = reader.Read(stream);
-
-foreach (var meter in meters)
+foreach (var reading in reader.Read(stream))
 {
     Console.WriteLine("--------------------------------");
-
-    Console.WriteLine($"MeterNumber : {meter.MeterNumber}");
-    Console.WriteLine($"ProfileName : {meter.ProfileName}");
-    Console.WriteLine($"FileName    : {meter.FileName}");
-    Console.WriteLine($"Unit        : {meter.Unit}");
-    Console.WriteLine($"PostalCode  : {meter.PostalCode}");
+    Console.WriteLine($"MeterNumber : {reading.MeterNumber}");
+    Console.WriteLine($"Timestamp   : {reading.Timestamp}");
+    Console.WriteLine($"Value       : {reading.Value}");
+    Console.WriteLine($"Unit        : {reading.Unit}");
+    Console.WriteLine($"QualityFlag : {reading.QualityFlag}");
 }

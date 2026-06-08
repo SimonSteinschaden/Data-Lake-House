@@ -1,7 +1,8 @@
-using Enset.Application.Imports.DTOs;
+using System.Globalization;
 using Enset.Application.Imports.Abstractions;
+using Enset.Application.Imports.DTOs;
 
-namespace Enset.Infrastructure.Imports;
+namespace Enset.Infrastructure.Imports.Readers;
 
 public class CsvMeterReadingReader : IMeterReadingReader
 {
@@ -9,23 +10,34 @@ public class CsvMeterReadingReader : IMeterReadingReader
     {
         using var reader = new StreamReader(stream);
 
-        // Beispiel minimal – später robust machen
+        reader.ReadLine(); // Header skippen
+
         while (!reader.EndOfStream)
         {
             var line = reader.ReadLine();
             if (string.IsNullOrWhiteSpace(line)) continue;
 
-            var parts = line.Split(';'); // oder ','
+            var parts = line.Split(';');
+
+            if (parts.Length < 2)
+                continue;
+
+            if (!DateTime.TryParse(parts[0], out var timestamp))
+                continue;
+
+            if (!decimal.TryParse(
+                    parts[1],
+                    NumberStyles.Any,
+                    new CultureInfo("de-DE"),
+                    out var value))
+            {
+                value = 0m;
+            }
 
             yield return new MeterReadingImportDto
             {
-                MeterNumber = parts[0],
-                Timestamp = DateTime.Parse(parts[1]),
-                Value = decimal.Parse(parts[2]),
-                Unit = parts.Length > 3 ? parts[3] : null,
-                QualityFlag = parts.Length > 4 ? int.Parse(parts[4]) : null,
-                BuildingId = parts.Length > 5 && Guid.TryParse(parts[5], out var b) ? b : null,
-                CustomerId = parts.Length > 6 && Guid.TryParse(parts[6], out var c) ? c : null
+                Timestamp = timestamp,
+                Value = value
             };
         }
     }

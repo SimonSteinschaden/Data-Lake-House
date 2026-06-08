@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Enset.Infrastructure.Imports.Mapping;
 
+/*
 public class MeterReadingMapper : IMeterReadingMapper
 {
+    
     private readonly EnsetDbContext _context;
 
     public MeterReadingMapper(EnsetDbContext context)
@@ -45,4 +47,6 @@ public class MeterReadingMapper : IMeterReadingMapper
             CustomerId = dto.CustomerId
         };
     }
+    
 }
+*/

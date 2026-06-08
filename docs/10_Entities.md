@@ -13,11 +13,35 @@ Die Domain ist nach Fachbereichen gegliedert:
 - `Data`
 - `Documents`
 - `Energy`
-- `Imports`
 - `Geography`
-- `Infrastructure`
 - `Projects`
 
+Zusätzlich enthält `src/Enset.Application/Imports/Models` importbezogene Modelle wie `ImportJob` und `RawDataObject`, die im Application-Layer liegen.
 
-Die vollständige Implementierung liegt ausschließlich in der Codebase.
-Dieses Dokument beschreibt nur Struktur, Zweck und Architekturentscheidungen.
+## Wichtige Domain-Entities
+
+- `Customer`
+- `Project`
+- `Building`
+- `District`
+- `Municipality`
+- `Region`
+- `EnergySystem`
+- `Meter`
+- `MeterReading`
+- `Document`
+- `CalculationResult`
+- `BenchmarkDataset`
+- `DataSource`
+
+## Bemerkungen
+
+- `BaseEntity` definiert `Id`, `CreatedAt` und `UpdatedAt`.
+- `MeterReading` ist das einzige Domain-Objekt ohne `BaseEntity`.
+- `Meter` besitzt fachlich eindeutige `MeterNumber`.
+- `ImportJob` und `DataSource` sind modelliert, aber nicht vollständig in der Persistenz registriert.
+
+## Architekturhinweis
+
+Die vollständige Implementierung der Entitäten liegt in der Codebase.
+Dieses Dokument beschreibt Struktur, Zweck und aktuelle Implementierungsschwerpunkte.

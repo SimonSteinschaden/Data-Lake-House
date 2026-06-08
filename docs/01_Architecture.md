@@ -1,7 +1,28 @@
 # Architekturüberblick
 
 Die aktuelle Repository-Implementierung umfasst den Backend-Kern mit Domain, Application und Infrastructure.
-Geplante Komponenten wie UI, API und Worker sind im Architekturdiagramm beschrieben, sind aber im Code bisher nicht enthalten.
+Zu den vorhandenen Projekten gehört zudem `Enset.Worker.Import` als Entwicklungs- und Test-Harness.
+
+> Hinweis: Die folgenden PlantUML-Diagramme zeigen die Zielarchitektur. Im Vergleich dazu beschreibt der Abschnitt "Aktueller Implementierungsstand" den aktuellen Codezustand.
+
+## Aktueller Implementierungsstand
+
+- `Enset.Domain`: vollständig als reines Domainmodell vorhanden
+- `Enset.Application`: Import-bezogene DTOs, Abstraktionen, Enums und Prozessmodelle
+- `Enset.Infrastructure`: EF Core DbContext, Persistenz, Import-/Export-Reader, Service-Grundgerüste
+- `Enset.Worker.Import`: Entwickler-Harness für CSV-/Excel-Importtests, Validierung und Export
+
+## Noch nicht implementiert
+
+- ASP.NET Core Web API mit Controllern / Endpunkten
+- Produktives Frontend (Web oder Desktop)
+- Vollständiger Import-/Mapping-/Persistenz-Workflow
+- Orchestrierter ETL-Worker im Produktivbetrieb
+- Data Marketplace und Data Product Layer
+
+## Zielarchitektur
+
+Die PlantUML-Diagramme beschreiben die langfristige Zielarchitektur mit API, UI, Worker-Schichten und Storage-Zonen.
 
 ```plantuml
 

@@ -1,4 +1,4 @@
-# Data Model
+﻿# Data Model
 
 ## Ziel
 Das Datenmodell bildet die Grundlage für:
@@ -26,12 +26,12 @@ Das Datenmodell muss Daten auf mehreren Ebenen speichern und auswerten können:
 Region
 → Municipality / Ort
 → District / Quartier
-→ Building / (Betriebs-)Gebäude
+→ Building / Objekt
 → EnergySystem / Meter
 → MeterReading
 ```
 
-Ein Building ist das zentrale Objekt der Energieberatung. Es kann private, betriebliche oder öffentliche Gebäude abbilden, z. B. Wohnungen, Einfamilienhäuser, Mehrfamilienhäuser, Betriebe, Hallen, Schulen oder kommunale Gebäude.
+Ein Building ist das zentrale Objekt der Energieberatung.
 
 ---
 
@@ -40,7 +40,7 @@ Ein Building ist das zentrale Objekt der Energieberatung. Es kann private, betri
 ### Customer
 - Id (GUID)
 - Name
-- Type (Private, Company, Municipality)
+- Type
 - CreatedAt
 
 ---
@@ -56,25 +56,25 @@ Ein Building ist das zentrale Objekt der Energieberatung. Es kann private, betri
 
 ### Building
 - Id (GUID)
-- ProjectId (GUID)
-- DistrictId (GUID)
+- ProjectId
+- DistrictId
 - Name
-- PrimaryUseType (Residential, Commercial, Public, Mixed)
-- BuildingCategory (Apartment, House, Office, Hall, School, Retail, Industry, Other)
-- OwnershipType (OwnerOccupied, Rented, PublicOwned, CompanyOwned, Other)
+- PrimaryUseType
+- BuildingCategory
+- OwnershipType
 - IsResidential
 - IsCommercial
 - IsPublic
 - HasMixedUse
 - YearOfConstruction
-- FloorArea_m2
+- FloorAreaM2
 
 ---
 
 ### EnergySystem
 - Id (GUID)
 - BuildingId
-- Type (PV, Battery, Heating)
+- Type
 - Capacity
 - InstallationYear
 
@@ -83,26 +83,31 @@ Ein Building ist das zentrale Objekt der Energieberatung. Es kann private, betri
 ### Meter
 - Id (GUID)
 - BuildingId
-- Type (Consumption, Production)
-- Unit (kWh)
+- MeterNumber
+- Type
+- Unit (Standard: kWh)
 - ExternalId
 
 ---
 
-### MeterReading (Timeseries!)
-- Id (GUID)
+### MeterReading (Timeseries)
 - MeterId
 - Timestamp
 - Value
-- Unit
+- Unit (Standard: kWh)
 - QualityFlag
+- Optional: CustomerId
+- Optional: BuildingId
+- Optional: SourceImportJobId
+
+> `MeterReading` hat keinen eigenen `Id`; der Schlüssel besteht aus `MeterId + Timestamp`.
 
 ---
 
 ### Document
 - Id (GUID)
 - ProjectId
-- Type (Energieausweis, Rechnung)
+- Type
 - FilePath
 - UploadedAt
 
@@ -111,24 +116,27 @@ Ein Building ist das zentrale Objekt der Energieberatung. Es kann private, betri
 ### ImportJob
 - Id (GUID)
 - ProjectId
-- SourceType (CSV, Excel, PDF, API)
+- SourceType
 - Status
-- CreatedAt
+
+> `ImportJob` ist derzeit als Modell in `Enset.Application` definiert, aber nicht als `DbSet` im `EnsetDbContext` eingebunden.
 
 ---
 
 ### DataSource
 - Id (GUID)
 - Name
-- Type (UserUpload, API, Sensor)
+- Type
+
+> `DataSource` existiert im Domain-Layer, aber ebenfalls aktuell nicht als `DbSet` im DbContext.
 
 ---
 
 ### CalculationResult
 - Id (GUID)
 - KPIType
-- ScopeLevel (Region, Municipality, District, Building)
-- ScopeId (GUID)
+- ScopeLevel
+- ScopeId
 - Value
 - Unit
 - PeriodStart
@@ -139,14 +147,12 @@ Ein Building ist das zentrale Objekt der Energieberatung. Es kann private, betri
 
 ### BenchmarkDataset
 - Id (GUID)
-- Category
+- ScopeLevel
 - Region
-- BuildingType
 - BuildingCategory
 - YearRange
 - AvgConsumption
 - SampleSize
-- ScopeLevel
 
 ---
 
@@ -165,6 +171,7 @@ entity Project {
   Id : GUID
   CustomerId
   Name
+  StartDate
   Status
 }
 
@@ -189,11 +196,11 @@ entity Building {
   Id : GUID
   ProjectId
   DistrictId
+  Name
   PrimaryUseType
   BuildingCategory
   OwnershipType
-  YearOfConstruction
-  FloorArea_m2
+  FloorAreaM2
 }
 
 entity EnergySystem {
@@ -206,14 +213,14 @@ entity EnergySystem {
 entity Meter {
   Id : GUID
   BuildingId
+  MeterNumber
   Type
   Unit
 }
 
 entity MeterReading {
-  Id : GUID
-  MeterId
-  Timestamp
+  MeterId : GUID
+  Timestamp : datetime
   Value
   QualityFlag
 }
@@ -234,20 +241,19 @@ entity ImportJob {
 
 entity CalculationResult {
   Id : GUID
-  ProjectId
   KPIType
+  ScopeLevel
+  ScopeId
   Value
 }
 
 entity BenchmarkDataset {
   Id : GUID
+  ScopeLevel
   Region
-  BuildingType
+  BuildingCategory
   AvgConsumption
-  SampleSize
 }
-
-
 
 Customer ||--o{ Project
 Project ||--o{ Building
@@ -258,49 +264,6 @@ Meter ||--o{ MeterReading
 Project ||--o{ Document
 Project ||--o{ ImportJob
 Project ||--o{ CalculationResult
-BenchmarkDataset ..> Building
-Region ||--o{ Municipality
-Municipality ||--o{ District
-@enduml
-```
-
----
-
-## Zeitreihenmodell (wichtig!)
-
-```plantuml
-@startuml
-
-Meter --> MeterReading
-MeterReading --> DataSource
 
 @enduml
 ```
-
-👉 TimescaleDB empfohlen
-
----
-
-## Datenzonen (Lake House)
-
-- Raw: Originaldateien
-- Silver: validierte Daten
-- Gold: KPIs / Benchmarks
-
----
-
-## Designentscheidungen
-
-- GUIDs statt Integer (besser für Skalierung)
-- Trennung von Meter und MeterReading
-- flexible EnergySystem Struktur
-- Benchmark als eigenes Dataset
-
----
-
-## Nächste Schritte
-
-- EF Core Entities erstellen
-- Migration generieren
-- erste Testdaten einfügen
-- Importpipeline anbinden

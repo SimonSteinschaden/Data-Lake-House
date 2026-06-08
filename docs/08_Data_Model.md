@@ -31,9 +31,19 @@
 
 - `CalculationResult`
   - Ergebnis einer Analyse oder Berechnung.
+  - Enthält `KPIType`, `ScopeLevel`, `ScopeId`, `Value`, `Unit`, `PeriodStart`, `PeriodEnd`, `CalculatedAt`.
 
 - `BenchmarkDataset`
   - Datensatz für Benchmark-Vergleiche.
+  - Enthält `ScopeLevel`, `Region`, `BuildingCategory`, `YearRange`, `AvgConsumption`, `SampleSize`.
+
+- `ImportJob`
+  - Modelliert Import-Metadaten für ein Projekt.
+  - `ProjectId`, `SourceType`, `Status`.
+
+- `DataSource`
+  - Modelliert Herkunftsdatenquellen.
+  - `Name`, `Type`.
 
 ## Basisobjekt
 
@@ -45,6 +55,12 @@
 ## Datenbankmodell
 
 - `MeterReading` ist kein `BaseEntity`; es ist ein reines Zeitreihenmodell.
-- `Meter` besitzt einen eindeutigen, fachlichen Index auf `MeterNumber`.
+- `Meter` besitzt einen eindeutigen Index auf `MeterNumber`.
 - `MeterReading` ist über `MeterId` mit `Meter` verknüpft.
-- Import-Jobs und DataSources sind aktuell nicht als `DbSet` im `EnsetDbContext` eingebunden.
+- `ImportJob` und `DataSource` sind derzeit im Modell vorhanden, aber nicht als `DbSet` im `EnsetDbContext` eingebunden.
+
+## Hinweis
+
+- Das Domain-Layer umfasst die Geschäftsobjekte.
+- Importspezifische Modelle liegen im Application-Layer.
+- Die Persistenz dieses Modells wird derzeit über `Enset.Infrastructure` umgesetzt.

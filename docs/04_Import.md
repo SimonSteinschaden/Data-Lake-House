@@ -1,4 +1,9 @@
 ﻿```plantuml
+# Import-Architektur
+
+Dieses Dokument beschreibt die geplante Import-, Mapping- und Exportarchitektur.
+Aktuell ist im Repository eine Import-Pipeline mit DTOs, Abstraktionen und konkreter Infrastruktur vorhanden.
+
 @startuml
 title ENSET Import-, Mapping- und Exportarchitektur
 

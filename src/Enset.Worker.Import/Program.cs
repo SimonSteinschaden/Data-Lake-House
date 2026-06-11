@@ -1,10 +1,17 @@
 ﻿using Enset.Infrastructure.Imports.Readers;
 using Enset.Infrastructure.Imports.Excel;
 using Enset.Infrastructure.Exports.Excel;
+using Enset.Infrastructure.Imports;
+using Enset.Application.Imports.Abstractions;
 using Enset.Application.Imports.Reports;
+using Enset.Application.Imports.Mapping;
 using Enset.Application.Imports.Validation;
+using Enset.Application.Imports.DuplicationCheck.Validation;
 using Enset.Application.Imports.Decisions;
 using Enset.Application.Imports.Services;
+using Enset.Application.Imports.Services.Abstractions;
+using Enset.Application.Imports.DTOs;
+using Enset.Application.Imports.Issues;
 using XLWorkbook = ClosedXML.Excel.XLWorkbook;
 
 //------------------------------TESTING CSV READER------------------------------
@@ -239,3 +246,34 @@ else
         ? $"Building row {buildingWithoutId.RowNumber} updated with ID {newBuildingId}."
         : $"Building row {buildingWithoutId.RowNumber} could not be updated.");
 }
+
+//-------------------------------Duplication Check-------------------------------
+
+
+var excelReader2 = new ExcelWorkbookReader();
+
+var customerRows = excelReader2.ReadCustomers(filePath2);
+
+var customers2 = customerRows
+    .Select(CustomerExcelRowMapper.ToDto)
+    .ToList();
+
+Console.WriteLine($"Customer rows gelesen: {customerRows.Count}");
+Console.WriteLine($"Customer DTOs erzeugt: {customers2.Count}");
+
+var validator = new CustomerDuplicateValidator();
+
+var duplicates = validator.FindDuplicates(customers2);
+
+Console.WriteLine($"Dubletten gefunden: {duplicates.Count}");
+
+foreach (var duplicate in duplicates)
+{
+    Console.WriteLine("--------------------------------");
+    Console.WriteLine($"First : {duplicate.First.CompanyName}");
+    Console.WriteLine($"Second: {duplicate.Second.CompanyName}");
+    Console.WriteLine($"Score : {duplicate.SimilarityScore:P1}");
+    Console.WriteLine($"Reason: {duplicate.Reason}");
+}
+
+//-------------------------------END OF TESTING-------------------------------

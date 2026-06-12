@@ -1,4 +1,3 @@
-
 using Enset.Application.Imports.DTOs;
 using Enset.Application.Imports.DuplicationCheck.Identity;
 using Enset.Application.Imports.DuplicationCheck.Models;
@@ -29,7 +28,9 @@ public class CustomerDuplicateValidator
                     First = items[i],
                     Second = items[i + 1],
                     SimilarityScore = 1.0,
-                    Reason = "Exact customer identity key match"
+                    Reason = "Exact customer identity key match",
+                    RequiresUserDecision = true,
+                    ProposedResolution = items[i].CompanyName
                 });
             }
         }
@@ -41,6 +42,12 @@ public class CustomerDuplicateValidator
                 var nameA = CustomerIdentityKeyBuilder.Normalize(list[i].CompanyName);
                 var nameB = CustomerIdentityKeyBuilder.Normalize(list[j].CompanyName);
 
+                if (string.IsNullOrWhiteSpace(nameA) ||
+                    string.IsNullOrWhiteSpace(nameB))
+                {
+                    continue;
+                }
+
                 var similarity = StringSimilarity.Similarity(nameA, nameB);
 
                 if (similarity >= 0.88)
@@ -50,7 +57,9 @@ public class CustomerDuplicateValidator
                         First = list[i],
                         Second = list[j],
                         SimilarityScore = similarity,
-                        Reason = "Similar customer name"
+                        Reason = "Similar customer name",
+                        RequiresUserDecision = true,
+                        ProposedResolution = list[i].CompanyName
                     });
                 }
             }

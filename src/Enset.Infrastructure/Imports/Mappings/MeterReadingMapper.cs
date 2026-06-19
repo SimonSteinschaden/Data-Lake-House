@@ -3,7 +3,7 @@ using Enset.Application.Imports.DTOs;
 using Enset.Domain.Energy;
 using Microsoft.EntityFrameworkCore;
 
-namespace Enset.Infrastructure.Imports.Mapping;
+namespace Enset.Infrastructure.Imports.Mappings;
 
 /*
 public class MeterReadingMapper : IMeterReadingMapper

@@ -4,7 +4,7 @@ namespace Enset.Application.Imports.Resolution;
 
 public class ConsoleImportIssueResolutionService
 {
-    public void ResolveIssues(IEnumerable<ImportIssue> issues)
+    public bool ResolveIssues(IEnumerable<ImportIssue> issues)
     {
         foreach (var issue in issues.Where(x => x.RequiresUserDecision && !x.IsResolved))
         {
@@ -25,6 +25,7 @@ public class ConsoleImportIssueResolutionService
             Console.WriteLine("3 = Eigene Bezeichnung eingeben");
             Console.WriteLine("4 = Getrennt lassen");
             Console.WriteLine("X = Importprozess abbrechen");
+
             var input = Console.ReadLine();
 
             switch (input)
@@ -51,15 +52,16 @@ public class ConsoleImportIssueResolutionService
                     issue.IsResolved = true;
                     break;
 
-                case "x": 
+                case "x":
                 case "X":
-                    throw new OperationCanceledException(
-                        "Import wurde durch Benutzer abgebrochen."); // TODO: Later return bool to allow clean cancellation with "X"-> public bool ResolveIssues(IEnumerable<ImportIssue> issues)
+                    return false;
 
                 default:
                     Console.WriteLine("Ungültige Eingabe. Issue bleibt ungelöst.");
                     break;
             }
         }
+
+        return true;
     }
 }

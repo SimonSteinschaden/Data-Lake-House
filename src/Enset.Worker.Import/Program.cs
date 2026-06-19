@@ -1,141 +1,59 @@
-﻿using Enset.Infrastructure.Imports.Readers;
-using Enset.Infrastructure.Imports.Excel;
+﻿using Enset.Application.Imports.Decisions;
+using Enset.Application.Imports.DTOs;
+using Enset.Application.Imports.DuplicationCheck.Mapping;
+using Enset.Application.Imports.DuplicationCheck.Validation;
+using Enset.Application.Imports.DuplicationCheck.Models;
+using Enset.Application.Imports.DuplicationCheck.Resolutions;
+using Enset.Application.Imports.Mapping;
+using Enset.Application.Imports.Resolution;
+using Enset.Application.Imports.Services;
+using Enset.Application.Imports.Validation;
 using Enset.Infrastructure.Exports.Excel;
 using Enset.Infrastructure.Imports;
-using Enset.Application.Imports.Abstractions;
-using Enset.Application.Imports.Reports;
-using Enset.Application.Imports.Mapping;
-using Enset.Application.Imports.Validation;
-using Enset.Application.Imports.DuplicationCheck.Validation;
-using Enset.Application.Imports.Decisions;
-using Enset.Application.Imports.Services;
-using Enset.Application.Imports.Services.Abstractions;
-using Enset.Application.Imports.DTOs;
-using Enset.Application.Imports.Issues;
+using Enset.Infrastructure.Imports.Excel;
+using Enset.Infrastructure.Imports.Readers;
 using XLWorkbook = ClosedXML.Excel.XLWorkbook;
 
-//------------------------------TESTING CSV READER------------------------------
-var filePath =
-    @"C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\Externe Daten\Lastprofil EEG.csv"; //TODO: Pfad anpassen. Pfadlogik welches Dokument geladen werden soll fehlt noch Automatische Erkennung.
+var csvFilePath =
+    @"C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\Externe Daten\Lastprofil EEG.csv";
 
-if (!File.Exists(filePath))
-{
-    Console.WriteLine($"Datei nicht gefunden: {filePath}");
-    return;
-}
+var excelFilePath =
+    @"C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\Externe Daten\Datenbasis Grundlage RDW.xlsm";
 
-using var stream = File.OpenRead(filePath);
-
-var reader = new CsvMeterReadingReader();
-
-/*foreach (var reading in reader.Read(stream).Take(100))
-{
-    Console.WriteLine("--------------------------------");
-    Console.WriteLine($"MeterNumber : {reading.MeterNumber}");
-    Console.WriteLine($"Timestamp   : {reading.Timestamp}");
-    Console.WriteLine($"Value       : {reading.Value}");
-    Console.WriteLine($"Unit        : {reading.Unit}");
-    Console.WriteLine($"QualityFlag : {reading.QualityFlag}");
-}*/
-
-var readings = reader.Read(stream)
-    .Take(100)
-    .ToList();
-
-Console.WriteLine($"Gelesene Datensätze: {readings.Count}");
-Console.WriteLine($"Erster Datensatz: {readings.FirstOrDefault()?.Timestamp}");
-Console.WriteLine($"Letzter Datensatz: {readings.LastOrDefault()?.Timestamp}");
+var exportFilePath =
+    @"C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\Exportierte Daten\Datenbasis Grundlage RDW_TEST.xlsm";
 
 
+// 1. CSV-Test
+RunCsvReaderTest(csvFilePath);
 
-//------------------------------TESTING EXCEL READER------------------------------
 
-var filePath2 = 
-    @"C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\Externe Daten\Datenbasis Grundlage RDW.xlsm"; //TODO: Pfad anpassen
-using var workbook = new XLWorkbook(filePath2);
+// 2. Excel-Struktur-Test
+RunExcelStructureTest(excelFilePath);
 
-var worksheet = workbook.Worksheet("Customers");
 
-Console.WriteLine($"Worksheet: {worksheet.Name}");
-
-foreach (var table in worksheet.Tables)
-{
-    Console.WriteLine($"Table: {table.Name}");
-
-    Console.WriteLine("Columns:");
-
-    foreach (var field in table.Fields)
-    {
-        Console.WriteLine($" - {field.Name}");
-    }
-
-    Console.WriteLine($"Rows: {table.DataRange.RowCount()}");
-}
-
-var worksheet2 = workbook.Worksheet("Buildings");
-
-Console.WriteLine($"Worksheet: {worksheet2.Name}");
-
-foreach (var table in worksheet2.Tables)
-{
-    Console.WriteLine($"Table: {table.Name}");
-
-    Console.WriteLine("Columns:");
-
-    foreach (var field in table.Fields)
-    {
-        Console.WriteLine($" - {field.Name}");
-    }
-
-    Console.WriteLine($"Rows: {table.DataRange.RowCount()}");
-}
-
-//------------------------------TESTING EXCEL READER CLASS CUSTOMERS------------------------------
-
+// 3. Excel-Import
 var excelReader = new ExcelWorkbookReader();
 
-var customers = excelReader.ReadCustomers(filePath2);
-var buildings = excelReader.ReadBuildings(filePath2);
+var customerRows = excelReader.ReadCustomers(excelFilePath);
+var buildingRows = excelReader.ReadBuildings(excelFilePath);
+
+Console.WriteLine();
+Console.WriteLine("========== EXCEL IMPORT ==========");
+Console.WriteLine($"Customers gelesen: {customerRows.Count}");
+Console.WriteLine($"Buildings gelesen: {buildingRows.Count}");
+
+PrintCustomerPreview(customerRows);
+PrintBuildingPreview(buildingRows);
 
 
-
-Console.WriteLine($"Customers gelesen: {customers.Count}");
-Console.WriteLine($"Buildings gelesen: {buildings.Count}");
-foreach (var customer in customers.Take(10))
-{
-    Console.WriteLine("--------------------------------");
-    Console.WriteLine($"Row: {customer.RowNumber}");
-    Console.WriteLine($"ID: {customer.InternalCustomerId}");
-    Console.WriteLine($"Name: {customer.FirstName} {customer.LastName}");
-    Console.WriteLine($"Organization: {customer.OrganizationName}");
-}
-
-//------------------------------TESTING EXCEL READER CLASS BUILDINGS------------------------------
-
-
-foreach (var building in buildings.Take(5))
-{
-    Console.WriteLine("--------------------------------");
-    Console.WriteLine($"Row: {building.RowNumber}");
-    Console.WriteLine($"BuildingID: {building.InternalBuildingId}");
-    Console.WriteLine($"CustomerID: {building.InternalCustomerId}");
-    Console.WriteLine($"Project: {building.ProjectName}");
-    Console.WriteLine($"Address: {building.Street} {building.HouseNumber}, {building.PostalCode} {building.City}");
-}
-
-//------------------------------REPORTING EXCEL VALIDATION------------------------------
-
-var report =
-    ExcelImportValidator.Validate(
-        customers,
-        buildings);
+// 4. Import-Validation
+var report = ExcelImportValidator.Validate(customerRows, buildingRows);
 
 Console.WriteLine();
 Console.WriteLine("========== IMPORT REPORT ==========");
-
 Console.WriteLine($"Customers : {report.CustomerCount}");
 Console.WriteLine($"Buildings : {report.BuildingCount}");
-
 Console.WriteLine($"Errors    : {report.Errors.Count}");
 Console.WriteLine($"Warnings  : {report.Warnings.Count}");
 
@@ -149,7 +67,8 @@ foreach (var warning in report.Warnings)
     Console.WriteLine($"WARNING: {warning}");
 }
 
-//-------------------------------DECISION LOGIC BASED ON VALIDATION------------------------------
+
+// 5. Import-Entscheidung
 var decision = ImportDecisionEngine.Decide(report);
 
 Console.WriteLine();
@@ -158,122 +77,308 @@ Console.WriteLine($"Decision: {decision}");
 if (decision == ImportDecisionType.Abort)
 {
     Console.WriteLine("Validation errors found.");
-    Console.WriteLine("Continuing anyway because this is a writer test."); //return;
+    Console.WriteLine("Continuing anyway because this is currently a test run.");
 }
 
 
-//-------------------------------EXPORT EXCEL WORKBOOK-COPY------------------------------
-var writer = new ExcelWorkbookWriter();
-
-var targetFile =
-    @"C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\Exportierte Daten\Datenbasis Grundlage RDW_TEST.xlsm";
-
-var firstCustomerId = customers
-    .First(c => !string.IsNullOrWhiteSpace(c.InternalCustomerId))
-    .InternalCustomerId!;
-
-var success = writer.UpdateCustomerNotes(
-    filePath2,
-    targetFile,
-    firstCustomerId,
-    $"BUSINESS UPDATE {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-
-Console.WriteLine(success
-    ? "Customer notes updated."
-    : "Customer not found.");
+// 6. Excel-Writer-Test
+RunExcelWriterTest(
+    excelFilePath,
+    exportFilePath,
+    customerRows,
+    buildingRows);
 
 
-
-        var firstBuildingId = buildings
-            .First(b => !string.IsNullOrWhiteSpace(b.InternalBuildingId))
-            .InternalBuildingId!;
-
-        var buildingSuccess = writer.UpdateBuildingNotes(
-            filePath2,
-            targetFile,
-            firstBuildingId,
-            $"BUILDING UPDATE {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-
-        Console.WriteLine(buildingSuccess
-            ? "Building notes updated."
-            : "Building not found.");
+// 7. Generic-ID-Test
+RunGenericIdTest(
+    excelFilePath,
+    exportFilePath,
+    customerRows,
+    buildingRows);
 
 
-//-------------------------------TESTING GENERIC ID ------------------------------
-
-var customerWithoutId =
-    customers.FirstOrDefault(
-        c => string.IsNullOrWhiteSpace(c.InternalCustomerId));
-
-if (customerWithoutId is null)
-{
-    Console.WriteLine("No customer without InternalCustomerId found.");
-}
-else
-{
-    var newId = CustomerIdGenerator.Generate();
-
-    var idUpdateSuccess = writer.UpdateCustomerId(
-    filePath2,
-    targetFile,
-    customerWithoutId.RowNumber,
-    newId);
-
-    Console.WriteLine(success
-        ? $"Customer row {customerWithoutId.RowNumber} updated with ID {newId}."
-        : $"Customer row {customerWithoutId.RowNumber} could not be updated.");
-}
-
-var buildingWithoutId =
-    buildings.FirstOrDefault(
-        b => string.IsNullOrWhiteSpace(b.InternalBuildingId));
-
-if (buildingWithoutId is null)
-{
-    Console.WriteLine("No building without InternalBuildingId found.");
-}
-else
-{
-    var newBuildingId = BuildingIdGenerator.Generate();
-
-    var buildingIdUpdateSuccess = writer.UpdateBuildingId(
-        filePath2,
-        targetFile,
-        buildingWithoutId.RowNumber,
-        newBuildingId);
-
-    Console.WriteLine(buildingIdUpdateSuccess
-        ? $"Building row {buildingWithoutId.RowNumber} updated with ID {newBuildingId}."
-        : $"Building row {buildingWithoutId.RowNumber} could not be updated.");
-}
-
-//-------------------------------Duplication Check-------------------------------
-
-
-var excelReader2 = new ExcelWorkbookReader();
-
-var customerRows = excelReader2.ReadCustomers(filePath2);
-
-var customers2 = customerRows
+// 8. DuplicationCheck mit User-Resolution
+var customerDtos = customerRows
     .Select(CustomerExcelRowMapper.ToDto)
     .ToList();
 
-Console.WriteLine($"Customer rows gelesen: {customerRows.Count}");
-Console.WriteLine($"Customer DTOs erzeugt: {customers2.Count}");
+RunCustomerDuplicationResolution(customerDtos);
 
-var validator = new CustomerDuplicateValidator();
 
-var duplicates = validator.FindDuplicates(customers2);
+// Ende
+Console.WriteLine();
+Console.WriteLine("========== END OF TESTING ==========");
 
-Console.WriteLine($"Dubletten gefunden: {duplicates.Count}");
 
-foreach (var duplicate in duplicates)
+// -------------------------
+// Local test methods
+// -------------------------
+
+static void RunCsvReaderTest(string filePath)
 {
-    Console.WriteLine("--------------------------------");
-    Console.WriteLine($"First : {duplicate.First.CompanyName}");
-    Console.WriteLine($"Second: {duplicate.Second.CompanyName}");
-    Console.WriteLine($"Score : {duplicate.SimilarityScore:P1}");
-    Console.WriteLine($"Reason: {duplicate.Reason}");
+    Console.WriteLine();
+    Console.WriteLine("========== CSV READER TEST ==========");
+
+    if (!File.Exists(filePath))
+    {
+        Console.WriteLine($"Datei nicht gefunden: {filePath}");
+        return;
+    }
+
+    using var stream = File.OpenRead(filePath);
+
+    var reader = new CsvMeterReadingReader();
+
+    var readings = reader.Read(stream)
+        .Take(100)
+        .ToList();
+
+    Console.WriteLine($"Gelesene Datensätze: {readings.Count}");
+    Console.WriteLine($"Erster Datensatz: {readings.FirstOrDefault()?.Timestamp}");
+    Console.WriteLine($"Letzter Datensatz: {readings.LastOrDefault()?.Timestamp}");
 }
 
-//-------------------------------END OF TESTING-------------------------------
+
+static void RunExcelStructureTest(string filePath)
+{
+    Console.WriteLine();
+    Console.WriteLine("========== EXCEL STRUCTURE TEST ==========");
+
+    using var workbook = new XLWorkbook(filePath);
+
+    PrintWorksheetStructure(workbook, "Customers");
+    PrintWorksheetStructure(workbook, "Buildings");
+}
+
+
+static void PrintWorksheetStructure(XLWorkbook workbook, string worksheetName)
+{
+    var worksheet = workbook.Worksheet(worksheetName);
+
+    Console.WriteLine();
+    Console.WriteLine($"Worksheet: {worksheet.Name}");
+
+    foreach (var table in worksheet.Tables)
+    {
+        Console.WriteLine($"Table: {table.Name}");
+        Console.WriteLine("Columns:");
+
+        foreach (var field in table.Fields)
+        {
+            Console.WriteLine($" - {field.Name}");
+        }
+
+        Console.WriteLine($"Rows: {table.DataRange.RowCount()}");
+    }
+}
+
+
+static void PrintCustomerPreview(IEnumerable<dynamic> customers)
+{
+    Console.WriteLine();
+    Console.WriteLine("========== CUSTOMER PREVIEW ==========");
+
+    foreach (var customer in customers.Take(10))
+    {
+        Console.WriteLine("--------------------------------");
+        Console.WriteLine($"Row: {customer.RowNumber}");
+        Console.WriteLine($"ID: {customer.InternalCustomerId}");
+        Console.WriteLine($"Name: {customer.FirstName} {customer.LastName}");
+        Console.WriteLine($"Organization: {customer.OrganizationName}");
+    }
+}
+
+
+static void PrintBuildingPreview(IEnumerable<dynamic> buildings)
+{
+    Console.WriteLine();
+    Console.WriteLine("========== BUILDING PREVIEW ==========");
+
+    foreach (var building in buildings.Take(5))
+    {
+        Console.WriteLine("--------------------------------");
+        Console.WriteLine($"Row: {building.RowNumber}");
+        Console.WriteLine($"BuildingID: {building.InternalBuildingId}");
+        Console.WriteLine($"CustomerID: {building.InternalCustomerId}");
+        Console.WriteLine($"Project: {building.ProjectName}");
+        Console.WriteLine($"Address: {building.Street} {building.HouseNumber}, {building.PostalCode} {building.City}");
+    }
+}
+
+
+static void RunExcelWriterTest(
+    string sourceFile,
+    string targetFile,
+    IEnumerable<dynamic> customers,
+    IEnumerable<dynamic> buildings)
+{
+    Console.WriteLine();
+    Console.WriteLine("========== EXCEL WRITER TEST ==========");
+
+    var writer = new ExcelWorkbookWriter();
+
+    var firstCustomerId = customers
+        .First(c => !string.IsNullOrWhiteSpace(c.InternalCustomerId))
+        .InternalCustomerId;
+
+    var customerSuccess = writer.UpdateCustomerNotes(
+        sourceFile,
+        targetFile,
+        firstCustomerId,
+        $"BUSINESS UPDATE {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+    Console.WriteLine(customerSuccess
+        ? "Customer notes updated."
+        : "Customer not found.");
+
+    var firstBuildingId = buildings
+        .First(b => !string.IsNullOrWhiteSpace(b.InternalBuildingId))
+        .InternalBuildingId;
+
+    var buildingSuccess = writer.UpdateBuildingNotes(
+        sourceFile,
+        targetFile,
+        firstBuildingId,
+        $"BUILDING UPDATE {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+    Console.WriteLine(buildingSuccess
+        ? "Building notes updated."
+        : "Building not found.");
+}
+
+
+static void RunGenericIdTest(
+    string sourceFile,
+    string targetFile,
+    IEnumerable<dynamic> customers,
+    IEnumerable<dynamic> buildings)
+{
+    Console.WriteLine();
+    Console.WriteLine("========== GENERIC ID TEST ==========");
+
+    var writer = new ExcelWorkbookWriter();
+
+    var customerWithoutId = customers
+        .FirstOrDefault(c => string.IsNullOrWhiteSpace(c.InternalCustomerId));
+
+    if (customerWithoutId is null)
+    {
+        Console.WriteLine("No customer without InternalCustomerId found.");
+    }
+    else
+    {
+        var newId = CustomerIdGenerator.Generate();
+
+        var idUpdateSuccess = writer.UpdateCustomerId(
+            sourceFile,
+            targetFile,
+            customerWithoutId.RowNumber,
+            newId);
+
+        Console.WriteLine(idUpdateSuccess
+            ? $"Customer row {customerWithoutId.RowNumber} updated with ID {newId}."
+            : $"Customer row {customerWithoutId.RowNumber} could not be updated.");
+    }
+
+    var buildingWithoutId = buildings
+        .FirstOrDefault(b => string.IsNullOrWhiteSpace(b.InternalBuildingId));
+
+    if (buildingWithoutId is null)
+    {
+        Console.WriteLine("No building without InternalBuildingId found.");
+    }
+    else
+    {
+        var newBuildingId = BuildingIdGenerator.Generate();
+
+        var buildingIdUpdateSuccess = writer.UpdateBuildingId(
+            sourceFile,
+            targetFile,
+            buildingWithoutId.RowNumber,
+            newBuildingId);
+
+        Console.WriteLine(buildingIdUpdateSuccess
+            ? $"Building row {buildingWithoutId.RowNumber} updated with ID {newBuildingId}."
+            : $"Building row {buildingWithoutId.RowNumber} could not be updated.");
+    }
+}
+
+
+static void RunCustomerDuplicationResolution(
+    List<CustomerImportDto> customers)
+{
+    Console.WriteLine();
+    Console.WriteLine("========== DUPLICATION CHECK ==========");
+
+    var validator = new CustomerDuplicateValidator();
+
+    var duplicateCandidates = validator.FindDuplicates(customers);
+
+    Console.WriteLine($"Dubletten gefunden: {duplicateCandidates.Count}");
+
+    if (duplicateCandidates.Count == 0)
+    {
+        return;
+    }
+
+    var issues = duplicateCandidates
+        .Select(CustomerDuplicateIssueMapper.ToIssue)
+        .ToList();
+
+    var resolutionService = new ConsoleImportIssueResolutionService();
+
+    var resolutionCompleted = resolutionService.ResolveIssues(issues);
+
+    if (!resolutionCompleted)
+    {
+        Console.WriteLine("Import wurde durch Benutzer abgebrochen.");
+        return;
+    }
+
+    var resultBuilder = new ImportResolutionResultBuilder();
+    var mergeInstructionBuilder = new CustomerMergeInstructionBuilder();
+
+    var customerMergeInstructions = new List<CustomerMergeInstruction>();
+
+    for (var i = 0; i < duplicateCandidates.Count; i++)
+    {
+        var issue = issues[i];
+
+        if (!issue.IsResolved)
+        {
+            continue;
+        }
+
+        var result = resultBuilder.Build(issue);
+
+        var instruction = mergeInstructionBuilder.Build(
+            duplicateCandidates[i],
+            result);
+
+        if (instruction is not null)
+        {
+            customerMergeInstructions.Add(instruction);
+        }
+    }
+
+var groupBuilder = new CustomerMergeGroupBuilder();
+
+var customerMergeGroups = groupBuilder.Build(customerMergeInstructions);
+
+Console.WriteLine();
+Console.WriteLine($"Customer Merge Groups: {customerMergeGroups.Count}");
+
+foreach (var group in customerMergeGroups)
+{
+    Console.WriteLine("--------------------------------");
+    Console.WriteLine($"Master: {group.MasterCustomer.CompanyName}");
+    Console.WriteLine($"Name:   {group.ResolvedName}");
+
+    Console.WriteLine("Duplicates:");
+
+    foreach (var duplicate in group.DuplicateCustomers)
+    {
+        Console.WriteLine($" - {duplicate.CompanyName}");
+    }
+}
+}

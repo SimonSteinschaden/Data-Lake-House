@@ -4,15 +4,23 @@ namespace Enset.Application.Imports.Resolution;
 
 public class ApplyResolutionService
 {
-    public string? GetResolvedValue(ImportIssue issue)
+    public string? GetResolvedValue(ImportResolutionResult result)
     {
-        return issue.ResolutionAction switch
+        if (result.KeepSeparate)
         {
-            ImportResolutionAction.KeepFirst => issue.FirstValue,
-            ImportResolutionAction.KeepSecond => issue.SecondValue,
-            ImportResolutionAction.UseCustomValue => issue.CustomResolvedValue,
-            ImportResolutionAction.KeepSeparate => null,
-            _ => null
-        };
+            return null;
+        }
+
+        if (!result.MergeRequired)
+        {
+            return null;
+        }
+
+        return result.ResolvedValue;
+    }
+
+    public bool ShouldMerge(ImportResolutionResult result)
+    {
+        return result.MergeRequired && !result.KeepSeparate;
     }
 }

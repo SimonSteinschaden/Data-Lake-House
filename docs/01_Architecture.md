@@ -1,7 +1,12 @@
 # Architekturüberblick
 
-Die aktuelle Repository-Implementierung umfasst den Backend-Kern mit Domain, Application und Infrastructure.
-Geplante Komponenten wie UI, API und Worker sind im Architekturdiagramm beschrieben, sind aber im Code bisher nicht enthalten.
+Die aktuelle Repository-Implementierung umfasst den technischen Kern des ENSET Data Lake House MVP.
+
+Der Fokus liegt auf der Datenaufnahme, Datenverwaltung, Datenverarbeitung sowie der Bereitstellung standardisierter Data Products für die Business Modules des ENSET Universe.
+
+Die aktuelle Implementierung konzentriert sich auf die Backend-Komponenten (Domain, Application und Infrastructure). Geplante Komponenten wie Benutzeroberflächen, Web API und Worker sind im Architekturdiagramm beschrieben und werden schrittweise im Rahmen des MVP umgesetzt.
+
+Das ENSET Data Lake House dient dabei nicht ausschließlich der Speicherung energierelevanter Daten. Seine Hauptaufgabe besteht darin, aus heterogenen Datenquellen qualitätsgesicherte und standardisierte Data Products bereitzustellen, welche von der ENSET Data Platform sowie zukünftigen Business Modules genutzt werden.
 
 ```plantuml
 
@@ -29,6 +34,7 @@ package "Application / Domain Layer" {
   [Import Service] as ImportService
   [Calculation Service] as CalcService
   [Benchmark Service] as BenchmarkService
+  [Data Product Service] as DataProductService
   [Validation Service] as ValidationService
 }
 
@@ -65,6 +71,7 @@ API --> BuildingService
 API --> ImportService
 API --> CalcService
 API --> BenchmarkService
+API --> DataProductService
 
 ImportService --> ValidationService
 CsvWorker --> ImportService
@@ -74,16 +81,26 @@ EtlWorker --> CalcService
 
 ProjectService --> PostgreSQL
 BuildingService --> PostgreSQL
+
 ImportService --> PostgreSQL
 ImportService --> Timescale
 ImportService --> Raw
+
 CalcService --> Timescale
 CalcService --> Curated
+
 BenchmarkService --> Curated
 BenchmarkService --> PostgreSQL
 
+Curated --> DataProductService
+BenchmarkService --> DataProductService
+
+DataProductService --> PostgreSQL
+DataProductService --> API
+
 Raw --> AzureLake
 Curated --> AzureLake
+
 PostgreSQL --> Synology
 Timescale --> Synology
 Synology --> AzureBackup
@@ -94,92 +111,6 @@ Docker .. ExcelWorker
 Docker .. PdfWorker
 Docker .. PostgreSQL
 Docker .. Timescale
-
-@enduml
-
-'--------------------------------------------------------------------------------------
-'DATA FLOW
-'--------------------------------------------------------------------------------------
-@startuml
-title ENSET eKUT Data Lake House MVP - Datenfluss
-
-actor "Energieberater" as User
-
-participant "UI\nWinUI3/Blazor/React" as UI
-participant "ASP.NET Core API" as API
-participant "Import Service" as Import
-participant "Validation Service" as Validation
-database "PostgreSQL" as PG
-database "TimescaleDB" as TS
-collections "Raw Zone" as Raw
-collections "Gold Zone" as Gold
-participant "Calculation Service" as Calc
-participant "Benchmark Service" as Bench
-
-User -> UI: Projekt/Gebäude anlegen
-UI -> API: POST /projects, /buildings
-API -> PG: Stammdaten speichern
-
-User -> UI: Datei importieren
-UI -> API: POST /imports/files
-API -> Import: ImportJob erstellen
-Import -> Raw: Originaldatei speichern
-Import -> Validation: Daten prüfen und normalisieren
-
-Validation -> PG: Metadaten speichern
-Validation -> TS: Messwerte speichern
-
-Calc -> TS: Messdaten lesen
-Calc -> PG: Gebäudedaten lesen
-Calc -> Gold: Kennzahlen speichern
-
-Bench -> Gold: Kennzahlen lesen
-Bench -> PG: Vergleichsgruppen lesen
-Bench -> API: Benchmark-Ergebnis
-
-API -> UI: Dashboarddaten
-UI -> User: Auswertung anzeigen
-
-@enduml
-
-'--------------------------------------------------------------------------------------
-'Data Marketplace
-'--------------------------------------------------------------------------------------
-@startuml
-title ENSET Data Marketplace Erweiterung
-
-package "Data Lake House" {
-  [Raw Data]
-  [Processed Data]
-  [KPI / Benchmark Engine]
-}
-
-package "Data Product Layer" {
-  [Anonymization Service]
-  [Aggregation Service]
-  [Data Product Service]
-  [Pricing Service]
-  [Export Service]
-}
-
-package "Marketplace" {
-  [Marketplace API]
-  [Download / Purchase API]
-}
-
-package "Customers" {
-  [eKUT Projects]
-  [External Buyers]
-}
-
-[Processed Data] --> [Anonymization Service]
-[Anonymization Service] --> [Aggregation Service]
-[Aggregation Service] --> [Data Product Service]
-[Data Product Service] --> [Pricing Service]
-[Data Product Service] --> [Export Service]
-
-[Export Service] --> [Marketplace API]
-[Marketplace API] --> [External Buyers]
 
 @enduml
 ```

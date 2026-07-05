@@ -112,8 +112,10 @@ C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.dll
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Application.dll
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Domain.dll
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Application.pdb
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.csproj.AssemblyReference.cache
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.AssemblyInfoInputs.cache
@@ -126,5 +128,3 @@ C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.pdb
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.genruntimeconfig.cache
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\ref\Enset.Infrastructure.dll
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Application.dll
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Application.pdb

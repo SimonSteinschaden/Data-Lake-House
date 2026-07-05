@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Enset.Worker.Import")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b40bdaf621a00d85c14755b8ec06516f92889e8a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1b2c7b2c1d6694525160c2121cda9d573627b07f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Enset.Worker.Import")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Enset.Worker.Import")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

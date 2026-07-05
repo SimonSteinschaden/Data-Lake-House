@@ -1,12 +1,28 @@
 # Architekturüberblick
 
-Die aktuelle Repository-Implementierung umfasst den technischen Kern des ENSET Data Lake House MVP.
+Die aktuelle Repository-Implementierung umfasst den Backend-Kern mit Domain, Application und Infrastructure.
+Zu den vorhandenen Projekten gehört zudem `Enset.Worker.Import` als Entwicklungs- und Test-Harness.
 
-Der Fokus liegt auf der Datenaufnahme, Datenverwaltung, Datenverarbeitung, Datenanalyse sowie der Bereitstellung standardisierter Data Products für die Business Modules des ENSET Universe.
+> Hinweis: Die folgenden PlantUML-Diagramme zeigen die Zielarchitektur. Im Vergleich dazu beschreibt der Abschnitt "Aktueller Implementierungsstand" den aktuellen Codezustand.
 
-Die aktuelle Implementierung konzentriert sich auf die Backend-Komponenten (Domain, Application und Infrastructure). Geplante Komponenten wie Benutzeroberflächen, Web API und Worker sind im Architekturdiagramm beschrieben und werden schrittweise im Rahmen des MVP umgesetzt.
+## Aktueller Implementierungsstand
 
-Das ENSET Data Lake House dient dabei nicht ausschließlich der Speicherung energierelevanter Daten. Seine Hauptaufgabe besteht darin, aus heterogenen Datenquellen qualitätsgesicherte und standardisierte Data Products bereitzustellen, welche von der ENSET Data Platform sowie zukünftigen Business Modules genutzt werden.
+- `Enset.Domain`: vollständig als reines Domainmodell vorhanden
+- `Enset.Application`: Import-bezogene DTOs, Abstraktionen, Enums und Prozessmodelle
+- `Enset.Infrastructure`: EF Core DbContext, Persistenz, Import-/Export-Reader, Service-Grundgerüste
+- `Enset.Worker.Import`: Entwickler-Harness für CSV-/Excel-Importtests, Validierung und Export
+
+## Noch nicht implementiert
+
+- ASP.NET Core Web API mit Controllern / Endpunkten
+- Produktives Frontend (Web oder Desktop)
+- Vollständiger Import-/Mapping-/Persistenz-Workflow
+- Orchestrierter ETL-Worker im Produktivbetrieb
+- Data Marketplace und Data Product Layer
+
+## Zielarchitektur
+
+Die PlantUML-Diagramme beschreiben die langfristige Zielarchitektur mit API, UI, Worker-Schichten und Storage-Zonen.
 
 ```plantuml
 

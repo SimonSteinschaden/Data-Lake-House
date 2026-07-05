@@ -2,7 +2,6 @@
 
 ## Ziel
 KPIs sollen auf mehreren Ebenen berechnet werden können:
-
 - Objektebene
 - Quartiersebene
 - Ortsebene
@@ -16,8 +15,7 @@ Damit können Energieberatung, Benchmarking und spätere Data Products sauber au
 Region
 → Municipality / Ort
 → District / Quartier
-→ Site / Objekt
-→ Building
+→ Building / Objekt
 → EnergySystem / Meter
 → MeterReading
 ```
@@ -78,7 +76,6 @@ KPIs müssen aggregierbar sein:
 
 ```text
 Gebäude-KPIs
-→ Objekt-KPIs
 → Quartier-KPIs
 → Orts-KPIs
 → Regions-KPIs
@@ -91,36 +88,20 @@ Jahresverbrauch Region =
 Summe aller Jahresverbräuche der zugehörigen Orte/Quartiere/Objekte
 ```
 
-## Technische Regel
+## Technische Daten
 
-Jeder KPI braucht:
+In der aktuellen Codebasis ist die KPI-Entity definiert als `CalculationResult` mit folgenden Feldern:
 
-- KPIType
-- ScopeLevel
-- ScopeId
-- Value
-- Unit
-- PeriodStart
-- PeriodEnd
-- CalculationMethod
-- DataQuality
-- CalculatedAt
+- `KPIType`
+- `ScopeLevel`
+- `ScopeId`
+- `Value`
+- `Unit`
+- `PeriodStart`
+- `PeriodEnd`
+- `CalculatedAt`
 
-## Beispiel CalculationResult
-
-```json
-{
-  "kpiType": "SpecificEnergyConsumption",
-  "scopeLevel": "Building",
-  "scopeId": "building-guid",
-  "value": 142.5,
-  "unit": "kWh/m2a",
-  "periodStart": "2025-01-01",
-  "periodEnd": "2025-12-31",
-  "calculationMethod": "AnnualConsumption / FloorArea",
-  "dataQuality": "Validated"
-}
-```
+Einige konzeptionelle Felder wie `CalculationMethod` und `DataQuality` sind bisher nicht als Properties implementiert.
 
 ## KPI-Entity
 
@@ -136,37 +117,42 @@ entity CalculationResult {
   Unit : string
   PeriodStart : datetime
   PeriodEnd : datetime
-  CalculationMethod : string
-  DataQuality : string
   CalculatedAt : datetime
 }
 
 entity Region
 entity Municipality
 entity District
-entity Site
 entity Building
 
 Region ||--o{ Municipality
 Municipality ||--o{ District
-District ||--o{ Site
-Site ||--o{ Building
+District ||--o{ Building
 
 CalculationResult }o..|| Region
 CalculationResult }o..|| Municipality
 CalculationResult }o..|| District
-CalculationResult }o..|| Site
 CalculationResult }o..|| Building
 
 @enduml
 ```
+
+## Benchmark-Daten
+
+Die Entity `BenchmarkDataset` ist im Code definiert als Datensatz mit:
+
+- `ScopeLevel`
+- `Region`
+- `BuildingCategory`
+- `YearRange`
+- `AvgConsumption`
+- `SampleSize`
 
 ## Wichtig für Data Products
 
 Für verkaufbare Datensätze dürfen KPIs nur anonymisiert und aggregiert verwendet werden.
 
 Geeignete Ebenen:
-
 - Quartier, wenn genügend Objekte vorhanden sind
 - Ort
 - Region
@@ -175,7 +161,6 @@ Geeignete Ebenen:
 - Nutzungstyp-Cluster
 
 Nicht geeignet:
-
 - einzelne Kunden
 - einzelne Adressen
 - einzelne Gebäude ohne Aggregation

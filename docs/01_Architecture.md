@@ -50,6 +50,7 @@ package "Application / Domain Layer" {
   [Import Service] as ImportService
   [Calculation Service] as CalcService
   [Benchmark Service] as BenchmarkService
+  [Data Product Service] as DataProductService
   [Validation Service] as ValidationService
 }
 
@@ -64,7 +65,8 @@ package "Storage Layer" {
   database "PostgreSQL\nStammdaten, Projekte,\nGebäude, Metadaten" as PostgreSQL
   database "TimescaleDB\nZeitreihen / Messwerte" as Timescale
   folder "Raw Zone\nOriginaldateien" as Raw
-  folder "Silver/Gold Zone\nkuratierte Daten" as Curated
+  folder "Curated Zone\nvalidierte Daten" as Curated
+  folder "Data Products\nstandardisierte Ergebnisse" as Products
 }
 
 package "Infrastructure" {
@@ -86,6 +88,7 @@ API --> BuildingService
 API --> ImportService
 API --> CalcService
 API --> BenchmarkService
+API --> DataProductService
 
 ImportService --> ValidationService
 CsvWorker --> ImportService
@@ -95,16 +98,30 @@ EtlWorker --> CalcService
 
 ProjectService --> PostgreSQL
 BuildingService --> PostgreSQL
+
 ImportService --> PostgreSQL
 ImportService --> Timescale
 ImportService --> Raw
+
 CalcService --> Timescale
 CalcService --> Curated
+
 BenchmarkService --> Curated
 BenchmarkService --> PostgreSQL
 
+Curated --> DataProductService
+BenchmarkService --> DataProductService
+
+DataProductService --> PostgreSQL
+DataProductService --> Products
+DataProductService --> API
+
 Raw --> AzureLake
 Curated --> AzureLake
+Products --> AzureLake
+PostgreSQL --> AzureLake
+Timescale --> AzureLake
+
 PostgreSQL --> Synology
 Timescale --> Synology
 Synology --> AzureBackup
@@ -117,12 +134,12 @@ Docker .. PostgreSQL
 Docker .. Timescale
 
 @enduml
-
+```
 '--------------------------------------------------------------------------------------
 'DATA FLOW
 '--------------------------------------------------------------------------------------
 @startuml
-title ENSET eKUT Data Lake House MVP - Datenfluss
+title ENSET Data Lake House MVP - Datenfluss
 
 actor "Energieberater" as User
 
@@ -133,9 +150,11 @@ participant "Validation Service" as Validation
 database "PostgreSQL" as PG
 database "TimescaleDB" as TS
 collections "Raw Zone" as Raw
-collections "Gold Zone" as Gold
+collections "Curated Zone" as Curated
 participant "Calculation Service" as Calc
 participant "Benchmark Service" as Bench
+participant "Data Product Service" as Product
+collections "Data Products" as Products
 
 User -> UI: Projekt/Gebäude anlegen
 UI -> API: POST /projects, /buildings
@@ -152,22 +171,26 @@ Validation -> TS: Messwerte speichern
 
 Calc -> TS: Messdaten lesen
 Calc -> PG: Gebäudedaten lesen
-Calc -> Gold: Kennzahlen speichern
+Calc -> Curated: Kennzahlen speichern
 
-Bench -> Gold: Kennzahlen lesen
+Bench -> Curated: Kennzahlen lesen
 Bench -> PG: Vergleichsgruppen lesen
-Bench -> API: Benchmark-Ergebnis
 
-API -> UI: Dashboarddaten
+Curated -> Product: Datenbasis bereitstellen
+Bench -> Product: Benchmark-Ergebnisse bereitstellen
+Product -> Products: Standardisierte Data Products erzeugen
+
+Products -> API: Data Products bereitstellen
+API -> UI: Dashboarddaten / Auswertungen
 UI -> User: Auswertung anzeigen
 
 @enduml
 
 '--------------------------------------------------------------------------------------
-'Data Marketplace
+'DATA PRODUCT LAYER / MARKETPLACE EXTENSION
 '--------------------------------------------------------------------------------------
 @startuml
-title ENSET Data Marketplace Erweiterung
+title ENSET Data Lake House - Data Product Layer und Marketplace-Erweiterung
 
 package "Data Lake House" {
   [Raw Data]
@@ -176,34 +199,49 @@ package "Data Lake House" {
 }
 
 package "Data Product Layer" {
-  [Anonymization Service]
+  [Quality Assurance]
   [Aggregation Service]
+  [Anonymization Service]
+  [Metadata Catalog]
   [Data Product Service]
-  [Pricing Service]
   [Export Service]
+  [Pricing Service]
 }
 
-package "Marketplace" {
+package "Business Modules" {
+  [Municipal Building Platform]
+  [Energy Management]
+  [Reporting]
+  [Benchmarking]
+}
+
+package "Marketplace / Data Space Extension" {
   [Marketplace API]
   [Download / Purchase API]
+  [Data Space Connector]
 }
 
-package "Customers" {
-  [eKUT Projects]
-  [External Buyers]
-}
+[Processed Data] --> [Quality Assurance]
+[KPI / Benchmark Engine] --> [Quality Assurance]
 
-[Processed Data] --> [Anonymization Service]
-[Anonymization Service] --> [Aggregation Service]
-[Aggregation Service] --> [Data Product Service]
-[Data Product Service] --> [Pricing Service]
+[Quality Assurance] --> [Aggregation Service]
+[Aggregation Service] --> [Anonymization Service]
+[Anonymization Service] --> [Metadata Catalog]
+[Metadata Catalog] --> [Data Product Service]
+
+[Data Product Service] --> [Municipal Building Platform]
+[Data Product Service] --> [Energy Management]
+[Data Product Service] --> [Reporting]
+[Data Product Service] --> [Benchmarking]
+
 [Data Product Service] --> [Export Service]
+[Data Product Service] --> [Pricing Service]
 
 [Export Service] --> [Marketplace API]
-[Marketplace API] --> [External Buyers]
+[Marketplace API] --> [Download / Purchase API]
+[Export Service] --> [Data Space Connector]
 
 @enduml
-```
 
 # Aktuelle Projektstruktur
 
@@ -234,3 +272,12 @@ Die Implementierung wurde sauber nach Clean Architecture aufgeteilt:
 - `EnsetDbContext` liegt ausschließlich in `src/Enset.Infrastructure/DBContext.cs`.
 - `ImportJob` und `DataSource` sind aktuell nicht als `DbSet` im DbContext enthalten.
 
+## Architekturprinzip
+
+Das ENSET Data Lake House dient nicht ausschließlich der Speicherung energierelevanter Daten.
+
+Sein primärer Zweck besteht darin, aus unterschiedlichsten Datenquellen standardisierte, qualitätsgesicherte und wiederverwendbare Data Products bereitzustellen.
+
+Business Modules wie die Municipal Building Platform, das Energy Management oder zukünftige Anwendungen greifen ausschließlich auf diese Data Products zu und nicht direkt auf Rohdaten oder interne Speicherstrukturen.
+
+Dadurch werden Wiederverwendbarkeit, Konsistenz sowie eine klare Trennung zwischen Datenhaltung, Datenverarbeitung und Fachanwendungen gewährleistet.

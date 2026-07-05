@@ -4,7 +4,7 @@ public class CustomerExcelRow
 {
     public int RowNumber { get; set; }
 
-    public string? InternalCustomerId { get; set; }
+    public string? InternalCustomerId { get; set; } //TODO: SQL Injection Prevention: Validate and sanitize the input to prevent SQL injection attacks.
     public string? FolderNumber { get; set; }
     public string? EKutCustomer { get; set; }
     public string? ProjectName { get; set; }

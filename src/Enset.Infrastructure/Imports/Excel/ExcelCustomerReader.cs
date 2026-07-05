@@ -16,7 +16,7 @@ public class ExcelCustomerReader : IExcelCustomerReader
 
         for (int row = 2; row <= lastRow; row++)
         {
-            yield return new CustomerImportDto
+            yield return new CustomerImportDto //TODO: SQL Injection Prevention und  Automatisches Mapping: Implementieren Sie eine Validierung und Bereinigung der Eingabedaten, um SQL-Injection-Angriffe zu verhindern. Stellen Sie sicher, dass die Daten korrekt gemappt werden, um die Integrität der importierten Kundendaten zu gewährleisten.
             {
                 CompanyName = worksheet.Cell(row, 1).GetString(),
                 PostalCode = worksheet.Cell(row, 2).GetString(),

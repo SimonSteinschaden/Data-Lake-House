@@ -3,7 +3,7 @@ namespace Enset.Application.Imports.DTOs;
 public class CustomerImportDto
 {
     // Externe Referenzen
-    public string? ExternalCustomerId { get; set; }
+    public string? ExternalCustomerId { get; set; } //TODO: SQL Injection prevention, Input validation, restliche Inputs ergänzen - zb: Notes
 
     // Unternehmen
     public string? CompanyName { get; set; }
@@ -23,4 +23,5 @@ public class CustomerImportDto
     // Kommunikation
     public string? Email { get; set; }
     public string? Phone { get; set; }
+
 }

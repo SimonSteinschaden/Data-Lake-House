@@ -1,20 +1,13 @@
+using Enset.Application.Imports.Abstractions;
+using Enset.Application.Imports.Issues;
 using Enset.Application.Imports.Models;
 using Enset.Application.Imports.Reports;
 
 namespace Enset.Application.Imports.Validation;
 
-/*TODO: Erweiterung um Prüfungen wie:
-Customer ohne Telefon/Email
-Building ohne Adresse
-Building ohne Baujahr
-Building ohne Nutzfläche
-Customer ohne Building
- -> in zugehörige Classes implementieren*/
-
-
-public static class ExcelImportValidator
+public class ExcelImportValidator : IImportValidator
 {
-    public static ImportReport Validate(
+    public ImportReport Validate(
         IReadOnlyList<CustomerExcelRow> customers,
         IReadOnlyList<BuildingExcelRow> buildings)
     {
@@ -24,27 +17,37 @@ public static class ExcelImportValidator
             BuildingCount = buildings.Count
         };
 
-        ValidateCustomers(customers, report.Errors);
-        ValidateBuildings(buildings, report.Errors);
-        ValidateCustomerBuildingRelations(customers, buildings, report.Errors);
+        ValidateCustomers(customers, report.Issues);
+        ValidateBuildings(buildings, report.Issues);
+        ValidateCustomerBuildingRelations(customers, buildings, report.Issues);
 
         return report;
     }
 
     private static void ValidateCustomers(
         IReadOnlyList<CustomerExcelRow> customers,
-        List<string> errors)
+        ICollection<ImportIssue> issues)
     {
         if (customers.Count == 0)
-            errors.Add("No customers found.");
-
-        var emptyIds = customers
-            .Where(c => string.IsNullOrWhiteSpace(c.InternalCustomerId))
-            .ToList();
-
-        foreach (var customer in emptyIds)
         {
-            errors.Add($"Customer row {customer.RowNumber}: InternalCustomerId is empty.");
+            issues.Add(new ImportIssue
+            {
+                Type = ImportIssueType.MissingCustomer,
+                Severity = ImportIssueSeverity.Error,
+                Message = "No customers found.",
+                RequiresUserDecision = false
+            });
+        }
+
+        foreach (var customer in customers.Where(c => string.IsNullOrWhiteSpace(c.InternalCustomerId)))
+        {
+            issues.Add(new ImportIssue
+            {
+                Type = ImportIssueType.MissingCustomer,
+                Severity = ImportIssueSeverity.Error,
+                Message = $"Customer row {customer.RowNumber}: InternalCustomerId is empty.",
+                RequiresUserDecision = false
+            });
         }
 
         var duplicateIds = customers
@@ -55,24 +58,55 @@ public static class ExcelImportValidator
         foreach (var group in duplicateIds)
         {
             var rows = string.Join(", ", group.Select(c => c.RowNumber));
-            errors.Add($"Duplicate CustomerID '{group.Key}' found in rows: {rows}.");
+
+            issues.Add(new ImportIssue
+            {
+                Type = ImportIssueType.DuplicateCustomer,
+                Severity = ImportIssueSeverity.Error,
+                Message = $"Duplicate CustomerID '{group.Key}' found in rows: {rows}.",
+                RequiresUserDecision = true
+            });
         }
     }
 
     private static void ValidateBuildings(
         IReadOnlyList<BuildingExcelRow> buildings,
-        List<string> errors)
+        ICollection<ImportIssue> issues)
     {
         if (buildings.Count == 0)
-            errors.Add("No buildings found.");
+        {
+            issues.Add(new ImportIssue
+            {
+                Type = ImportIssueType.MissingBuilding,
+                Severity = ImportIssueSeverity.Error,
+                Message = "No buildings found.",
+                RequiresUserDecision = false
+            });
+        }
 
         foreach (var building in buildings)
         {
             if (string.IsNullOrWhiteSpace(building.InternalBuildingId))
-                errors.Add($"Building row {building.RowNumber}: InternalBuildingId is empty.");
+            {
+                issues.Add(new ImportIssue
+                {
+                    Type = ImportIssueType.MissingBuilding,
+                    Severity = ImportIssueSeverity.Error,
+                    Message = $"Building row {building.RowNumber}: InternalBuildingId is empty.",
+                    RequiresUserDecision = false
+                });
+            }
 
             if (string.IsNullOrWhiteSpace(building.InternalCustomerId))
-                errors.Add($"Building row {building.RowNumber}: InternalCustomerId is empty.");
+            {
+                issues.Add(new ImportIssue
+                {
+                    Type = ImportIssueType.MissingCustomer,
+                    Severity = ImportIssueSeverity.Error,
+                    Message = $"Building row {building.RowNumber}: InternalCustomerId is empty.",
+                    RequiresUserDecision = false
+                });
+            }
         }
 
         var duplicateIds = buildings
@@ -83,14 +117,21 @@ public static class ExcelImportValidator
         foreach (var group in duplicateIds)
         {
             var rows = string.Join(", ", group.Select(b => b.RowNumber));
-            errors.Add($"Duplicate BuildingID '{group.Key}' found in rows: {rows}.");
+
+            issues.Add(new ImportIssue
+            {
+                Type = ImportIssueType.DuplicateBuilding,
+                Severity = ImportIssueSeverity.Error,
+                Message = $"Duplicate BuildingID '{group.Key}' found in rows: {rows}.",
+                RequiresUserDecision = true
+            });
         }
     }
 
     private static void ValidateCustomerBuildingRelations(
         IReadOnlyList<CustomerExcelRow> customers,
         IReadOnlyList<BuildingExcelRow> buildings,
-        List<string> errors)
+        ICollection<ImportIssue> issues)
     {
         var validCustomerIds = customers
             .Where(c => !string.IsNullOrWhiteSpace(c.InternalCustomerId))
@@ -106,8 +147,13 @@ public static class ExcelImportValidator
 
             if (!validCustomerIds.Contains(customerId))
             {
-                errors.Add(
-                    $"Building row {building.RowNumber}: references unknown CustomerID '{customerId}'.");
+                issues.Add(new ImportIssue
+                {
+                    Type = ImportIssueType.MissingCustomer,
+                    Severity = ImportIssueSeverity.Error,
+                    Message = $"Building row {building.RowNumber}: references unknown CustomerID '{customerId}'.",
+                    RequiresUserDecision = false
+                });
             }
         }
     }

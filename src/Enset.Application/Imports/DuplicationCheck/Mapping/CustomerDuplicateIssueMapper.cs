@@ -12,8 +12,8 @@ public static class CustomerDuplicateIssueMapper
         return DuplicateCandidateIssueMapper.ToImportIssue(
             candidate,
             ImportIssueType.DuplicateCustomer,
-            candidate.First.CompanyName,
-            candidate.Second.CompanyName,
+            candidate.First.CompanyName ?? string.Empty,
+            candidate.Second.CompanyName ?? string.Empty,
             nameof(CustomerImportDto.CompanyName));
     }
 }

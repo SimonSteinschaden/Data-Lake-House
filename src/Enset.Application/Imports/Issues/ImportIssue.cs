@@ -3,11 +3,13 @@ namespace Enset.Application.Imports.Issues;
 
 public class ImportIssue
 {
-    public ImportIssueType Type { get; set; }
+    public Guid? EntityId { get; init; }
 
-    public ImportIssueSeverity Severity { get; set; }
+    public ImportIssueType Type { get; init; }
 
-    public string Message { get; set; } = string.Empty;
+    public ImportIssueSeverity Severity { get; init; }
+
+    public string Message { get; init; } = string.Empty;
 
     public double? SimilarityScore { get; set; }
 

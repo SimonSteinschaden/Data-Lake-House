@@ -1,8 +1,9 @@
 using Enset.Application.Imports.DTOs;
 using Enset.Application.Imports.DuplicationCheck.Validation;
 using Enset.Application.Imports.Issues;
+using Enset.Application.Imports.DuplicationCheck.Abstractions;
 
-namespace Enset.Application.Imports.Services;
+namespace Enset.Application.Imports.DuplicationCheck.Services;
 
 public class ImportValidationService : IImportValidationService
 {

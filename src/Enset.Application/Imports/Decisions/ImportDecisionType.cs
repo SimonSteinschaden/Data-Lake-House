@@ -1,3 +1,5 @@
+namespace Enset.Application.Imports.Decisions;
+
 public enum ImportDecisionType
 {
     Continue,

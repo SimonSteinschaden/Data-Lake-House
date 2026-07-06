@@ -4,11 +4,32 @@ using Enset.Application.Imports.Models;
 
 namespace Enset.Infrastructure.Imports.Excel;
 
-public class ExcelWorkbookReader : IExcelReader
+public class ExcelWorkbookReader : IExcelReader, IExcelWorkbookReader
 {
+    public ImportWorkbook Read(Stream stream)
+    {
+        using var memoryStream = new MemoryStream();
+        stream.CopyTo(memoryStream);
+        memoryStream.Position = 0;
+
+        using var workbook = new XLWorkbook(memoryStream);
+
+        return new ImportWorkbook
+        {
+            Customers = ReadCustomers(workbook),
+            Buildings = ReadBuildings(workbook)
+        };
+    }
+
     public IReadOnlyList<CustomerExcelRow> ReadCustomers(string filePath)
     {
         using var workbook = OpenWorkbookSnapshot(filePath);
+
+        return ReadCustomers(workbook);
+    }
+
+    private static IReadOnlyList<CustomerExcelRow> ReadCustomers(XLWorkbook workbook)
+    {
 
         var worksheet = workbook.Worksheet("Customers");
         var table = worksheet.Table("Customer");
@@ -51,11 +72,17 @@ public class ExcelWorkbookReader : IExcelReader
     }
 
     public IReadOnlyList<BuildingExcelRow> ReadBuildings(string filePath)
-{
-    using var workbook = OpenWorkbookSnapshot(filePath);
+    {
+        using var workbook = OpenWorkbookSnapshot(filePath);
 
-    var worksheet = workbook.Worksheet("Buildings");
-    var table = worksheet.Table("Tabelle2");
+        return ReadBuildings(workbook);
+    }
+
+    private static IReadOnlyList<BuildingExcelRow> ReadBuildings(XLWorkbook workbook)
+    {
+
+        var worksheet = workbook.Worksheet("Buildings");
+        var table = worksheet.Table("Tabelle2");
 
     var rows = new List<BuildingExcelRow>();
 
@@ -105,8 +132,8 @@ public class ExcelWorkbookReader : IExcelReader
         });
     }
 
-    return rows;
-}
+        return rows;
+    }
 
     private static XLWorkbook OpenWorkbookSnapshot(string filePath)
     {

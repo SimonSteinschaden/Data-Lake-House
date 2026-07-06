@@ -1,3 +1,7 @@
+using Enset.Domain.Common;
+
+namespace Enset.Domain.Analytics;
+
 public class BenchmarkDataset : BaseEntity
 {
     public ScopeLevel ScopeLevel { get; set; }

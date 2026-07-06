@@ -1,7 +1,14 @@
+
+using Enset.Domain.Common;
+using Enset.Domain.Buildings;
+
+namespace Enset.Domain.Energy;
+
 public class Meter : BaseEntity
 {
-    public Guid BuildingId { get; set; }
-    public Building Building { get; set; } = null!;
+    public Guid? BuildingId { get; set; }
+    public Building? Building { get; set; }
+    public string MeterNumber { get; set; } = string.Empty;
 
     public MeterType Type { get; set; }
 

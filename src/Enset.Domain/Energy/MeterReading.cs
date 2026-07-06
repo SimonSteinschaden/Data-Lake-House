@@ -1,4 +1,6 @@
-public class MeterReading : BaseEntity
+namespace Enset.Domain.Energy;
+
+public class MeterReading
 {
     public Guid MeterId { get; set; }
     public Meter Meter { get; set; } = null!;
@@ -10,4 +12,10 @@ public class MeterReading : BaseEntity
     public string Unit { get; set; } = "kWh";
 
     public DataQuality QualityFlag { get; set; }
+
+    public Guid? CustomerId { get; set; }
+
+    public Guid? BuildingId { get; set; }
+
+    public Guid? SourceImportJobId { get; set; }
 }

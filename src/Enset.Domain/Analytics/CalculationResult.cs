@@ -1,3 +1,7 @@
+using Enset.Domain.Common;
+
+namespace Enset.Domain.Analytics;
+
 public class CalculationResult : BaseEntity
 {
     public KPIType KPIType { get; set; }

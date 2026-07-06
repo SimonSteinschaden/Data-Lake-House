@@ -1,0 +1,16 @@
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\Enset.Application.csproj.AssemblyReference.cache
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\Enset.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\Enset.Application.AssemblyInfoInputs.cache
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\Enset.Application.AssemblyInfo.cs
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\Enset.Application.csproj.CoreCompileInputs.cache
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\Enset.Application.sourcelink.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\bin\Debug\net10.0\Enset.Application.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\Enset.Ap.9BA3188D.Up2Date
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\refint\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Application\obj\Debug\net10.0\ref\Enset.Application.dll

@@ -1,3 +1,10 @@
+using Enset.Domain.Common;
+using Enset.Domain.Customers;
+using Enset.Domain.Buildings;
+using Enset.Domain.Documents;
+
+namespace Enset.Domain.Projects;
+
 public class Project : BaseEntity
 {
     public Guid CustomerId { get; set; }
@@ -14,5 +21,4 @@ public class Project : BaseEntity
 
     public ICollection<Document> Documents { get; set; } = new List<Document>();
 
-    public ICollection<ImportJob> ImportJobs { get; set; } = new List<ImportJob>();
 }

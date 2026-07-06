@@ -13,7 +13,6 @@ public class ExcelImportValidator : IImportValidator
     {
         var report = new ImportReport
         {
-            CustomerCount = customers.Count,
             BuildingCount = buildings.Count
         };
 

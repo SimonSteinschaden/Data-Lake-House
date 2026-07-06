@@ -1,177 +1,112 @@
-﻿```plantuml
-# Import-Architektur
+# Importworkflow
 
-Dieses Dokument beschreibt die geplante Import-, Mapping- und Exportarchitektur.
-Aktuell ist im Repository eine Import-Pipeline mit DTOs, Abstraktionen und konkreter Infrastruktur vorhanden.
+## Aktiver Analysepfad
 
-@startuml
-title ENSET Import-, Mapping- und Exportarchitektur
+Der aktuelle Worker führt ausschließlich eine Importanalyse aus:
 
-actor "Interner Nutzer" as User
-actor "Zoho CRM" as Zoho
-actor "XML Datei" as XmlFile
-actor "Excel/XLSM Datei" as ExcelFile
-actor "Externer Käufer\nData Product" as Buyer
-
-package "Input Sources" {
-  [XML Import File] as XML
-  [Excel/XLSM Import File] as Excel
-  [Zoho CRM API] as ZohoApi
-}
-
-package "Connector Layer" {
-  [XmlImportConnector] as XmlConnector
-  [ExcelImportConnector] as ExcelConnector
-  [ZohoCrmConnector] as ZohoConnector
-}
-
-package "Mapping Layer" {
-  [External DTOs] as DTOs
-  [Field Mapping Service] as Mapping
-  [Unit Normalization Service] as UnitNorm
-  [Validation Service] as Validation
-}
-
-package "Domain Model" {
-  [Customer]
-  [Project]
-  [Region]
-  [Municipality]
-  [District]
-  [Building]
-  [EnergySystem]
-  [Meter]
-  [MeterReading]
-  [Document]
-  [ImportJob]
-  [DataSource]
-}
-
-package "Storage Layer" {
-  database "PostgreSQL\noperative Daten" as PostgreSQL
-  database "TimescaleDB\nZeitreihen" as Timescale
-  folder "Raw Zone\nOriginal XML/XLSM/API Payloads" as Raw
-  folder "Silver Zone\nvalidierte Daten" as Silver
-  folder "Gold Zone\nKPIs / Benchmarks" as Gold
-}
-
-package "Data Product Layer" {
-  [Anonymization Service] as Anon
-  [Aggregation Service] as Agg
-  [Data Product Service] as DataProduct
-  [Export Service] as Export
-}
-
-package "Output Formats" {
-  [XML Export] as XmlExport
-  [CSV Export] as CsvExport
-  [JSON/API Export] as JsonExport
-}
-
-User --> XML
-User --> Excel
-Zoho --> ZohoApi
-
-XML --> XmlConnector
-Excel --> ExcelConnector
-ZohoApi --> ZohoConnector
-
-XmlConnector --> Raw
-ExcelConnector --> Raw
-ZohoConnector --> Raw
-
-XmlConnector --> DTOs
-ExcelConnector --> DTOs
-ZohoConnector --> DTOs
-
-DTOs --> Mapping
-Mapping --> UnitNorm
-UnitNorm --> Validation
-
-Validation --> Customer
-Validation --> Project
-Validation --> Region
-Validation --> Municipality
-Validation --> District
-Validation --> Building
-Validation --> EnergySystem
-Validation --> Meter
-Validation --> MeterReading
-Validation --> Document
-Validation --> ImportJob
-Validation --> DataSource
-
-Customer --> PostgreSQL
-Project --> PostgreSQL
-Region --> PostgreSQL
-Municipality --> PostgreSQL
-District --> PostgreSQL
-Building --> PostgreSQL
-EnergySystem --> PostgreSQL
-Meter --> PostgreSQL
-MeterReading --> Timescale
-Document --> PostgreSQL
-ImportJob --> PostgreSQL
-DataSource --> PostgreSQL
-
-PostgreSQL --> Silver
-Timescale --> Silver
-Silver --> Gold
-
-Gold --> Anon
-Anon --> Agg
-Agg --> DataProduct
-DataProduct --> Export
-
-Export --> XmlExport
-Export --> CsvExport
-Export --> JsonExport
-
-XmlExport --> User
-CsvExport --> Buyer
-JsonExport --> Buyer
-
-@enduml
+```text
+Read
+  -> Map
+  -> Validate
+  -> DuplicateCheck
+  -> ImportDecisionEngine
+  -> ImportReport
 ```
 
-# Aktuelle Import-Architektur
+Es findet in diesem Pfad kein Schreibzugriff statt.
 
-## Verantwortlichkeiten nach Layer
+### 1. Read
 
-- src/Enset.Domain/ enthält das reine Domain-Modell (Meter, MeterReading, Building, Project, Customer, usw.).
-- src/Enset.Application/ enthält Import-DTOs, Enums, Models und Abstraktionen.
-- src/Enset.Infrastructure/ enthält den EF Core EnsetDbContext, konkrete Reader-/Mapper-Implementierungen und Services.
+- `IImportReader` ist der Application-Port für eine Importquelle.
+- `ExcelImportReader` ist der Infrastructure-Adapter für einen Dateipfad.
+- `ExcelWorkbookReader` öffnet die Arbeitsmappe mit ClosedXML und erzeugt ein `ImportWorkbook` mit `CustomerExcelRow` und `BuildingExcelRow`.
+- ClosedXML ist nur in `Enset.Infrastructure` referenziert.
 
-## Relevante Dateien
+### 2. Map
 
-- src/Enset.Application/Imports/DTOs/MeterImportDto.cs
-- src/Enset.Application/Imports/DTOs/MeterReadingImportDto.cs
-- src/Enset.Application/Imports/Abstractions/IMeterReadingReader.cs
-- src/Enset.Application/Imports/Abstractions/IMeterReadingReaderFactory.cs
-- src/Enset.Application/Imports/Abstractions/IMeterLookupService.cs
-- src/Enset.Application/Imports/Abstractions/IMeterReadingMapper.cs
-- src/Enset.Application/Imports/Enums/ImportSourceType.cs
-- src/Enset.Application/Imports/Enums/ImportStatus.cs
-- src/Enset.Application/Imports/Enums/RawDataObjectType.cs
-- src/Enset.Application/Imports/Models/ImportJob.cs
-- src/Enset.Application/Imports/Models/RawDataObject.cs
+- `IImportMapper` abstrahiert das Mapping.
+- `CustomerImportMapper` überführt Customer-Zeilen in `CustomerImportDto`.
+- Die DTOs werden im späteren `ImportReport` bereitgestellt.
 
-- src/Enset.Infrastructure/DBContext.cs
-- src/Enset.Infrastructure/Imports/CsvMeterReadingReader.cs
-- src/Enset.Infrastructure/Imports/Factory/MeterReadingReaderFactory.cs
-- src/Enset.Infrastructure/Imports/Services/MeterLookupService.cs
-- src/Enset.Infrastructure/Imports/Mapping/MeterReadingMapper.cs
+### 3. Validate
 
-## Architekturelle Fakten
+- `IImportValidator` abstrahiert die Importvalidierung.
+- `ExcelImportValidator` prüft aktuell leere und doppelte interne Customer-/Building-IDs sowie Customer-Referenzen von Gebäuden.
+- Befunde werden als typisierte `ImportIssue`-Objekte im Report gesammelt.
 
-- MeterReading ist ein Domain-Zeitreihenobjekt und erbt nicht von BaseEntity.
-- Meter erbt von BaseEntity und nutzt MeterNumber als fachliche Identität.
-- MeterId bleibt die technische interne GUID.
-- Importdateien dürfen MeterNumber verwenden, nicht aber die interne MeterId.
-- EnsetDbContext konfiguriert den Composite Key MeterId + Timestamp für MeterReading.
-- ImportJob und DataSource sind aktuell nicht Teil eines DbSet in EnsetDbContext.
+### 4. DuplicateCheck
 
-## Laufender Zustand
+- `IDuplicationCheckService` ist der Port des Moduls.
+- `DuplicationCheckService` prüft aktuell Customer-Dubletten.
+- Interne `DuplicateCandidate<CustomerImportDto>` werden über einen Mapper in `ImportIssue` überführt.
+- `DuplicateCandidate` verlässt das DuplicationCheck-Modul nicht.
 
-- Build der drei Projekte ist möglich.
-- Enset.Domain, Enset.Application und Enset.Infrastructure sind aktuell fehlerfrei kompilierbar.
+### 5. ImportReport
+
+`ImportCoordinator.RunAsync` liefert einen `ImportReport` mit:
+
+- `ImportId` und `CreatedAt`;
+- gemappten `Customers`;
+- `Issues` mit stabilen `IssueId`-Werten;
+- technischer `Decision` aus dem `ImportDecisionEngine`;
+- Statistiken wie Customer-, Issue-, Error- und Warning-Count.
+
+`ImportDecisionEngine` liefert `Abort`, sobald der Analyse-Report mindestens ein Error-/Critical-Issue enthält, sonst `Continue`. Das ist eine technische Analyseentscheidung und keine Benutzerfreigabe.
+
+## Vorbereiteter Resolution- und Schreibpfad
+
+```text
+ImportReport
+  -> ApplyResolutionService
+  -> ImportWriteContext
+  -> ImportWriteGate
+  -> IImportWriter
+```
+
+### ApplyResolutionService
+
+`IApplyResolutionService` und `ApplyResolutionService` sind implementiert. Der Service:
+
+- ordnet Benutzerentscheidungen über `IssueId` zu;
+- akzeptiert nur Issues mit `RequiresUserDecision`;
+- validiert ResolutionAction und benutzerdefinierte Werte;
+- setzt `ResolutionAction`, `CustomResolvedValue` und `IsResolved`;
+- erzeugt einen `ImportWriteContext` mit Customers, Issues, aktueller technischer Entscheidung und Benutzerbestätigung.
+
+Es gibt noch keine Persistenz, API oder UI für Reports und Entscheidungen.
+
+### WriteGate
+
+`ImportWriteGate` schreibt selbst keine Daten. Es verweigert die Freigabe, wenn:
+
+- die Context-Decision `Abort` ist;
+- die Benutzerbestätigung fehlt;
+- mindestens ein entscheidungspflichtiges Issue ungelöst ist.
+
+### Writer
+
+- `IImportWriter` ist der Application-Port.
+- `ExcelImportWriter` ist ein vorhandener Infrastructure-Adapter.
+- `ExcelWorkbookWriter` führt die konkrete ClosedXML-Aktualisierung aus.
+- Der aktive Worker instanziiert oder verwendet diese Writer derzeit nicht.
+- Database- und Raw-Zone-Writer fehlen.
+
+## Logging
+
+Der Coordinator protokolliert über `IImportLogger`. Im Worker wird dafür `ConsoleImportLogger` verwendet. Eine strukturierte produktive Logging-Infrastruktur ist noch offen.
+
+## Testwerkzeuge und Nebenpfade
+
+- `DuplicationResolutionRunner` bleibt als auskommentiertes Entwickler-Testwerkzeug erhalten.
+- `ConfiguredExcelImportReader` ist ein alternativer Worker-Adapter über `IExcelReader`.
+- CSV-MeterReading-Reader, Factory, Lookup und Mapper existieren, gehören aber nicht zum aktiven Excel-Customer-Analysepfad.
+
+## Noch offen
+
+- persistente Ablage und Wiederabruf von `ImportReport`;
+- API-/UI-gesteuerte Resolution;
+- produktive Verdrahtung `ApplyResolutionService -> WriteGate -> Writer`;
+- Audit Trail mit Benutzeridentität und Zeitstempel;
+- transaktionaler Database-Writer und unveränderliche Raw-Kopie;
+- durchgängige Building-, Meter- und MeterReading-Pipeline;
+- automatisierte Tests für Coordinator, ResolutionService und WriteGate.

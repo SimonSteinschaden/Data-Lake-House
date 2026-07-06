@@ -1,30 +1,64 @@
-# Data-Lake-House
-Data Lake House für ENSET Universe
+# ENSET Data Lake House
+
+Backend-Prototyp für das ENSET Data Lake House. Die verbindliche Zielarchitektur ist in der [Architecture Baseline v1.0](docs/Decisions/ARCHITECTURE_REVIEW_V1_0.md) festgehalten. Der aktuelle Implementierungsstand ist im [Architecture Review v1.1](docs/Decisions/ARCHITECTURE_REVIEW_V1_1.md) dokumentiert.
 
 ## Aktueller Stand
-- Backend-Schichten: `Enset.Domain`, `Enset.Application`, `Enset.Infrastructure`
-- Entwickler-Test-Harness: `Enset.Worker.Import`
-- Implementiert:
-  - Domainmodell mit Kunden, Projekten, Gebäuden, Energieanlagen, Zählern und Zeitreihen
-  - Import-Abstraktionen, DTOs, Reader-Factory und einfache CSV-/Excel-Leser
-  - EF Core Persistenz mit PostgreSQL/TimescaleDB-kompatiblen `MeterReadings`
-  - Excel-Export-Utilities und grundsätzliche Import-Validierungs-Tools
-- Offen:
-  - produktive ASP.NET Core API / HTTP-Endpunkte
-  - Web- oder Desktop-Frontend
-  - produktiver Worker / orchestrierter ETL-Workflow
-  - vollständige Import-/Mapping-/Persistenz-Pipeline
-  - Data Marketplace
+
+Implementiert sind:
+
+- vier .NET-10-Projekte: `Enset.Domain`, `Enset.Application`, `Enset.Infrastructure` und `Enset.Worker`;
+- ein Application-gesteuerter Analyseworkflow für Excel-Importe;
+- die Pipeline `Read -> Map -> Validate -> DuplicateCheck -> ImportReport`;
+- strukturierte `ImportIssue`- und `ImportReport`-Modelle;
+- `ApplyResolutionService`, `ImportWriteContext` und `ImportWriteGate` als Bausteine des nachgelagerten Freigabepfads;
+- Excel-Reader und Excel-Writer als Infrastructure-Adapter mit ClosedXML;
+- EF-Core-Persistenz für das vorhandene Domainmodell mit PostgreSQL/Npgsql.
+
+Der Worker führt derzeit ausschließlich die Importanalyse aus und gibt den Report in der Konsole aus. Er schreibt keine Importdaten.
+
+Noch offen sind insbesondere REST API, React UI, persistente ImportReports, produktiver Resolution-/Write-Ablauf, Database- und Raw-Zone-Writer, Background Jobs, Authentifizierung, Importhistorie und automatisierte Tests.
+
+## Importablauf
+
+Aktiv ausgeführt:
+
+```text
+ExcelImportReader
+  -> ImportCoordinator
+  -> Read -> Map -> Validate -> DuplicateCheck
+  -> ImportReport
+  -> Konsolenausgabe
+```
+
+Vorbereitet, aber noch nicht im Worker verdrahtet:
+
+```text
+ImportReport
+  -> ApplyResolutionService
+  -> ImportWriteContext
+  -> ImportWriteGate
+  -> IImportWriter
+```
 
 ## Technologie
+
 - .NET 10
 - Entity Framework Core 10
 - Npgsql / PostgreSQL
-- TimescaleDB-kompatibles Zeitreihenmodell
-- ClosedXML für Excel-Integration
+- ClosedXML ausschließlich in `Enset.Infrastructure`
 
-## Struktur
-- `src/Enset.Domain/` enthält das reine Domain-Modell
-- `src/Enset.Application/` enthält Import-DTOs, Abstraktionen und Prozessmodelle
-- `src/Enset.Infrastructure/` enthält Persistenz, Import-/Export-Infrastruktur und konkrete Services
-- `src/Enset.Worker.Import/` enthält einen Entwickler-Test-Harness für CSV-/Excel-Importe
+## Projektstruktur
+
+- `src/Enset.Domain/`: Domain-Entities und fachliche Basistypen
+- `src/Enset.Application/`: Import-Use-Case, Ports, DTOs, Validierung, DuplicationCheck, Entscheidungen und WriteGate
+- `src/Enset.Infrastructure/`: EF Core, PostgreSQL/Npgsql sowie konkrete Datei-Adapter
+- `src/Enset.Worker/`: Composition Root und Konsolen-Testpfad
+- `docs/`: IST-Dokumentation, Baseline und Roadmap
+
+## Build
+
+```powershell
+dotnet build src/Enset.Worker/Enset.Worker.csproj --no-restore
+```
+
+Letzter dokumentierter Stand: erfolgreich, 0 Warnungen, 0 Fehler.

@@ -4,11 +4,21 @@ namespace Enset.Application.Imports.Decisions;
 
 public static class ImportDecisionEngine
 {
-    public static ImportDecisionType Decide(ImportReport report)
+    public static ImportDecision Decide(ImportReport report)
     {
         if (report.HasErrors)
-            return ImportDecisionType.Abort;
+        {
+            return new ImportDecision
+            {
+                Type = ImportDecisionType.Abort,
+                Reason = "The import contains one or more errors."
+            };
+        }
 
-        return ImportDecisionType.Continue;
+        return new ImportDecision
+        {
+            Type = ImportDecisionType.Continue,
+            Reason = "The import contains no errors."
+        };
     }
 }

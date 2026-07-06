@@ -1,6 +1,8 @@
+using Enset.Application.Imports.Reports;
+
 namespace Enset.Application.Imports.Abstractions;
 
 public interface IImportCoordinator
 {
-    Task RunAsync(CancellationToken cancellationToken = default);
+    Task<ImportReport> RunAsync(CancellationToken cancellationToken = default);
 }

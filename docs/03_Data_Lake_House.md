@@ -1,36 +1,37 @@
 # Data Lake House
 
-## Ziel
-Das Data Lake House soll strukturierte Energieberatungsdaten, Gebäudedaten und Zeitreihen zusammenführen.
-Es ist als Basis für Analysen, Benchmarking und spätere Data Products gedacht.
+## Zweck
 
-## Aktueller Zustand
+Das ENSET Data Lake House soll strukturierte Energieberatungs-, Gebäude- und Zeitreihendaten zusammenführen. Die verbindliche Zieldefinition bleibt die Architecture Baseline v1.0.
 
-Im Repository sind aktuell nur die Backend-Schichten implementiert:
-- Reines Domainmodell (`Enset.Domain`)
-- Import-Abstraktionen, DTOs und Modelle (`Enset.Application`)
-- EF Core-Persistenz, Reader, Mapper und Services (`Enset.Infrastructure`)
-- Entwickler-Test-Harness für CSV-/Excel-Importe (`Enset.Worker.Import`)
+## Aktuell implementiert
 
-Eine physische Data Lake Struktur mit Raw/Silver/Gold Zones ist derzeit nur konzeptionell beschrieben, aber nicht als separate Storage Layer im Code umgesetzt.
+- Domainmodell für Customers, Projekte, Gebäude, Energiesysteme, Zähler und Messwerte;
+- EF-Core-Context mit PostgreSQL/Npgsql-Unterstützung;
+- TimescaleDB-kompatibles Zeitreihenmodell für `MeterReading`;
+- Excel- und CSV-nahe Importadapter;
+- Application-gesteuerte Excel-Importanalyse;
+- vorbereitete Analyse-Entities `CalculationResult` und `BenchmarkDataset`.
 
-## Geplante Datenzonen
+## Zonenstatus
 
-- Raw Zone: Originaldateien, Import-Rohdaten
-- Silver Zone: validierte, normalisierte Daten
-- Gold Zone: KPIs, Benchmark-Datasets und Data Products
+| Zone/Baustein | Status | Befund |
+|---|---|---|
+| Raw Zone | offen | `RawDataObject` existiert, aber kein Store oder Writer |
+| Curated/Silver | offen | Domain-Persistenz existiert, jedoch kein freigegebener Curated-Importpfad |
+| Data Products/Gold | offen | keine Verträge, Publisher oder Produktpersistenz |
+| PostgreSQL | teilweise | DbContext und Migrationen vorhanden, produktiver Importwriter fehlt |
+| TimescaleDB | teilweise | kompatibles Modell vorhanden, Hypertable-Betrieb nicht nachgewiesen |
 
-## Implementierte Kernbausteine
+## Abgrenzung
 
-- `MeterReading` als Zeitreihendaten mit `MeterId + Timestamp` als Schlüssel
-- `Meter` mit fachlicher Identität `MeterNumber`
-- `Customer`, `Project`, `Building`, `EnergySystem`, `Document`
-- `CalculationResult` und `BenchmarkDataset` als vorbereitete Analyse-Entities
+Der derzeitige `ImportReport` ist ein flüchtiges Analyseergebnis und kein persistiertes Data Product. Ebenso sind `CalculationResult` und `BenchmarkDataset` vorbereitete Entities, aber noch keine versionierten Data Products.
 
-## Noch offen
+## Verbleibende Arbeiten
 
-- echtes Data Lake Storage-Layout
-- automatisierte Raw/Silver/Gold-Pipeline
-- exportfähige Data Products
-- API und Frontend
-- persistente ImportJob-/DataSource-Entitäten im DbContext
+- unveränderliche Raw-Ablage und Provenance;
+- transaktionaler Curated-/Database-Writer;
+- Report- und Importhistorien-Persistenz;
+- Background Jobs und Wiederanlauf;
+- Berechnungs-, QA- und Publikationspipeline;
+- Data-Product-Ports und standardisierte Ausgabe.

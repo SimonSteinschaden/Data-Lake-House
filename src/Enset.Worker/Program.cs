@@ -2,7 +2,6 @@ using Enset.Application.Imports.Coordination;
 using Enset.Application.Imports.DuplicationCheck.Services;
 using Enset.Application.Imports.Mapping;
 using Enset.Application.Imports.Validation;
-using Enset.Application.Imports.WriteGate;
 using Enset.Infrastructure.Imports.Excel;
 using Enset.Worker;
 using Enset.Worker.Logging;
@@ -25,28 +24,32 @@ if (!File.Exists(sourceFile))
     return;
 }
 
-var outputFile = Path.Combine(
-    Path.GetDirectoryName(sourceFile)!,
-    $"{Path.GetFileNameWithoutExtension(sourceFile)}_imported{Path.GetExtension(sourceFile)}");
-
-File.Copy(sourceFile, outputFile, overwrite: true);
-
 var reader = new ExcelImportReader(
     new ExcelWorkbookReader(),
     sourceFile);
-
-IExcelWorkbookWriter workbookWriter =
-    new ExcelWorkbookWriter(outputFile);
 
 var coordinator = new ImportCoordinator(
     reader,
     new CustomerImportMapper(),
     new ExcelImportValidator(),
     new DuplicationCheckService(),
-    new ImportWriteGate(),
-    new ExcelImportWriter(workbookWriter),
     new ConsoleImportLogger());
 
 var runner = new ImportRunner(coordinator);
 
-await runner.RunAsync();
+var report = await runner.RunAsync();
+
+Console.WriteLine();
+Console.WriteLine($"ImportId: {report.ImportId}");
+Console.WriteLine($"CreatedAt: {report.CreatedAt:O}");
+Console.WriteLine($"Decision: {report.Decision.Type} ({report.Decision.Reason})");
+Console.WriteLine($"Customers: {report.CustomerCount}");
+Console.WriteLine(
+    $"Issues: {report.IssueCount} " +
+    $"({report.ErrorCount} errors, {report.WarningCount} warnings)");
+
+foreach (var issue in report.Issues)
+{
+    Console.WriteLine(
+        $"{issue.IssueId} | {issue.Type} | {issue.Severity} | {issue.Message}");
+}

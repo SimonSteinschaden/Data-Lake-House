@@ -22,3 +22,11 @@ C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Domain\obj\Debug\net10.0\refint\Enset.Domain.dll
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Domain\obj\Debug\net10.0\Enset.Domain.pdb
 C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Domain\obj\Debug\net10.0\ref\Enset.Domain.dll
+C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Domain\obj\Debug\net10.0\Enset.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Domain\obj\Debug\net10.0\Enset.Domain.AssemblyInfoInputs.cache
+C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Domain\obj\Debug\net10.0\Enset.Domain.AssemblyInfo.cs
+C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Domain\obj\Debug\net10.0\Enset.Domain.csproj.CoreCompileInputs.cache
+C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Domain\obj\Debug\net10.0\Enset.Domain.sourcelink.json
+C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Domain\obj\Debug\net10.0\Enset.Domain.dll
+C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Domain\obj\Debug\net10.0\refint\Enset.Domain.dll
+C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Domain\obj\Debug\net10.0\Enset.Domain.pdb

@@ -1,79 +1,35 @@
-    
-    /*private static void RunCustomerDuplicationResolution(
-        List<CustomerImportDto> customers)
+using Enset.Application.Imports.Abstractions;
+using Enset.Application.Imports.Reports;
+using Enset.Application.Imports.Resolution;
+using Enset.Application.Imports.WriteGate;
+
+namespace Enset.Worker.Tests;
+
+/// <summary>
+/// Developer test harness that deliberately uses the same resolution and commit
+/// services as API and future UI clients.
+/// </summary>
+public static class DuplicationResolutionRunner
+{
+    public static async Task<ImportCommitResult> RunAsync(
+        ImportReport report,
+        IReadOnlyCollection<ImportIssueResolution> resolutions,
+        ImportCommitRequest commitRequest,
+        IApplyResolutionService resolutionService,
+        IImportReportRepository reports,
+        IImportCommitService commitService,
+        CancellationToken cancellationToken = default)
     {
-        Console.WriteLine();
-        Console.WriteLine("========== DUPLICATION CHECK ==========");
+        ArgumentNullException.ThrowIfNull(report);
+        ArgumentNullException.ThrowIfNull(commitRequest);
 
-        var validator = new CustomerDuplicateValidator();
+        resolutionService.Apply(
+            report,
+            resolutions,
+            commitRequest.UserId,
+            commitRequest.Timestamp);
 
-        var duplicateCandidates = validator.FindDuplicates(customers);
-
-        Console.WriteLine($"Dubletten gefunden: {duplicateCandidates.Count}");
-
-        if (duplicateCandidates.Count == 0)
-        {
-            return;
-        }
-
-        var issues = duplicateCandidates
-            .Select(CustomerDuplicateIssueMapper.ToIssue)
-            .ToList();
-
-        var resolutionService = new ConsoleImportIssueResolutionService();
-
-        var resolutionCompleted = resolutionService.ResolveIssues(issues);
-
-        if (!resolutionCompleted)
-        {
-            Console.WriteLine("Import wurde durch Benutzer abgebrochen.");
-            return;
-        }
-
-        var resultBuilder = new ImportResolutionResultBuilder();
-        var mergeInstructionBuilder = new CustomerMergeInstructionBuilder();
-
-        var customerMergeInstructions = new List<CustomerMergeInstruction>();
-
-        for (var i = 0; i < duplicateCandidates.Count; i++)
-        {
-            var issue = issues[i];
-
-            if (!issue.IsResolved)
-            {
-                continue;
-            }
-
-            var result = resultBuilder.Build(issue);
-
-            var instruction = mergeInstructionBuilder.Build(
-                duplicateCandidates[i],
-                result);
-
-            if (instruction is not null)
-            {
-                customerMergeInstructions.Add(instruction);
-            }
-        }
-
-    var groupBuilder = new CustomerMergeGroupBuilder();
-
-    var customerMergeGroups = groupBuilder.Build(customerMergeInstructions);
-
-    Console.WriteLine();
-    Console.WriteLine($"Customer Merge Groups: {customerMergeGroups.Count}");
-
-    foreach (var group in customerMergeGroups)
-    {
-        Console.WriteLine("--------------------------------");
-        Console.WriteLine($"Master: {group.MasterCustomer.CompanyName}");
-        Console.WriteLine($"Name:   {group.ResolvedName}");
-
-        Console.WriteLine("Duplicates:");
-
-        foreach (var duplicate in group.DuplicateCustomers)
-        {
-            Console.WriteLine($" - {duplicate.CompanyName}");
-        }
+        await reports.SaveAsync(report, cancellationToken);
+        return await commitService.CommitAsync(commitRequest, cancellationToken);
     }
-    }*/
+}

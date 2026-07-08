@@ -1,66 +1,41 @@
-# Datenmodell
+# Technisches Daten- und Persistenzmodell
 
-## Kern-Entities
+## BaseEntity
 
-- `Customer`
-  - Enthält Kundenstammdaten.
-  - Beziehung zu `Project`.
+`BaseEntity` definiert:
 
-- `Project`
-  - Gehört zu einem `Customer`.
-  - Enthält `Buildings` und `Documents`.
+- `Guid Id`, standardmäßig neu erzeugt;
+- `DateTime CreatedAt` in UTC;
+- optionales `DateTime UpdatedAt`.
 
-- `Building`
-  - Gehört zu einem `Project`.
-  - Gehört zu einem `District`.
-  - Enthält `EnergySystems` und `Meters`.
+`MeterReading` erbt bewusst nicht von `BaseEntity`.
 
-- `Meter`
-  - Gehört zu einem `Building`.
-  - Hat `MeterNumber` als fachliche Identität.
-  - Besitzt das Attribut `Unit` (Standard: `kWh`).
-  - Eine `Meter`-Entität kann viele `MeterReading`-Einträge haben.
+## Aktive DbSets
 
-- `MeterReading`
-  - Zeitreihendatenpunkt für einen `Meter`.
-  - Verwendet den Composite Key `MeterId + Timestamp`.
-  - Enthält `Value`, `Unit`, `QualityFlag` und optional `CustomerId`, `BuildingId`, `SourceImportJobId`.
+`EnsetDbContext` registriert:
 
-- `Document`
-  - Dokumente zum Projekt.
+- `Customers`, `Projects`, `Buildings`;
+- `EnergySystems`, `Meters`, `MeterReadings`;
+- `Documents`;
+- `CalculationResults`, `BenchmarkDatasets`.
 
-- `CalculationResult`
-  - Ergebnis einer Analyse oder Berechnung.
-  - Enthält `KPIType`, `ScopeLevel`, `ScopeId`, `Value`, `Unit`, `PeriodStart`, `PeriodEnd`, `CalculatedAt`.
+`ImportJob` und `DataSource` sind modelliert, aber nicht als aktive DbSets eingebunden.
 
-- `BenchmarkDataset`
-  - Datensatz für Benchmark-Vergleiche.
-  - Enthält `ScopeLevel`, `Region`, `BuildingCategory`, `YearRange`, `AvgConsumption`, `SampleSize`.
+## Schlüssel und Indizes
 
-- `ImportJob`
-  - Modelliert Import-Metadaten für ein Projekt.
-  - `ProjectId`, `SourceType`, `Status`.
+- `MeterReading`: Composite Key aus `MeterId + Timestamp`;
+- Index auf `MeterReading.Timestamp`;
+- eindeutiger Index auf `Meter.MeterNumber`;
+- Fremdschlüsselbeziehung `MeterReading.MeterId -> Meter`.
 
-- `DataSource`
-  - Modelliert Herkunftsdatenquellen.
-  - `Name`, `Type`.
+## Zeitreihen- und Provenance-Felder
 
-## Basisobjekt
+`MeterReading` enthält Wert, Einheit und `DataQuality`. Optional sind `CustomerId`, `BuildingId` und `SourceImportJobId` vorhanden. Für diese optionalen Provenance-Felder ist derzeit keine vollständige Persistenz- und Importkette implementiert.
 
-- `BaseEntity`
-  - `Id` (GUID)
-  - `CreatedAt` (UTC)
-  - `UpdatedAt`
+## Aktuelle Grenzen
 
-## Datenbankmodell
-
-- `MeterReading` ist kein `BaseEntity`; es ist ein reines Zeitreihenmodell.
-- `Meter` besitzt einen eindeutigen Index auf `MeterNumber`.
-- `MeterReading` ist über `MeterId` mit `Meter` verknüpft.
-- `ImportJob` und `DataSource` sind derzeit im Modell vorhanden, aber nicht als `DbSet` im `EnsetDbContext` eingebunden.
-
-## Hinweis
-
-- Das Domain-Layer umfasst die Geschäftsobjekte.
-- Importspezifische Modelle liegen im Application-Layer.
-- Die Persistenz dieses Modells wird derzeit über `Enset.Infrastructure` umgesetzt.
+- `ImportReport` und Audit Trail werden nur als JSON-Dateien, nicht relational persistiert;
+- keine unveränderliche ImportHistory oder Audit-Entities in der Datenbank;
+- `DatabaseImportWriter` ist vorhanden, blockiert aber sicher bis zum fachlichen Mapping;
+- kein nachgewiesener TimescaleDB-Hypertable;
+- keine Data-Product-Entities mit Version, Schema und Publikationsmetadaten.

@@ -1,177 +1,92 @@
-﻿```plantuml
-# Import-Architektur
+# Importworkflow
 
-Dieses Dokument beschreibt die geplante Import-, Mapping- und Exportarchitektur.
-Aktuell ist im Repository eine Import-Pipeline mit DTOs, Abstraktionen und konkreter Infrastruktur vorhanden.
+## Analyse
 
-@startuml
-title ENSET Import-, Mapping- und Exportarchitektur
-
-actor "Interner Nutzer" as User
-actor "Zoho CRM" as Zoho
-actor "XML Datei" as XmlFile
-actor "Excel/XLSM Datei" as ExcelFile
-actor "Externer Käufer\nData Product" as Buyer
-
-package "Input Sources" {
-  [XML Import File] as XML
-  [Excel/XLSM Import File] as Excel
-  [Zoho CRM API] as ZohoApi
-}
-
-package "Connector Layer" {
-  [XmlImportConnector] as XmlConnector
-  [ExcelImportConnector] as ExcelConnector
-  [ZohoCrmConnector] as ZohoConnector
-}
-
-package "Mapping Layer" {
-  [External DTOs] as DTOs
-  [Field Mapping Service] as Mapping
-  [Unit Normalization Service] as UnitNorm
-  [Validation Service] as Validation
-}
-
-package "Domain Model" {
-  [Customer]
-  [Project]
-  [Region]
-  [Municipality]
-  [District]
-  [Building]
-  [EnergySystem]
-  [Meter]
-  [MeterReading]
-  [Document]
-  [ImportJob]
-  [DataSource]
-}
-
-package "Storage Layer" {
-  database "PostgreSQL\noperative Daten" as PostgreSQL
-  database "TimescaleDB\nZeitreihen" as Timescale
-  folder "Raw Zone\nOriginal XML/XLSM/API Payloads" as Raw
-  folder "Silver Zone\nvalidierte Daten" as Silver
-  folder "Gold Zone\nKPIs / Benchmarks" as Gold
-}
-
-package "Data Product Layer" {
-  [Anonymization Service] as Anon
-  [Aggregation Service] as Agg
-  [Data Product Service] as DataProduct
-  [Export Service] as Export
-}
-
-package "Output Formats" {
-  [XML Export] as XmlExport
-  [CSV Export] as CsvExport
-  [JSON/API Export] as JsonExport
-}
-
-User --> XML
-User --> Excel
-Zoho --> ZohoApi
-
-XML --> XmlConnector
-Excel --> ExcelConnector
-ZohoApi --> ZohoConnector
-
-XmlConnector --> Raw
-ExcelConnector --> Raw
-ZohoConnector --> Raw
-
-XmlConnector --> DTOs
-ExcelConnector --> DTOs
-ZohoConnector --> DTOs
-
-DTOs --> Mapping
-Mapping --> UnitNorm
-UnitNorm --> Validation
-
-Validation --> Customer
-Validation --> Project
-Validation --> Region
-Validation --> Municipality
-Validation --> District
-Validation --> Building
-Validation --> EnergySystem
-Validation --> Meter
-Validation --> MeterReading
-Validation --> Document
-Validation --> ImportJob
-Validation --> DataSource
-
-Customer --> PostgreSQL
-Project --> PostgreSQL
-Region --> PostgreSQL
-Municipality --> PostgreSQL
-District --> PostgreSQL
-Building --> PostgreSQL
-EnergySystem --> PostgreSQL
-Meter --> PostgreSQL
-MeterReading --> Timescale
-Document --> PostgreSQL
-ImportJob --> PostgreSQL
-DataSource --> PostgreSQL
-
-PostgreSQL --> Silver
-Timescale --> Silver
-Silver --> Gold
-
-Gold --> Anon
-Anon --> Agg
-Agg --> DataProduct
-DataProduct --> Export
-
-Export --> XmlExport
-Export --> CsvExport
-Export --> JsonExport
-
-XmlExport --> User
-CsvExport --> Buyer
-JsonExport --> Buyer
-
-@enduml
+```text
+Excel
+  -> IImportAnalysisService
+  -> ImportCoordinator
+  -> Read -> Map -> Validate -> DuplicateCheck
+  -> ImportReport
+  -> IImportReportRepository
 ```
 
-# Aktuelle Import-Architektur
+`ExcelImportAnalysisService` staged die hochgeladene Datei, berechnet SHA-256, führt den strikt analyse-only gehaltenen Coordinator aus und speichert den Report. Der Coordinator kennt weder Gate noch Writer.
 
-## Verantwortlichkeiten nach Layer
+### Komponenten
 
-- src/Enset.Domain/ enthält das reine Domain-Modell (Meter, MeterReading, Building, Project, Customer, usw.).
-- src/Enset.Application/ enthält Import-DTOs, Enums, Models und Abstraktionen.
-- src/Enset.Infrastructure/ enthält den EF Core EnsetDbContext, konkrete Reader-/Mapper-Implementierungen und Services.
+- `IImportReader` / `ExcelImportReader`: Application-Port und Datei-Adapter
+- `ExcelWorkbookReader`: ClosedXML-Parsen in Infrastructure
+- `IImportMapper` / `CustomerImportMapper`: Mapping auf CustomerImportDto
+- `IImportValidator` / `ExcelImportValidator`: strukturierte Validierungs-Issues
+- `IDuplicationCheckService` / `DuplicationCheckService`: Customer-Dubletten und Issue-Mapping
+- `ImportDecisionEngine`: technische Continue-/Abort-Entscheidung
 
-## Relevante Dateien
+### Persistenter ImportReport
 
-- src/Enset.Application/Imports/DTOs/MeterImportDto.cs
-- src/Enset.Application/Imports/DTOs/MeterReadingImportDto.cs
-- src/Enset.Application/Imports/Abstractions/IMeterReadingReader.cs
-- src/Enset.Application/Imports/Abstractions/IMeterReadingReaderFactory.cs
-- src/Enset.Application/Imports/Abstractions/IMeterLookupService.cs
-- src/Enset.Application/Imports/Abstractions/IMeterReadingMapper.cs
-- src/Enset.Application/Imports/Enums/ImportSourceType.cs
-- src/Enset.Application/Imports/Enums/ImportStatus.cs
-- src/Enset.Application/Imports/Enums/RawDataObjectType.cs
-- src/Enset.Application/Imports/Models/ImportJob.cs
-- src/Enset.Application/Imports/Models/RawDataObject.cs
+Der Report speichert:
 
-- src/Enset.Infrastructure/DBContext.cs
-- src/Enset.Infrastructure/Imports/CsvMeterReadingReader.cs
-- src/Enset.Infrastructure/Imports/Factory/MeterReadingReaderFactory.cs
-- src/Enset.Infrastructure/Imports/Services/MeterLookupService.cs
-- src/Enset.Infrastructure/Imports/Mapping/MeterReadingMapper.cs
+- ImportId und ImportStatus;
+- Customers und ImportIssues;
+- SourceFile-Metadaten einschließlich SHA-256 und internem Stagingpfad;
+- CreatedAt und UpdatedAt;
+- Decision, Statistiken und Audit Trail.
 
-## Architekturelle Fakten
+`JsonImportReportRepository` ist die aktuelle austauschbare dateibasierte Implementierung von `IImportReportRepository`.
 
-- MeterReading ist ein Domain-Zeitreihenobjekt und erbt nicht von BaseEntity.
-- Meter erbt von BaseEntity und nutzt MeterNumber als fachliche Identität.
-- MeterId bleibt die technische interne GUID.
-- Importdateien dürfen MeterNumber verwenden, nicht aber die interne MeterId.
-- EnsetDbContext konfiguriert den Composite Key MeterId + Timestamp für MeterReading.
-- ImportJob und DataSource sind aktuell nicht Teil eines DbSet in EnsetDbContext.
+## Resolution
 
-## Laufender Zustand
+```text
+persistierter ImportReport
+  -> ApplyResolutionService
+  -> aktualisierter ImportReport + Audit Trail
+  -> IImportReportRepository
+```
 
-- Build der drei Projekte ist möglich.
-- Enset.Domain, Enset.Application und Enset.Infrastructure sind aktuell fehlerfrei kompilierbar.
+Der Service ordnet Entscheidungen über IssueId zu, erlaubt Änderungen oder Zurücksetzen vor dem Commit, validiert benutzerdefinierte Werte und protokolliert Benutzer, Zeitpunkt sowie Vorher-/Nachher-Zustand. Er schreibt keine Nutzdaten und ruft keinen Writer auf.
+
+## Commit
+
+```text
+ImportCommitRequest
+  -> ImportCommitService
+  -> ImportWriteContext
+  -> ImportWriteGate
+  -> IImportWriter
+  -> optional IRawZoneWriter
+```
+
+`ImportWriteContext` enthält ImportId, Report, Zielmodus, Zielwriter, UserId, Timestamp, TargetLocation und Raw-Zone-Option.
+
+Das Gate blockiert, wenn:
+
+- Report oder passende ImportId fehlen;
+- der Benutzerkontext fehlt;
+- der Status nicht `ReadyToCommit` ist;
+- die Decision `Abort` ist;
+- entscheidungspflichtige Issues offen sind.
+
+`ImportWriteGateResult` liefert alle Gate-Fehler. Nur `ImportCommitService` löst nach erfolgreichem Gate einen Writer auf.
+
+### Writer
+
+- `ExcelImportWriter`: kopiert die gestagte Arbeitsmappe ans Ziel und aktualisiert Customers über `ExcelWorkbookWriter`.
+- `DatabaseImportWriter`: registrierbarer sicherer Platzhalter; verweigert Änderungen, bis das fachliche Domain-Mapping implementiert ist.
+- `FileSystemRawZoneWriter`: archiviert die Originaldatei optional nach erfolgreichem Ziel-Write eindeutig unter der ImportId.
+
+## Gemeinsame Aufrufer
+
+- REST API: Analyze, GET, Resolutions und Commit
+- `DuplicationResolutionRunner`: Console-/Entwickler-Testpfad über dieselben Application-Services
+- zukünftige React UI: soll ausschließlich die REST API verwenden
+
+Es existiert keine parallele Console-Resolution- oder Writerlogik.
+
+## Noch offen
+
+- React Import Wizard;
+- fachliches und transaktionales Database-Mapping;
+- datenbankgestützte Report-/Import-History-Persistenz mit Concurrency Control;
+- Authentifizierung statt übermittelter UserId;
+- Building-, Meter- und MeterReading-End-to-End-Pipeline;
+- breitere Excel-, API-, Sicherheits- und End-to-End-Tests.

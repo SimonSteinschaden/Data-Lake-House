@@ -1,87 +1,86 @@
-﻿# Backend-Architektur
+# Backend- und Entwicklerdokumentation
 
-## Aktuelle Projektstruktur
+## Projekte
 
-Das Backend ist sauber nach Clean Architecture getrennt:
+| Projekt | Verantwortung | Abhängigkeiten |
+|---|---|---|
+| `Enset.Domain` | Entities, Enums und fachliche Basistypen | keine |
+| `Enset.Application` | Use Cases, Ports, DTOs, Importworkflow und WriteGate | Domain |
+| `Enset.Infrastructure` | EF Core, Npgsql, ClosedXML und konkrete Adapter | Domain, Application |
+| `Enset.Worker` | Composition Root und Konsolenausgabe | alle Bibliotheken |
+| `Enset.Api` | REST-Endpunkte und API-Composition-Root | Application, Infrastructure |
+| `Enset.Import.Tests` | Architektur- und Workflowtests | API, Application, Infrastructure |
 
-- `src/Enset.Domain/`
-  - Enthält Domain-Entities, Enums und das Basismodell.
-  - Keine Abhängigkeit auf EF Core, Infrastructure oder Application.
-  - Packages:
-    - Common
-    - Customers
-    - Projects
-    - Buildings
-    - Energy
-    - Documents
-    - Analytics
-    - Geography
-    - Data
+Alle Projekte verwenden `net10.0` mit aktivierten Nullable Reference Types und Implicit Usings.
 
-- `src/Enset.Application/`
-  - Referenziert `Enset.Domain`.
-  - Enthält Import-DTOs, Abstraktionen, Enums und Prozessmodelle.
-  - Packages:
-    - Imports/DTOs
-    - Imports/Abstractions
-    - Imports/Enums
-    - Imports/Models
+## Application-Struktur
 
-- `src/Enset.Infrastructure/`
-  - Referenziert `Enset.Domain` und `Enset.Application`.
-  - Enthält EF Core `EnsetDbContext`, TimescaleDB-kompatible Persistenz, Reader-Implementierungen, Mapper-Implementierungen und konkrete Services.
-  - Enthält Import- und Export-Infrastruktur.
+- `Imports/Abstractions`: Ports für Coordinator, Reader, Mapper, Validator, Resolution, WriteGate, Writer und Logger
+- `Imports/Coordination`: Analyze-only-`ImportCoordinator`
+- `Imports/DTOs`: Import- und vorbereitende API-DTOs
+- `Imports/Validation`: aktive Excel-Validierung und teilweise leere Validator-Platzhalter
+- `Imports/DuplicationCheck`: interne Kandidaten, Identity Builder, Mapping, Services und Resolution-Hilfen
+- `Imports/Issues`: zentrales Issue- und ResolutionAction-Modell
+- `Imports/Reports`: `ImportReport` und `AutoFixReport`
+- `Imports/Decisions`: technische Importentscheidung
+- `Imports/WriteGate`: `ImportWriteContext` und Gate-Implementierung
 
-- `src/Enset.Worker.Import/`
-  - Entwickler-Test-Harness für CSV-/Excel-Importe und Validierungs-Experimente.
+## Infrastructure-Struktur
 
-## Technischer Stack
+- `DBContext.cs`: EF-Core-Context
+- `Persistence/` und `Migrations/`: Design-Time-Factory und Migrationen
+- `Imports/Excel/`: ExcelImportReader/-Writer und Workbook-Adapter
+- `Imports/Csv/`: MeterReading-CSV-Reader
+- `Imports/Factories/`, `Mappings/`, `Services/`: weitere Importbausteine
+- `Exports/Excel/`: vorhandener Excel-Exportadapter
 
-- `TargetFramework`: `net10.0`
-- `Microsoft.EntityFrameworkCore` 10.x
-- `Npgsql.EntityFrameworkCore.PostgreSQL` 10.x
-- `ClosedXML` für Excel-Verarbeitung
-
-## Wichtige Architekturentscheidungen
-
-- `MeterReading` ist ein Zeitreihenobjekt und erbt **nicht** von `BaseEntity`.
-- Der Primärschlüssel für `MeterReading` ist `MeterId + Timestamp`.
-- `Meter` erbt von `BaseEntity` und verwendet `MeterNumber` als fachliche Identität.
-- `MeterId` bleibt die technische interne GUID.
-- Importdateien sollten `MeterNumber` verwenden, nicht `MeterId`.
+ClosedXML ist ausschließlich im Infrastructure-Projekt als Package referenziert.
 
 ## EnsetDbContext
 
-- Befindet sich in `src/Enset.Infrastructure/DBContext.cs`.
-- Konfiguriert:
-  - `MeterReading` mit Composite Key `MeterId + Timestamp`.
-  - Index auf `MeterReading.Timestamp`.
-  - Unique Index auf `Meter.MeterNumber`.
-  - Beziehung `Meter` -> `MeterReading` über `MeterId`.
-- Definierte DbSets:
-  - `Customers`
-  - `Projects`
-  - `Buildings`
-  - `EnergySystems`
-  - `Meters`
-  - `MeterReadings`
-  - `Documents`
-  - `CalculationResults`
-  - `BenchmarkDatasets`
-- Auskommentiert, aber vorhanden:
-  - `ImportJobs`
-  - `DataSources`
+Aktive DbSets:
 
-## Import-Layer
+- `Customers`, `Projects`, `Buildings`
+- `EnergySystems`, `Meters`, `MeterReadings`
+- `Documents`
+- `CalculationResults`, `BenchmarkDatasets`
 
-- Abstraktionen in `Enset.Application/Imports/Abstractions`.
-- DTOs in `Enset.Application/Imports/DTOs`.
-- Modelle in `Enset.Application/Imports/Models`.
-- Reader, Factory und Services in `Enset.Infrastructure/Imports`.
+Konfiguration:
 
-## Status und Ausblick
+- Composite Key `MeterReading.MeterId + Timestamp`;
+- Index auf `MeterReading.Timestamp`;
+- Unique Index auf `Meter.MeterNumber`;
+- Beziehung `Meter -> MeterReadings` über `MeterId`.
 
-- `Enset.Domain`, `Enset.Application` und `Enset.Infrastructure` kompilieren.
-- `Enset.Worker.Import` dient als Entwickler-Harness, nicht als produktiver Worker.
-- API- und Frontend-Schicht sind noch nicht implementiert.
-- Import-Service und persistente Import-Job-Verwaltung sind noch unvollständig.
+`ImportJob` und `DataSource` sind modelliert, aber nicht als aktive DbSets registriert.
+
+## Worker ausführen
+
+Der Worker verwendet aktuell einen hart codierten lokalen XLSM-Pfad in `Program.cs`. Der produktive Argumentpfad ist dort als TODO auskommentiert. Der Lauf analysiert und protokolliert nur; er erzeugt keine Ausgabedatei.
+
+Build:
+
+```powershell
+dotnet build src/Enset.Worker/Enset.Worker.csproj --no-restore
+```
+
+Aktueller Nachweis: erfolgreich, 0 Warnungen, 0 Fehler.
+
+## API und Tests
+
+```powershell
+dotnet build src/Enset.Api/Enset.Api.csproj --no-restore
+dotnet test tests/Enset.Import.Tests/Enset.Import.Tests.csproj --no-restore
+```
+
+Aktueller Nachweis: API-Build erfolgreich; 7 von 7 Tests bestanden.
+
+## Bekannte Entwicklerlücken
+
+- keine Solution-Datei;
+- kein Generic Host und keine Dependency-Injection-Konfiguration;
+- hart codierter Entwicklungsdateipfad;
+- mehrere leere Validator-/Mapper-/AutoFix-Platzhalter;
+- ältere bereits versionierte `bin`-/`obj`-Artefakte; neue Artefakte werden durch `.gitignore` ausgeschlossen;
+- uneinheitliche Formatierung und teilweise ältere Encoding-Artefakte im Quellcode;
+- keine CI/CD- oder Docker-Konfiguration.

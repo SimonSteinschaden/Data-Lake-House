@@ -1,4 +1,5 @@
 using Enset.Application.Imports.Abstractions;
+using Enset.Application.Imports.Reports;
 
 namespace Enset.Worker;
 
@@ -14,7 +15,7 @@ public sealed class ImportRunner
         _coordinator = coordinator;
     }
 
-    public Task RunAsync(CancellationToken cancellationToken = default)
+    public Task<ImportReport> RunAsync(CancellationToken cancellationToken = default)
     {
         return _coordinator.RunAsync(cancellationToken);
     }

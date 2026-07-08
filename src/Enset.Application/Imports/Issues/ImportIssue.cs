@@ -3,6 +3,8 @@ namespace Enset.Application.Imports.Issues;
 
 public class ImportIssue
 {
+    public Guid IssueId { get; init; } = Guid.NewGuid();
+
     public Guid? EntityId { get; init; }
 
     public ImportIssueType Type { get; init; }

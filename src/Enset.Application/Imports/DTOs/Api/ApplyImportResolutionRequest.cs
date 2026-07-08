@@ -4,9 +4,7 @@ namespace Enset.Application.Imports.DTOs.Api;
 
 public sealed class ApplyImportResolutionRequest
 {
-    public Guid ImportId { get; init; }
-
-    public bool UserConfirmed { get; init; }
+    public string UserId { get; init; } = string.Empty;
 
     public IReadOnlyList<ImportIssueResolution> Resolutions { get; init; } = [];
 }

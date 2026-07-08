@@ -37,11 +37,11 @@ Fast alle Domain-Entities erben von `BaseEntity` mit GUID, `CreatedAt` und optio
 
 ## Importspezifische Modelle
 
-`ImportJob` und `RawDataObject` liegen derzeit in `Enset.Application`, nicht in Domain. `ImportJob` ist noch nicht als aktives DbSet registriert. `RawDataObject` ist lediglich ein Modell; ein Raw-Zone-Store ist nicht implementiert.
+`ImportJob` und `RawDataObject` liegen derzeit in `Enset.Application`, nicht in Domain. `ImportJob` ist noch nicht als aktives DbSet registriert. Die Raw-Zone-Ablage erfolgt aktuell dateibasiert über `FileSystemRawZoneWriter`; `RawDataObject` ist damit noch nicht persistent verknüpft.
 
 ## Nicht implementierte Aspekte
 
-- keine persistente ImportReport-/ImportHistory-Beziehung;
-- keine technisch umgesetzten Raw-/Curated-/Data-Product-Modelle;
+- keine datenbankgestützte ImportReport-/ImportHistory-Beziehung;
+- kein persistentes Raw-/Curated-/Data-Product-Domänenmodell;
 - keine Data-Product-Verträge oder Provenance-Kette;
 - keine vollständige Importabbildung auf alle Domain-Entities.

@@ -1,6 +1,8 @@
 using Enset.Application.Imports.Abstractions;
 using Enset.Application.Imports.Decisions;
 using Enset.Application.Imports.DuplicationCheck.Abstractions;
+using Enset.Application.Imports.Enums;
+using Enset.Application.Imports.Issues;
 using Enset.Application.Imports.Reports;
 
 namespace Enset.Application.Imports.Coordination;
@@ -57,6 +59,12 @@ public sealed class ImportCoordinator : IImportCoordinator
 
         report.Issues.AddRange(duplicateIssues);
         report.Decision = ImportDecisionEngine.Decide(report);
+        report.Status = report.Issues.Any(issue =>
+                (issue.RequiresUserDecision && !issue.IsResolved) ||
+                (issue.Severity >= ImportIssueSeverity.Error && !issue.IsResolved))
+            ? ImportStatus.AwaitingResolution
+            : ImportStatus.ReadyToCommit;
+        report.UpdatedAt = DateTime.UtcNow;
 
         _logger.Info($"Duplication check finished with {duplicateIssues.Count} issue(s).");
 

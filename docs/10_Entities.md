@@ -24,7 +24,7 @@ Diese Modelle sind keine Domain-Entities:
 - `CustomerImportDto`, `BuildingImportDto`, `MeterImportDto`, `MeterReadingImportDto`
 - `ImportIssue` und `ImportIssueResolution`
 - `ImportReport` und `ImportDecision`
-- `ImportWriteContext`
+- `ImportAuditEntry`, `ImportSourceFileMetadata` und `ImportWriteContext`
 - `DuplicateCandidate<T>` und Merge-Hilfsmodelle
 - `ImportJob` und `RawDataObject`
 
@@ -36,7 +36,7 @@ Excel-spezifische Workbook-Reader/-Writer und ClosedXML-Typen liegen in Infrastr
 
 ## Bekannte Modelllücken
 
-- persistentes `ImportReport`-/ImportHistory-/Audit-Modell;
+- relationales `ImportReport`-/ImportHistory-/Audit-Modell; aktuell besteht JSON-Persistenz;
 - Data-Product-Verträge und Publikationsmetadaten;
 - vollständige Provenance für Raw- und Curated-Daten;
 - aktive Persistenz von `ImportJob` und `DataSource`;

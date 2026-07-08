@@ -1,6 +1,7 @@
 using Enset.Application.Imports.Abstractions;
 using Enset.Application.Imports.DTOs;
 using Enset.Domain.Energy;
+using Enset.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Enset.Infrastructure.Imports.Mappings;

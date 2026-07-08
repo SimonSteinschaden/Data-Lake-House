@@ -60,18 +60,27 @@ IImportReader / ExcelImportReader
 
 `ImportCoordinator` orchestriert diese Komponenten. Er enthält weder `IImportWriteGate` noch `IImportWriter` und führt keine Benutzerentscheidung oder Persistenz aus.
 
-## Vorbereiteter Freigabe- und Schreibpfad
+## Freigabe- und Schreibpfad
 
 ```text
 ImportReport
     -> IApplyResolutionService / ApplyResolutionService
+    -> persistierter ImportReport
+    -> IImportCommitService / ImportCommitService
     -> ImportWriteContext
     -> IImportWriteGate / ImportWriteGate
     -> IImportWriter
     -> z. B. ExcelImportWriter
 ```
 
-Die einzelnen Bausteine existieren. Dieser zweite Teil ist noch nicht über API, UI oder einen produktiven Worker-Endpunkt verdrahtet.
+API und `DuplicationResolutionRunner` verwenden denselben Application-Pfad. Nur `ImportCommitService` löst nach erfolgreichem Gate einen `IImportWriter` auf. Der Excel-Writer ist funktionsfähig, der Database-Writer verweigert Schreibzugriffe bis ein fachliches Mapping implementiert ist. Optional archiviert `FileSystemRawZoneWriter` die Originaldatei eindeutig nach `ImportId`.
+
+## REST API und Persistenz
+
+- `Enset.Api` stellt Analyze-, GET-, Resolution- und Commit-Endpunkte bereit.
+- `JsonImportReportRepository` speichert Reports dateibasiert und atomar austauschbar über `IImportReportRepository`.
+- Uploads werden gestaged, per SHA-256 identifiziert und als Source-Metadaten am Report gespeichert.
+- Interne Staging-/Raw-Pfade werden nicht im API-Response veröffentlicht.
 
 ## Durchgesetzte Architekturentscheidungen
 
@@ -81,16 +90,14 @@ Die einzelnen Bausteine existieren. Dieser zweite Teil ist noch nicht über API,
 - Excel und ClosedXML bleiben in Infrastructure.
 - Reader und Writer folgen derselben Port-/Adapterstruktur: Application-Port, Infrastructure-Adapter, technische Workbook-Komponente.
 - Logging im Use Case erfolgt über `IImportLogger`; der Worker stellt `ConsoleImportLogger` bereit.
-- `ImportWriteGate` bewertet ausschließlich `ImportWriteContext`, Bestätigung und Issue-Zustände.
+- `ImportWriteGate` bewertet ausschließlich `ImportWriteContext`, Reportstatus, User-Kontext und Issue-Zustände.
 
 ## Noch nicht implementierte Architekturteile
 
-- REST API und Dependency-Injection-Host
 - React Import Wizard
-- persistente Speicherung des `ImportReport`
-- produktiver End-to-End-Resolution-/Write-Pfad
-- `DatabaseImportWriter` und `RawZoneWriter`
+- produktives fachliches Mapping im `DatabaseImportWriter`
+- Datenbankpersistenz für Reports und Import History
 - Background Jobs und Import History
 - Authentifizierung/Autorisierung
 - Data-Product-Ports und produktive Zonenpipeline
-- automatisierte Unit-, Integrations- und Architekturtests
+- OpenAPI sowie breitere Integrations-, Sicherheits- und End-to-End-Tests

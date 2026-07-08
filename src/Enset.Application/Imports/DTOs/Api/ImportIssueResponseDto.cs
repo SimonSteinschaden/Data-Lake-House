@@ -14,6 +14,8 @@ public sealed class ImportIssueResponseDto
 
     public string Message { get; init; } = string.Empty;
 
+    public double? SimilarityScore { get; init; }
+
     public bool RequiresUserDecision { get; init; }
 
     public string? FieldName { get; init; }

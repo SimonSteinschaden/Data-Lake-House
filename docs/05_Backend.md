@@ -8,6 +8,8 @@
 | `Enset.Application` | Use Cases, Ports, DTOs, Importworkflow und WriteGate | Domain |
 | `Enset.Infrastructure` | EF Core, Npgsql, ClosedXML und konkrete Adapter | Domain, Application |
 | `Enset.Worker` | Composition Root und Konsolenausgabe | alle Bibliotheken |
+| `Enset.Api` | REST-Endpunkte und API-Composition-Root | Application, Infrastructure |
+| `Enset.Import.Tests` | Architektur- und Workflowtests | API, Application, Infrastructure |
 
 Alle Projekte verwenden `net10.0` mit aktivierten Nullable Reference Types und Implicit Usings.
 
@@ -64,12 +66,21 @@ dotnet build src/Enset.Worker/Enset.Worker.csproj --no-restore
 
 Aktueller Nachweis: erfolgreich, 0 Warnungen, 0 Fehler.
 
+## API und Tests
+
+```powershell
+dotnet build src/Enset.Api/Enset.Api.csproj --no-restore
+dotnet test tests/Enset.Import.Tests/Enset.Import.Tests.csproj --no-restore
+```
+
+Aktueller Nachweis: API-Build erfolgreich; 7 von 7 Tests bestanden.
+
 ## Bekannte Entwicklerlücken
 
-- keine Solution-Datei und keine Testprojekte;
+- keine Solution-Datei;
 - kein Generic Host und keine Dependency-Injection-Konfiguration;
 - hart codierter Entwicklungsdateipfad;
 - mehrere leere Validator-/Mapper-/AutoFix-Platzhalter;
-- versionierte `bin`-/`obj`-Artefakte und fehlende `.gitignore`-Bereinigung;
+- ältere bereits versionierte `bin`-/`obj`-Artefakte; neue Artefakte werden durch `.gitignore` ausgeschlossen;
 - uneinheitliche Formatierung und teilweise ältere Encoding-Artefakte im Quellcode;
 - keine CI/CD- oder Docker-Konfiguration.

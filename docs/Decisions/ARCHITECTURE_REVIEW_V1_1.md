@@ -7,7 +7,7 @@
 
 ## Einordnung
 
-Seit dem Review v1.0 wurde der Importworkflow deutlich näher an die Baseline geführt. Die Importanalyse wird nun in Application orchestriert und ist vom Resolution-/Schreibpfad getrennt. Zentrale Workflowmodelle und Gates sind vorhanden. Die Baseline v1.0 ist trotzdem noch nicht vollständig umgesetzt: Der zweite Pfad ist nicht produktiv integriert, und API, UI, persistente Reports, Storage-Writer, Betrieb und Tests fehlen.
+Seit dem Review v1.0 wurde der Importworkflow deutlich näher an die Baseline geführt. Die Importanalyse wird in Application orchestriert und ist vom Resolution-/Schreibpfad getrennt. Phase 2 ergänzt persistente Reports, Audit Trail, REST-Endpunkte, einen zentralen Commit-Service, Raw-Zone-Archivierung und automatisierte Kernprüfungen. Die Baseline v1.0 ist trotzdem noch nicht vollständig umgesetzt: React UI, fachliches Database-Mapping, produktive Storage-Backends, Authentifizierung und Betrieb fehlen.
 
 ## A) Aktuell implementierter Stand
 
@@ -71,7 +71,7 @@ Damit transportiert der Workflow Validierungs- und Dublettenprobleme einheitlich
 - BuildingCount und abgeleitete Customer-, Issue-, Error- und Warning-Counts;
 - gefilterte Error-, Warning-, Information- und Critical-Listen.
 
-Der Report ist noch flüchtig und wird nicht persistiert.
+Der Report wird über `IImportReportRepository` gespeichert. Die aktuelle JSON-Dateiimplementierung ist für API-/UI-Abruf geeignet, ersetzt aber noch kein produktives Datenbankrepository mit Concurrency Control.
 
 ### ImportDecisionEngine
 
@@ -79,22 +79,21 @@ Der Report ist noch flüchtig und wird nicht persistiert.
 
 ### ApplyResolutionService
 
-`IApplyResolutionService` und `ApplyResolutionService` sind implementiert. Der Service ordnet Benutzerentscheidungen über `IssueId` zu, verhindert doppelte Resolutionen, validiert Action und Custom Value, markiert entscheidungspflichtige Issues als resolved und erzeugt einen `ImportWriteContext`.
-
-Der Service ist noch nicht über API, UI oder einen produktiven Workerpfad erreichbar. Benutzeridentität, Zeitstempel und persistenter Audit Trail fehlen.
+`IApplyResolutionService` und `ApplyResolutionService` sind implementiert. Der Service ordnet Benutzerentscheidungen über `IssueId` zu, verhindert doppelte Resolutionen innerhalb eines Requests, erlaubt spätere Änderungen, validiert Action und Custom Value und aktualisiert Status sowie Decision. Jede Änderung wird mit Benutzer, Zeitpunkt und Vorher-/Nachher-Werten auditierbar gespeichert. Der Service erzeugt keinen WriteContext und schreibt keine Nutzdaten.
 
 ### ImportWriteContext
 
 `ImportWriteContext` bündelt die für eine Schreibfreigabe relevanten Informationen:
 
-- aktuelle `ImportDecisionType`;
-- `UserConfirmed`;
-- Issues samt Resolution-Zuständen;
-- freizugebende Customer-DTOs.
+- ImportId und vollständigen ImportReport;
+- Zielmodus und Zielwriter (`Excel` oder `Database`);
+- UserId und Timestamp;
+- optionale TargetLocation und Raw-Zone-Option;
+- abgeleitete Issues und Customer-DTOs.
 
 ### ImportWriteGate
 
-`IImportWriteGate` abstrahiert die Freigabe. `ImportWriteGate` erlaubt Schreiben nur, wenn die Decision nicht `Abort` ist, eine Benutzerbestätigung vorliegt und keine entscheidungspflichtigen Issues ungelöst sind. Das Gate bewertet ausschließlich den `ImportWriteContext` und schreibt selbst nichts.
+`IImportWriteGate` abstrahiert die Freigabe. `ImportWriteGate` erlaubt Schreiben nur bei vorhandenem passenden Report, User-Kontext, Status `ReadyToCommit`, einer Decision ungleich `Abort` und ohne offene entscheidungspflichtige Issues. Es liefert ein strukturiertes Gate-Ergebnis, bewertet ausschließlich den `ImportWriteContext` und schreibt selbst nichts.
 
 ### IImportWriter und ExcelImportWriter
 
@@ -102,7 +101,7 @@ Der Service ist noch nicht über API, UI oder einen produktiven Workerpfad errei
 
 ### ExcelWorkbookWriter
 
-`ExcelWorkbookWriter` verwendet ClosedXML, öffnet eine konfigurierte Arbeitsmappe und aktualisiert passende Customer-Zeilen anhand der externen Customer-ID. Der Writer ist vorhanden, aber nicht in einen produktiven, durchgängig freigegebenen Importablauf integriert.
+`ExcelWorkbookWriter` verwendet ClosedXML, öffnet eine konfigurierte Arbeitsmappe und aktualisiert passende Customer-Zeilen anhand der externen Customer-ID. `ExcelImportWriter` wird ausschließlich vom zentralen Commit-Service nach erfolgreichem Gate aufgerufen.
 
 ### ImportLogger
 
@@ -140,7 +139,7 @@ WriteGate
 Writer
 ```
 
-Die Kernbausteine dieses Teils existieren. Noch offen sind der persistente Reportabruf, ein API-/UI- oder Worker-Aufrufer, Auditdaten und die produktive Verdrahtung. Das WriteGate darf erst nach angewendeten Benutzerentscheidungen aufgerufen werden.
+Der zweite Teil ist über `ImportCommitService` zentral verdrahtet. REST API und `DuplicationResolutionRunner` nutzen denselben Resolution-/Commit-Pfad. Das WriteGate wird erst nach geladenem Report und angewendeten Benutzerentscheidungen aufgerufen; nur der Commit-Service löst anschließend einen Writer auf.
 
 ## C) Projektstruktur
 
@@ -151,7 +150,7 @@ Die Kernbausteine dieses Teils existieren. Noch offen sind der persistente Repor
 | Worker | Composition Root, Entwicklungskonfiguration, Runner, Konsolenlogger und Reportausgabe | referenziert die drei Bibliotheken; kein produktiver Host |
 | Domain | Entities, Enums und fachliche Basistypen | keine Projekt- oder Package-Referenzen |
 
-Nicht vorhanden sind API-, UI- und Testprojekte sowie eine Solution-Datei.
+Vorhanden sind zusätzlich `Enset.Api` und `tests/Enset.Import.Tests`. Nicht vorhanden sind ein UI-Projekt und eine Solution-Datei.
 
 ## D) Architekturentscheidungen
 
@@ -171,23 +170,23 @@ Legende: ✅ implementiert, 🟡 teilweise implementiert, ⬜ offen
 | Modul | Status | Aktueller Befund |
 |---|:---:|---|
 | ImportReader | ✅ | Port und aktiver Excel-Adapter vorhanden |
-| ImportWriter | 🟡 | Excel-Adapter vorhanden, nicht produktiv verdrahtet; DB/Raw fehlen |
+| ImportWriter | 🟡 | Excel-Adapter über Commit verdrahtet; Database-Mapping noch sicher blockiert |
 | Logging | 🟡 | Port und Console-Adapter vorhanden; strukturiertes Logging fehlt |
 | Validation | 🟡 | aktive Excel-Customer-/Building-Prüfungen; weitere Validatoren und Tests fehlen |
 | DuplicateCheck | 🟡 | Customer-Erkennung und Issue-Mapping vorhanden; weitere Entitäten/Audit fehlen |
 | DecisionEngine | ✅ | technische Continue-/Abort-Entscheidung vorhanden |
-| ImportReport | 🟡 | UI-/API-fähiges Modell vorhanden; Persistenz fehlt |
-| ApplyResolutionService | 🟡 | Kernservice vorhanden; API/UI/Audit/Integration fehlen |
+| ImportReport | ✅ | JSON-Persistenz, Status, Source-Metadaten und Audit Trail vorhanden |
+| ApplyResolutionService | ✅ | wiederholbare, auditierte Entscheidungen über API/Console-Pfad integriert |
 | ImportWriteGate | ✅ | Context-basierte Freigabelogik vorhanden |
-| REST API | ⬜ | nur vorbereitende DTOs vorhanden |
+| REST API | 🟡 | Analyze, GET, Resolutions und Commit vorhanden; Auth/OpenAPI fehlen |
 | React UI | ⬜ | kein Frontend-Projekt |
-| DatabaseWriter | ⬜ | nicht implementiert |
-| RawZoneWriter | ⬜ | nicht implementiert |
+| DatabaseWriter | 🟡 | Writer registrierbar, verweigert sicher bis fachliches Mapping existiert |
+| RawZoneWriter | ✅ | dateibasierte eindeutige Archivierung nach ImportId vorhanden |
 | Authentication | ⬜ | nicht implementiert |
 | ImportHistory | ⬜ | nicht implementiert |
-| Audit | ⬜ | keine persistente Benutzer-/Entscheidungshistorie |
+| Audit | 🟡 | Report-Audit Trail vorhanden; unveränderliche DB-Historie fehlt |
 | Background Jobs | ⬜ | kein Hosted Worker, Queueing oder Scheduling |
-| Automatisierte Tests | ⬜ | keine Testprojekte vorhanden |
+| Automatisierte Tests | 🟡 | 7 Kern-/Architekturtests vorhanden; breite Integration/E2E fehlt |
 | EF-Core-Domainpersistenz | 🟡 | DbContext/Migrationen vorhanden; Importpfad und Betriebsnachweis fehlen |
 | Data Product Layer | ⬜ | keine Ports, Verträge oder Publisher |
 
@@ -195,25 +194,24 @@ Legende: ✅ implementiert, 🟡 teilweise implementiert, ⬜ offen
 
 Die folgenden Arbeiten schließen verbleibende Lücken zur bestehenden Baseline. Sie erweitern die Zielarchitektur nicht.
 
-### 1. Resolution- und Schreibpfad fertigstellen
+### 1. Resolution- und Schreibpfad härten
 
-- `ApplyResolutionService` in einen persistenten Use Case integrieren;
-- Entscheidungen mit Benutzeridentität, Zeitpunkt und Audit Trail speichern;
-- `ImportReport -> ApplyResolutionService -> WriteGate -> Writer` produktiv verdrahten;
-- transaktionalen `DatabaseImportWriter` und unveränderlichen `RawZoneWriter` implementieren;
+- authentifizierten Benutzerkontext statt übergebener UserId integrieren;
+- Audit Trail unveränderlich in produktivem Storage speichern;
+- fachliches Mapping und Transaktionen im `DatabaseImportWriter` implementieren;
+- dateibasierten `RawZoneWriter` um Retention und Zugriffsschutz ergänzen;
 - Idempotenz, Retry und Abbruchverhalten testen.
 
 ### 2. ImportReport und Import History persistieren
 
-- Report, Status und Quelldatei-Referenz speichern;
-- Abruf und Wiederaufnahme über `ImportId` ermöglichen;
+- dateibasiertes Repository durch produktives Datenbankrepository mit Concurrency Control ergänzen;
+- Wiederaufnahme und konkurrierende Änderungen absichern;
 - Import History und technische Provenance bereitstellen.
 
 ### 3. REST API und Dokumentation
 
-- ASP.NET-Core-API-Projekt hinzufügen;
-- Analyse-, Report- und Resolution-Endpunkte implementieren;
-- DTO-Mapping, Validierung, Fehlerverträge und OpenAPI ergänzen;
+- bestehende Analyse-, Report-, Resolution- und Commit-Endpunkte härten;
+- Validierung, Fehlerverträge und OpenAPI ergänzen;
 - Authentifizierung und Autorisierung integrieren.
 
 ### 4. React Import Wizard
@@ -262,13 +260,13 @@ Die folgenden Arbeiten schließen verbleibende Lücken zur bestehenden Baseline.
 ### Aktuelle technische Schulden
 
 - hart codierter lokaler Excel-Pfad im Worker;
-- keine automatisierten Tests und keine Solution-Datei;
-- versionierte `bin`-/`obj`-Artefakte sowie keine wirksame `.gitignore`-Bereinigung;
+- noch unvollständige Testabdeckung und keine Solution-Datei;
+- ältere versionierte `bin`-/`obj`-Artefakte; `.gitignore` schützt nur neue Artefakte;
 - leere Mapper-, Validator-, AutoFix- und Normalizer-Platzhalter;
 - teilweise uneinheitliche Ordner-/Namespace- und Codeformatierung;
 - synchroner Datei-I/O hinter einer asynchron benannten Coordinator-Schnittstelle;
 - keine externe Konfiguration, kein Generic Host und kein strukturiertes Logging;
-- kein Audit Trail und keine Persistenz des Resolution-Zustands;
+- Audit und Resolution-Zustand sind nur dateibasiert gespeichert, ohne unveränderliche DB-Historie oder Concurrency Control;
 - TimescaleDB-Hypertable und produktiver Datenbankbetrieb nicht nachgewiesen.
 
 ## Build- und Testnachweis
@@ -278,6 +276,10 @@ Der aktuelle Gesamtbuild über das Worker-Projekt wurde erfolgreich ausgeführt:
 ```text
 dotnet build src/Enset.Worker/Enset.Worker.csproj --no-restore
 Build erfolgreich, 0 Warnungen, 0 Fehler
+dotnet build src/Enset.Api/Enset.Api.csproj --no-restore
+Build erfolgreich, 0 Warnungen, 0 Fehler
+dotnet test tests/Enset.Import.Tests/Enset.Import.Tests.csproj --no-restore
+7 von 7 Tests bestanden
 ```
 
-Es existieren weiterhin keine Testprojekte; ein automatisierter Verhaltensnachweis ist daher noch nicht möglich.
+Die vorhandenen Tests decken die zentralen Phase-2-Grenzen ab. Excel-/API-End-to-End-, Datenbank-, Raw-Zone-, Sicherheits- und Concurrency-Tests bleiben offen.

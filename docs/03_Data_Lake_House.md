@@ -17,7 +17,7 @@ Das ENSET Data Lake House soll strukturierte Energieberatungs-, Gebäude- und Ze
 
 | Zone/Baustein | Status | Befund |
 |---|---|---|
-| Raw Zone | offen | `RawDataObject` existiert, aber kein Store oder Writer |
+| Raw Zone | teilweise | dateibasierte Archivierung nach ImportId und SHA-256 vorhanden; produktiver Storage, Retention und Zugriffsschutz fehlen |
 | Curated/Silver | offen | Domain-Persistenz existiert, jedoch kein freigegebener Curated-Importpfad |
 | Data Products/Gold | offen | keine Verträge, Publisher oder Produktpersistenz |
 | PostgreSQL | teilweise | DbContext und Migrationen vorhanden, produktiver Importwriter fehlt |
@@ -25,13 +25,13 @@ Das ENSET Data Lake House soll strukturierte Energieberatungs-, Gebäude- und Ze
 
 ## Abgrenzung
 
-Der derzeitige `ImportReport` ist ein flüchtiges Analyseergebnis und kein persistiertes Data Product. Ebenso sind `CalculationResult` und `BenchmarkDataset` vorbereitete Entities, aber noch keine versionierten Data Products.
+Der `ImportReport` wird derzeit dateibasiert persistiert, ist aber weiterhin ein Workflow- und Auditmodell und kein Data Product. Ebenso sind `CalculationResult` und `BenchmarkDataset` vorbereitete Entities, aber noch keine versionierten Data Products.
 
 ## Verbleibende Arbeiten
 
-- unveränderliche Raw-Ablage und Provenance;
+- produktive Raw-Ablage, Retention, Zugriffsschutz und vollständige Provenance;
 - transaktionaler Curated-/Database-Writer;
-- Report- und Importhistorien-Persistenz;
+- datenbankgestützte Report- und Importhistorien-Persistenz;
 - Background Jobs und Wiederanlauf;
 - Berechnungs-, QA- und Publikationspipeline;
 - Data-Product-Ports und standardisierte Ausgabe.

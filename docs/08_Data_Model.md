@@ -34,8 +34,8 @@
 
 ## Aktuelle Grenzen
 
-- kein persistentes `ImportReport`-Modell;
-- keine ImportHistory oder Audit-Entities;
-- kein produktiver DatabaseImportWriter;
+- `ImportReport` und Audit Trail werden nur als JSON-Dateien, nicht relational persistiert;
+- keine unveränderliche ImportHistory oder Audit-Entities in der Datenbank;
+- `DatabaseImportWriter` ist vorhanden, blockiert aber sicher bis zum fachlichen Mapping;
 - kein nachgewiesener TimescaleDB-Hypertable;
 - keine Data-Product-Entities mit Version, Schema und Publikationsmetadaten.

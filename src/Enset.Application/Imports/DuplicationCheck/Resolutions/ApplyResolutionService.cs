@@ -1,22 +1,32 @@
 using Enset.Application.Imports.Abstractions;
 using Enset.Application.Imports.Decisions;
+using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Issues;
 using Enset.Application.Imports.Reports;
-using Enset.Application.Imports.WriteGate;
 
 namespace Enset.Application.Imports.Resolution;
 
 public sealed class ApplyResolutionService : IApplyResolutionService
 {
-    public ImportWriteContext Apply(
+    public ImportReport Apply(
         ImportReport report,
         IReadOnlyCollection<ImportIssueResolution> resolutions,
-        bool userConfirmed)
+        string userId,
+        DateTime timestamp)
     {
         ArgumentNullException.ThrowIfNull(report);
         ArgumentNullException.ThrowIfNull(resolutions);
 
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("A user id is required.", nameof(userId));
+
         EnsureUniqueResolutions(resolutions);
+
+        if (report.Status is ImportStatus.Committing or ImportStatus.Committed)
+        {
+            throw new InvalidOperationException(
+                $"Import '{report.ImportId}' can no longer be changed in status '{report.Status}'.");
+        }
 
         var issuesById = report.Issues.ToDictionary(issue => issue.IssueId);
 
@@ -29,16 +39,14 @@ public sealed class ApplyResolutionService : IApplyResolutionService
                     nameof(resolutions));
             }
 
-            ApplyResolution(issue, resolution);
+            ApplyResolution(report, issue, resolution, userId, timestamp);
         }
 
-        return new ImportWriteContext
-        {
-            Decision = DetermineWriteDecision(report.Issues),
-            UserConfirmed = userConfirmed,
-            Issues = report.Issues,
-            Customers = report.Customers
-        };
+        report.Decision = DetermineDecision(report.Issues);
+        report.Status = DetermineStatus(report.Issues);
+        report.UpdatedAt = timestamp;
+
+        return report;
     }
 
     private static void EnsureUniqueResolutions(
@@ -58,20 +66,16 @@ public sealed class ApplyResolutionService : IApplyResolutionService
     }
 
     private static void ApplyResolution(
+        ImportReport report,
         ImportIssue issue,
-        ImportIssueResolution resolution)
+        ImportIssueResolution resolution,
+        string userId,
+        DateTime timestamp)
     {
         if (!issue.RequiresUserDecision)
         {
             throw new InvalidOperationException(
                 $"Issue '{issue.IssueId}' does not accept a user resolution.");
-        }
-
-        if (resolution.ResolutionAction == ImportResolutionAction.None)
-        {
-            throw new ArgumentException(
-                $"A resolution action is required for issue '{issue.IssueId}'.",
-                nameof(resolution));
         }
 
         if (resolution.ResolutionAction == ImportResolutionAction.UseCustomValue &&
@@ -82,20 +86,52 @@ public sealed class ApplyResolutionService : IApplyResolutionService
                 nameof(resolution));
         }
 
+        var previousAction = issue.ResolutionAction;
+        var previousCustomValue = issue.CustomResolvedValue;
+
         issue.ResolutionAction = resolution.ResolutionAction;
         issue.CustomResolvedValue = resolution.ResolutionAction == ImportResolutionAction.UseCustomValue
             ? resolution.CustomResolvedValue
             : null;
-        issue.IsResolved = true;
+        issue.IsResolved = resolution.ResolutionAction != ImportResolutionAction.None;
+
+        report.AuditTrail.Add(new ImportAuditEntry
+        {
+            Timestamp = timestamp,
+            UserId = userId,
+            Action = issue.IsResolved ? "IssueResolutionChanged" : "IssueResolutionCleared",
+            IssueId = issue.IssueId,
+            PreviousResolutionAction = previousAction,
+            ResolutionAction = issue.ResolutionAction,
+            PreviousCustomResolvedValue = previousCustomValue,
+            CustomResolvedValue = issue.CustomResolvedValue
+        });
     }
 
-    private static ImportDecisionType DetermineWriteDecision(
-        IReadOnlyCollection<ImportIssue> issues)
+    private static ImportDecision DetermineDecision(IReadOnlyCollection<ImportIssue> issues)
     {
-        return issues.Any(issue =>
-                issue.Severity >= ImportIssueSeverity.Error &&
-                !issue.IsResolved)
-            ? ImportDecisionType.Abort
-            : ImportDecisionType.Continue;
+        var hasUnresolvedErrors = issues.Any(issue =>
+            issue.Severity >= ImportIssueSeverity.Error && !issue.IsResolved);
+
+        return new ImportDecision
+        {
+            Type = hasUnresolvedErrors
+                ? ImportDecisionType.Abort
+                : ImportDecisionType.Continue,
+            Reason = hasUnresolvedErrors
+                ? "The import contains unresolved errors."
+                : "The import contains no unresolved errors."
+        };
+    }
+
+    private static ImportStatus DetermineStatus(IReadOnlyCollection<ImportIssue> issues)
+    {
+        var hasBlockingIssues = issues.Any(issue =>
+            (issue.RequiresUserDecision && !issue.IsResolved) ||
+            (issue.Severity >= ImportIssueSeverity.Error && !issue.IsResolved));
+
+        return hasBlockingIssues
+            ? ImportStatus.AwaitingResolution
+            : ImportStatus.ReadyToCommit;
     }
 }

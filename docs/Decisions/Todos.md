@@ -4,31 +4,31 @@ Die priorisierte Roadmap steht in `../11_Roadmap.md`. Diese Liste hält konkrete
 
 ## Importworkflow
 
-- `ImportReport` persistent speichern und über `ImportId` abrufbar machen.
-- API-/Worker-Aufrufer für `ApplyResolutionService -> ImportWriteGate -> IImportWriter` implementieren.
-- Entscheidungen um Benutzeridentität, Entscheidungszeitpunkt und Audit Trail ergänzen.
+- JSON-Reportrepository durch produktive Datenbankpersistenz mit Concurrency Control ergänzen.
+- API-UserId durch authentifizierten Benutzerkontext ersetzen.
+- Audit Trail um unveränderliche Persistenz und fachliche Korrelationsdaten erweitern.
 - Write-Vorgänge transaktional und idempotent ausführen.
 - Customer-Pipeline auf Buildings, Meter und MeterReadings erweitern.
 - Hart codierten XLSM-Pfad in `Program.cs` durch Argumente oder Konfiguration ersetzen.
 
 ## Qualität und Tests
 
-- Unit Tests für `ImportCoordinator`, `ImportDecisionEngine`, `ApplyResolutionService` und `ImportWriteGate`.
-- IntegrationsTests für Excel-Reader/-Writer und später Database-/Raw-Zone-Writer.
+- vorhandene Tests um `ImportDecisionEngine`, Excel-End-to-End, Database- und Raw-Zone-Integration erweitern.
 - Architekturtests für Layer- und ClosedXML-Grenzen.
 - Leere Mapper-, Validator-, AutoFix- und Normalizer-Platzhalter implementieren oder entfernen.
 - Encoding und Formatierung der verbleibenden Quellcodedateien vereinheitlichen.
-- `.gitignore` ergänzen und versionierte `bin`-/`obj`-Artefakte aus Git entfernen.
+- bereits versionierte `bin`-/`obj`-Artefakte aus Git entfernen; `.gitignore` ist vorhanden.
 
 ## API und UI
 
-- REST API, DTO-Mapping, OpenAPI und Fehlerverträge implementieren.
+- OpenAPI, versionierte Fehlerverträge sowie Upload-/Content-Sicherheitsprüfung ergänzen.
 - React Import Wizard implementieren.
 - Authentifizierung, Autorisierung und Freigaberollen definieren.
 
 ## Storage und Betrieb
 
-- `DatabaseImportWriter` und `RawZoneWriter` implementieren.
+- fachliches und transaktionales Mapping im vorbereiteten `DatabaseImportWriter` implementieren.
+- dateibasierten RawZoneWriter für produktiven Storage, Retention und Zugriffsschutz härten.
 - Import History und Background Jobs bereitstellen.
 - externe Konfiguration, strukturiertes Logging, Monitoring, Docker und CI/CD ergänzen.
 

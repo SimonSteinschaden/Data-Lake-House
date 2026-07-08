@@ -2,25 +2,48 @@
 
 ## Aktueller Stand
 
-Es existiert noch kein ASP.NET-Core-API-Projekt, kein Controller, kein HTTP-Endpunkt und keine OpenAPI-Konfiguration.
+`Enset.Api` ist eine ASP.NET-Core-API auf .NET 10. Controller greifen ausschließlich auf Application-Use-Cases und Repository-Ports zu; sie injizieren oder rufen keinen `IImportWriter` direkt auf.
 
-In `Enset.Application/Imports/DTOs/Api` sind ausschließlich vorbereitende Verträge vorhanden:
+## Endpunkte
 
-- `ImportIssueResponseDto`
-- `ImportReportResponseDto`
-- `ApplyImportResolutionRequest`
+### POST `/api/v1/imports/analyze`
 
-Diese DTOs werden noch nicht durch Endpunkte oder Mapper verwendet. `ImportReport` wird nicht persistiert; deshalb kann eine API aktuell keinen Report anhand der `ImportId` wieder laden.
+- erwartet `multipart/form-data` mit Feld `file` (`.xlsx` oder `.xlsm`);
+- erwartet den Header `X-User-Id` für den Auditkontext;
+- staged und hasht die Originaldatei;
+- führt ausschließlich `ImportCoordinator` über `IImportAnalysisService` aus;
+- persistiert und liefert den `ImportReport`.
 
-## Verbleibende Arbeiten gemäß Baseline v1.0
+### GET `/api/v1/imports/{importId}`
 
-- API-Projekt und Composition Root einrichten;
-- Analyse-Endpunkt für Imports bereitstellen;
-- Reportpersistenz und Abfrage über `ImportId` implementieren;
-- Resolution-Endpunkt auf `IApplyResolutionService` aufbauen;
-- DTO-Mapping und Eingabevalidierung ergänzen;
-- Authentifizierung, Autorisierung und Audit-Kontext definieren;
-- OpenAPI-/Swagger-Dokumentation und Fehlerverträge bereitstellen;
-- Integrations- und Sicherheitstests ergänzen.
+- lädt einen persistierten Report über `IImportReportRepository`;
+- liefert 404 für unbekannte ImportIds.
 
-Dieses Dokument legt keine neuen Endpunkte oder Zielarchitektur fest.
+### POST `/api/v1/imports/{importId}/resolutions`
+
+- erwartet UserId und eine Liste von Issue-Resolutionen;
+- verwendet `IApplyResolutionService`;
+- erlaubt wiederholte Änderungen vor dem Commit;
+- speichert Audit Trail und Reportstatus;
+- führt keinen Writer aus.
+
+### POST `/api/v1/imports/{importId}/commit`
+
+- erwartet UserId, TargetMode, TargetWriter, optionale TargetLocation und Raw-Zone-Option;
+- verwendet ausschließlich `IImportCommitService`;
+- erzeugt intern den `ImportWriteContext` und wertet `IImportWriteGate` aus;
+- ruft erst nach erfolgreichem Gate den ausgewählten `IImportWriter` auf;
+- liefert Gate-Fehler als Conflict-Response.
+
+## Persistenz und Datenschutz
+
+`JsonImportReportRepository` ist eine austauschbare dateibasierte Implementierung des Application-Ports. API-Responses enthalten Source-Metadaten und Hash, aber keine internen Staging- oder Raw-Zone-Pfade.
+
+## Noch offen
+
+- OpenAPI/Swagger und versionierte API-Fehlerverträge;
+- Authentifizierung/Autorisierung statt übermittelter UserId;
+- Uploadgrößen-, Malware- und Content-Prüfung;
+- datenbankgestütztes Repository mit Concurrency Control;
+- API-Integrations-, Sicherheits- und End-to-End-Tests;
+- React-Client.

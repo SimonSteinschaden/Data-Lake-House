@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 
-namespace Enset.Api.Contracts;
+namespace Enset.Api.Contracts.Imports.Requests;
 
 public sealed class AnalyzeImportFormRequest
 {

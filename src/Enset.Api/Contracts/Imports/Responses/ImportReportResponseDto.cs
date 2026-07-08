@@ -1,7 +1,8 @@
 using Enset.Application.Imports.Decisions;
+using Enset.Application.Imports.DTOs;
 using Enset.Application.Imports.Enums;
 
-namespace Enset.Application.Imports.DTOs.Api;
+namespace Enset.Api.Contracts.Imports.Responses;
 
 public sealed class ImportReportResponseDto
 {

@@ -1,4 +1,4 @@
-using Enset.Application.Imports.DTOs.Api;
+using Enset.Api.Contracts.Imports.Responses;
 using Enset.Application.Imports.Reports;
 
 namespace Enset.Api.Mapping;

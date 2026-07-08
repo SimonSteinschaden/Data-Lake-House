@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Enset.Worker")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6da9532d20b4454693ac38cab4e44219f4c5c27a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9d0d0fdc421c1a863cb605289c159ed12552706f")]
 [assembly: System.Reflection.AssemblyProductAttribute("Enset.Worker")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Enset.Worker")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

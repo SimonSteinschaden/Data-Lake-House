@@ -1,8 +1,8 @@
 using Enset.Application.Imports.Enums;
 
-namespace Enset.Application.Imports.DTOs.Api;
+namespace Enset.Api.Contracts.Imports.Requests;
 
-public sealed class CommitImportRequest
+public sealed class CommitImportApiRequest
 {
     public string UserId { get; init; } = string.Empty;
 

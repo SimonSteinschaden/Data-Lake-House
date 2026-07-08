@@ -40,6 +40,7 @@ builder.Services.AddSingleton<IRawZoneWriter>(
     new FileSystemRawZoneWriter(rawZonePath));
 builder.Services.AddSingleton<IImportCommitService, ImportCommitService>();
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -51,6 +52,8 @@ if (app.Environment.IsDevelopment()) // Enable Swagger only in development envir
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.MapControllers();
 app.Run();
 

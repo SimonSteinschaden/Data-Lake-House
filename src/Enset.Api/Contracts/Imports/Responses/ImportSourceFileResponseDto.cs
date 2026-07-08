@@ -1,4 +1,4 @@
-namespace Enset.Application.Imports.DTOs.Api;
+namespace Enset.Api.Contracts.Imports.Responses;
 
 public sealed class ImportSourceFileResponseDto
 {

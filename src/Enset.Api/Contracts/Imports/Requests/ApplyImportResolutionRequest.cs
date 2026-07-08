@@ -1,6 +1,6 @@
 using Enset.Application.Imports.Resolution;
 
-namespace Enset.Application.Imports.DTOs.Api;
+namespace Enset.Api.Contracts.Imports.Requests;
 
 public sealed class ApplyImportResolutionRequest
 {

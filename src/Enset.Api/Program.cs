@@ -10,6 +10,7 @@ using Enset.Infrastructure.Imports.Excel;
 using Enset.Infrastructure.Imports.Persistence;
 using Enset.Infrastructure.Imports.RawZone;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
@@ -38,8 +39,17 @@ builder.Services.AddSingleton<IImportWriter, DatabaseImportWriter>();
 builder.Services.AddSingleton<IRawZoneWriter>(
     new FileSystemRawZoneWriter(rawZonePath));
 builder.Services.AddSingleton<IImportCommitService, ImportCommitService>();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment()) // Enable Swagger only in development environment
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 app.Run();

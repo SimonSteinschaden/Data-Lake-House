@@ -4,8 +4,12 @@ using Enset.Application.Imports.DTOs.Api;
 using Enset.Application.Imports.WriteGate;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Enset.Api.Controllers;
+namespace Enset.Api.Controllers; 
 
+/// <summary>
+/// Controller for handling import-related operations. HTTP entry point for import analysis, resolution application, and commit operations.
+/// (HTTP Einstiegsschicht)
+/// </summary>
 [ApiController]
 [Route("api/v1/imports")]
 public sealed class ImportsController : ControllerBase

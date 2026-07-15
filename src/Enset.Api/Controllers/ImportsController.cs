@@ -3,9 +3,14 @@ using Enset.Application.Imports.Abstractions;
 using Enset.Application.Imports.DTOs.Api;
 using Enset.Application.Imports.WriteGate;
 using Microsoft.AspNetCore.Mvc;
+using Enset.Api.Contracts;
 
-namespace Enset.Api.Controllers;
+namespace Enset.Api.Controllers; 
 
+/// <summary>
+/// Controller for handling import-related operations. HTTP entry point for import analysis, resolution application, and commit operations.
+/// (HTTP Einstiegsschicht)
+/// </summary>
 [ApiController]
 [Route("api/v1/imports")]
 public sealed class ImportsController : ControllerBase
@@ -33,24 +38,24 @@ public sealed class ImportsController : ControllerBase
     [HttpPost("analyze")]
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<ImportReportResponseDto>> Analyze(
-        [FromForm] IFormFile file,
+        [FromForm] AnalyzeImportFormRequest request,
         [FromHeader(Name = "X-User-Id")] string userId,
         CancellationToken cancellationToken)
     {
-        if (file.Length == 0)
+        if (request.File.Length == 0)
             return BadRequest("An Excel file is required.");
 
-        if (!SupportedExtensions.Contains(Path.GetExtension(file.FileName)))
+        if (!SupportedExtensions.Contains(Path.GetExtension(request.File.FileName)))
             return BadRequest("Only .xlsx and .xlsm files are supported.");
 
         if (string.IsNullOrWhiteSpace(userId))
             return BadRequest("X-User-Id header is required.");
 
-        await using var source = file.OpenReadStream();
+        await using var source = request.File.OpenReadStream();
         var report = await _analysisService.AnalyzeAsync(
             source,
-            file.FileName,
-            file.ContentType,
+            request.File.FileName,
+            request.File.ContentType,
             userId,
             cancellationToken);
 
@@ -71,7 +76,7 @@ public sealed class ImportsController : ControllerBase
     [HttpPost("{importId:guid}/resolutions")]
     public async Task<ActionResult<ImportReportResponseDto>> ApplyResolutions(
         Guid importId,
-        ApplyImportResolutionRequest request,
+        [FromBody] ApplyImportResolutionRequest request,
         CancellationToken cancellationToken)
     {
         var report = await _reports.GetAsync(importId, cancellationToken);
@@ -105,7 +110,7 @@ public sealed class ImportsController : ControllerBase
     [HttpPost("{importId:guid}/commit")]
     public async Task<ActionResult<ImportReportResponseDto>> Commit(
         Guid importId,
-        CommitImportRequest request,
+        [FromBody] CommitImportRequest request,
         CancellationToken cancellationToken)
     {
         var result = await _commitService.CommitAsync(

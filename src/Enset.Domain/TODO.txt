@@ -1,0 +1,24 @@
+Domain
+│
+├── Buildings
+├── Customers
+├── Projects
+├── Geography
+├── Documents
+│
+├── Assets
+│   ├── EnergySystems
+│   ├── Meters
+│   └── Sensors
+│
+├── Energy
+│   ├── MeterReadings
+│   ├── Assessments
+│   ├── Benchmarks
+│   ├── Indicators
+│   ├── Certificates
+│   └── Forecasts
+│
+├── Imports
+├── Calculations
+└── Common

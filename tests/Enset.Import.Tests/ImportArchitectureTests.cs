@@ -11,12 +11,32 @@ using Enset.Application.Imports.Reports;
 using Enset.Application.Imports.Resolution;
 using Enset.Application.Imports.WriteGate;
 using Enset.Infrastructure.Imports.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace Enset.Import.Tests;
 
 public sealed class ImportArchitectureTests
 {
+    [Fact]
+    public void Infrastructure_ContainsSingleCanonicalDbContext()
+    {
+        var infrastructureAssembly =
+            typeof(Enset.Infrastructure.Persistence.EnsetDbContext).Assembly;
+
+        var contextTypes = infrastructureAssembly
+            .GetTypes()
+            .Where(type =>
+                !type.IsAbstract &&
+                typeof(DbContext).IsAssignableFrom(type))
+            .ToList();
+
+        var contextType = Assert.Single(contextTypes);
+        Assert.Equal(
+            typeof(Enset.Infrastructure.Persistence.EnsetDbContext),
+            contextType);
+    }
+
     [Fact]
     public async Task ImportCoordinator_RemainsAnalyzeOnly()
     {
@@ -223,9 +243,9 @@ public sealed class ImportArchitectureTests
         };
     }
 
-    private static ImportCommitRequest CreateCommitRequest(Guid importId)
+    private static ImportCommitCommand CreateCommitRequest(Guid importId)
     {
-        return new ImportCommitRequest
+        return new ImportCommitCommand
         {
             ImportId = importId,
             UserId = "tester",

@@ -5,13 +5,27 @@ namespace Enset.Infrastructure.Persistence;
 
 public class EnsetDbContextFactory : IDesignTimeDbContextFactory<EnsetDbContext>
 {
+    private const string ConnectionStringEnvironmentVariable =
+        "ENSET_CONNECTION_STRING";
+
     public EnsetDbContext CreateDbContext(string[] args)
     {
+        var connectionString = Environment.GetEnvironmentVariable(
+            ConnectionStringEnvironmentVariable);
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                $"Set the '{ConnectionStringEnvironmentVariable}' environment variable " +
+                "before running Entity Framework Core design-time commands.");
+        }
+
         var optionsBuilder = new DbContextOptionsBuilder<EnsetDbContext>();
 
         optionsBuilder.UseNpgsql(
-            "Host=localhost;Port=5432;Database=enset_datalakehouse;Username=postgres;Password=postgres"
-        );
+            connectionString,
+            npgsql => npgsql.MigrationsAssembly(
+                typeof(EnsetDbContext).Assembly.FullName));
 
         return new EnsetDbContext(optionsBuilder.Options);
     }

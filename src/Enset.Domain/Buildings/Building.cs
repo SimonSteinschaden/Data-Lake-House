@@ -1,41 +1,42 @@
 using Enset.Domain.Common;
-using Enset.Domain.Projects;
-using Enset.Domain.Geography;
+using Enset.Domain.Customers;
+using Enset.Domain.Documents;
 using Enset.Domain.Energy;
+using Enset.Domain.Geography;
+using Enset.Domain.Projects;
 
 namespace Enset.Domain.Buildings;
 
 public class Building : BaseEntity
 {
-    public Guid ProjectId { get; set; }
-
-    public Project Project { get; set; } = null!;
-
-    public Guid DistrictId { get; set; }
-
-    public District District { get; set; } = null!;
+    public string BuildingNumber { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;
 
-    public PrimaryUseType PrimaryUseType { get; set; }
+    public Guid? ProjectId { get; set; }
 
-    public BuildingCategory BuildingCategory { get; set; }
+    public Project? Project { get; set; }
 
-    public OwnershipType OwnershipType { get; set; }
+    public Guid? DistrictId { get; set; }
 
-    public bool IsResidential { get; set; }
+    public District? District { get; set; }
 
-    public bool IsCommercial { get; set; }
+    public string? ExternalIdentifier { get; set; }
 
-    public bool IsPublic { get; set; }
+    public bool IsActive { get; set; } = true;
 
-    public bool HasMixedUse { get; set; }
+    public ICollection<BuildingVersion> Versions { get; set; }
+        = new List<BuildingVersion>();
 
-    public int? YearOfConstruction { get; set; }
+    public ICollection<CustomerBuildingAssignment> CustomerAssignments { get; set; }
+        = new List<CustomerBuildingAssignment>();
 
-    public decimal? FloorAreaM2 { get; set; }
+    public ICollection<EnergySystemBuildingAssignment> EnergySystemAssignments { get; set; }
+    = new List<EnergySystemBuildingAssignment>();
 
-    public ICollection<EnergySystem> EnergySystems { get; set; } = new List<EnergySystem>();
+    public ICollection<Meter> Meters { get; set; }
+        = new List<Meter>();
 
-    public ICollection<Meter> Meters { get; set; } = new List<Meter>();
+    public ICollection<Document> Documents { get; set; }
+        = new List<Document>();
 }

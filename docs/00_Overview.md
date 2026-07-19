@@ -23,6 +23,7 @@ Die Reviews v1.1 und v1.2 ersetzen oder verändern die Baseline nicht.
 - `09_KPIs.md`: KPI-Modell und Implementierungsstatus
 - `10_Entities.md`: C#-Entities und Prozessmodelle
 - `11_Roadmap.md`: verbleibende Meilensteine bis Version 1.0
+- `12_Phase_3_Data_Platform.md`: verbindlicher technischer Blueprint für PostgreSQL, TimescaleDB, operative APIs, Historisierung, KPI, Reporting, Monitoring und Phase-4-Sicherheitsvorbereitung
 - `Decisions/Todos.md`: konkrete technische TODOs
 
 ## Kurzstatus

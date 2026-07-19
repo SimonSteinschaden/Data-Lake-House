@@ -1,57 +1,26 @@
-using System.Text.Json.Serialization;
-using Enset.Api.Logging;
-using Enset.Application.Imports.Abstractions;
-using Enset.Application.Imports.Coordination;
-using Enset.Application.Imports.Resolution;
-using Enset.Application.Imports.WriteGate;
-using Enset.Infrastructure.Imports.Analysis;
-using Enset.Infrastructure.Imports.Database;
-using Enset.Infrastructure.Imports.Excel;
-using Enset.Infrastructure.Imports.Persistence;
-using Enset.Infrastructure.Imports.RawZone;
-
+using Enset.Api.Extensions;
+using Enset.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddControllers()
-    .AddJsonOptions(options =>
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    .AddApiServices()
+    .AddOpenApiServices()
+    .AddImportServices(builder.Environment);
 
-var appDataPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
-var reportPath = Path.Combine(appDataPath, "import-reports");
-var stagingPath = Path.Combine(appDataPath, "staging");
-var rawZonePath = Path.Combine(appDataPath, "raw-zone");
-var outputPath = Path.Combine(appDataPath, "outputs");
+var connectionString = builder.Configuration.GetConnectionString(
+    "EnsetDatabase")
+    ?? throw new InvalidOperationException(
+        "Connection string 'EnsetDatabase' is not configured.");
 
-builder.Services.AddSingleton<IImportLogger, ApiImportLogger>();
-builder.Services.AddSingleton<IImportReportRepository>(
-    new JsonImportReportRepository(reportPath));
-builder.Services.AddSingleton<IImportAnalysisService>(services =>
-    new ExcelImportAnalysisService(
-        stagingPath,
-        services.GetRequiredService<IImportReportRepository>(),
-        services.GetRequiredService<IImportLogger>()));
-builder.Services.AddSingleton<IApplyResolutionService, ApplyResolutionService>();
-builder.Services.AddSingleton<IImportWriteGate, ImportWriteGate>();
-builder.Services.AddSingleton<IImportWriter>(new ExcelImportWriter(outputPath));
-builder.Services.AddSingleton<IImportWriter, DatabaseImportWriter>();
-builder.Services.AddSingleton<IRawZoneWriter>(
-    new FileSystemRawZoneWriter(rawZonePath));
-builder.Services.AddSingleton<IImportCommitService, ImportCommitService>();
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddDbPersistence(connectionString);
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment()) // Enable Swagger only in development environment
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseApiPipeline();
 
 app.MapControllers();
+
 app.Run();
 
 public partial class Program;

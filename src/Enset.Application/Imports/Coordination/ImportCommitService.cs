@@ -3,6 +3,7 @@ using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Reports;
 using Enset.Application.Imports.WriteGate;
 
+
 namespace Enset.Application.Imports.Coordination;
 
 public sealed class ImportCommitService : IImportCommitService
@@ -25,22 +26,22 @@ public sealed class ImportCommitService : IImportCommitService
     }
 
     public async Task<ImportCommitResult> CommitAsync(
-        ImportCommitRequest request,
+        ImportCommitCommand command,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(command);
 
-        var report = await _reports.GetAsync(request.ImportId, cancellationToken);
+        var report = await _reports.GetAsync(command.ImportId, cancellationToken);
         var context = new ImportWriteContext
         {
-            ImportId = request.ImportId,
+            ImportId = command.ImportId,
             Report = report,
-            TargetMode = request.TargetMode,
-            TargetWriter = request.TargetWriter,
-            UserId = request.UserId,
-            Timestamp = request.Timestamp,
-            TargetLocation = request.TargetLocation,
-            ArchiveRawSource = request.ArchiveRawSource
+            TargetMode = command.TargetMode,
+            TargetWriter = command.TargetWriter,
+            UserId = command.UserId,
+            Timestamp = command.Timestamp,
+            TargetLocation = command.TargetLocation,
+            ArchiveRawSource = command.ArchiveRawSource
         };
 
         var gateResult = _writeGate.Evaluate(context);
@@ -55,7 +56,7 @@ public sealed class ImportCommitService : IImportCommitService
         }
 
         var writer = _writers.SingleOrDefault(candidate =>
-            candidate.WriterType == request.TargetWriter);
+            candidate.WriterType == command.TargetWriter);
 
         if (writer is null)
         {
@@ -65,24 +66,24 @@ public sealed class ImportCommitService : IImportCommitService
                 Report = report,
                 GateResult = new ImportWriteGateResult
                 {
-                    Errors = [$"No writer is registered for target '{request.TargetWriter}'."]
+                    Errors = [$"No writer is registered for target '{command.TargetWriter}'."]
                 }
             };
         }
 
         report!.Status = ImportStatus.Committing;
-        report.UpdatedAt = request.Timestamp;
+        report.UpdatedAt = command.Timestamp;
         report.AuditTrail.Add(CreateAudit(
-            request,
+            command,
             "CommitStarted",
-            $"Writer={request.TargetWriter}; Mode={request.TargetMode}"));
+            $"Writer={command.TargetWriter}; Mode={command.TargetMode}"));
         await _reports.SaveAsync(report, cancellationToken);
 
         try
         {
             await writer.WriteAsync(context, cancellationToken);
 
-            if (request.ArchiveRawSource && _rawZoneWriter is not null)
+            if (command.ArchiveRawSource && _rawZoneWriter is not null)
             {
                 report.SourceFile!.RawStoragePath =
                     await _rawZoneWriter.ArchiveAsync(context, cancellationToken);
@@ -90,7 +91,7 @@ public sealed class ImportCommitService : IImportCommitService
 
             report.Status = ImportStatus.Committed;
             report.UpdatedAt = DateTime.UtcNow;
-            report.AuditTrail.Add(CreateAudit(request, "CommitCompleted"));
+            report.AuditTrail.Add(CreateAudit(command, "CommitCompleted"));
             await _reports.SaveAsync(report, cancellationToken);
 
             return new ImportCommitResult
@@ -105,7 +106,7 @@ public sealed class ImportCommitService : IImportCommitService
             report.Status = ImportStatus.Failed;
             report.UpdatedAt = DateTime.UtcNow;
             report.AuditTrail.Add(CreateAudit(
-                request,
+                command,
                 "CommitFailed",
                 exception.Message));
             await _reports.SaveAsync(report, cancellationToken);
@@ -114,14 +115,14 @@ public sealed class ImportCommitService : IImportCommitService
     }
 
     private static ImportAuditEntry CreateAudit(
-        ImportCommitRequest request,
+        ImportCommitCommand command,
         string action,
         string? details = null)
     {
         return new ImportAuditEntry
         {
-            Timestamp = request.Timestamp,
-            UserId = request.UserId,
+            Timestamp = command.Timestamp,
+            UserId = command.UserId,
             Action = action,
             Details = details
         };

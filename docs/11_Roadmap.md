@@ -2,6 +2,8 @@
 
 Die Roadmap konkretisiert ausschließlich die noch offenen Arbeiten der verbindlichen Architecture Baseline v1.0. Sie definiert keine neue Zielarchitektur.
 
+> Für Phase 3 ist `12_Phase_3_Data_Platform.md` der verbindliche technische Blueprint. Der Schwerpunkt liegt auf der operativen PostgreSQL-/TimescaleDB-Plattform; der Import ist nur ein Zuführungsweg.
+
 ## Meilenstein 1: Importworkflow absichern
 
 - [x] Application-gesteuerten `ImportCoordinator` einführen

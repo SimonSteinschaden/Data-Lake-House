@@ -1,19 +1,19 @@
-using Enset.Application.Imports.DTOs.Api;
+using Enset.Api.Contracts.Imports.Responses;
 using Enset.Application.Imports.Reports;
 
 namespace Enset.Api.Mapping;
 
 public static class ImportReportResponseMapper
 {
-    public static ImportReportResponseDto ToResponse(this ImportReport report)
+    public static ImportReportResponse ToResponse(this ImportReport report)
     {
-        return new ImportReportResponseDto
+        return new ImportReportResponse
         {
             ImportId = report.ImportId,
             Status = report.Status,
             SourceFile = report.SourceFile is null
                 ? null
-                : new ImportSourceFileResponseDto
+                : new ImportSourceFileResponse
                 {
                     FileName = report.SourceFile.FileName,
                     ContentType = report.SourceFile.ContentType,
@@ -22,7 +22,7 @@ public static class ImportReportResponseMapper
                     IsRawArchived = !string.IsNullOrWhiteSpace(report.SourceFile.RawStoragePath)
                 },
             Customers = report.Customers,
-            Issues = report.Issues.Select(issue => new ImportIssueResponseDto
+            Issues = report.Issues.Select(issue => new ImportIssueResponse
             {
                 IssueId = issue.IssueId,
                 EntityId = issue.EntityId,
@@ -38,7 +38,7 @@ public static class ImportReportResponseMapper
                 CustomResolvedValue = issue.CustomResolvedValue,
                 IsResolved = issue.IsResolved
             }).ToList(),
-            AuditTrail = report.AuditTrail.Select(entry => new ImportAuditEntryResponseDto
+            AuditTrail = report.AuditTrail.Select(entry => new ImportAuditEntryResponse
             {
                 AuditId = entry.AuditId,
                 Timestamp = entry.Timestamp,

@@ -14,7 +14,7 @@ public static class DuplicationResolutionRunner
     public static async Task<ImportCommitResult> RunAsync(
         ImportReport report,
         IReadOnlyCollection<ImportIssueResolution> resolutions,
-        ImportCommitRequest commitRequest,
+        ImportCommitCommand commitRequest,
         IApplyResolutionService resolutionService,
         IImportReportRepository reports,
         IImportCommitService commitService,

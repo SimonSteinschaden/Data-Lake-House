@@ -1,5 +1,8 @@
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Beschreibt den Lebenszyklusstatus eines Datenprodukts.
+/// </summary>
 public enum DataProductStatus
 {
     Draft = 0, // Represents a data product that is still in the development or planning stage, and has not yet been finalized or released for use

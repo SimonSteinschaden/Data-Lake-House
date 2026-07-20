@@ -1,0 +1,23 @@
+GenerateDataProductCommand
+            │
+            ▼
+GenerationService
+            │
+            ├──────────────► AuthorizationService
+            │
+            ├──────────────► AvailabilityService
+            │
+            ├──────────────► passenden Generator finden
+            │
+            ▼
+Generator
+            │
+            ▼
+Context erweitern
+            │
+            ▼
+GenerationService
+            │
+            ├── Version erzeugen
+            ├── Values speichern
+            └── GenerationRun abschließen

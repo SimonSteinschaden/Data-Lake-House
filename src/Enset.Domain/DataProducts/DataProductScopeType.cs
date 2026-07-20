@@ -1,3 +1,8 @@
+namespace Enset.Domain.DataProducts;
+
+/// <summary>
+/// Kennzeichnet den unterstützten fachlichen oder räumlichen Geltungsbereich.
+/// </summary>
 public enum DataProductScopeType
 {
     Unknown = 0,

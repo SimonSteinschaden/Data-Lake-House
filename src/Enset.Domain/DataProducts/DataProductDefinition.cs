@@ -2,6 +2,9 @@ using Enset.Domain.Common;
 
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Definiert Typ, Ergebnisform und zulässige Geltungsbereiche eines Datenprodukts.
+/// </summary>
 public class DataProductDefinition : BaseEntity
 {
     public string Code { get; set; } = string.Empty;

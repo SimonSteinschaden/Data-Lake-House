@@ -1,3 +1,8 @@
+namespace Enset.Domain.DataProducts;
+
+/// <summary>
+/// Kennzeichnet die fachliche Art des Ergebnisses eines Datenprodukts.
+/// </summary>
 public enum DataProductResultType
 {
     Actual = 1,

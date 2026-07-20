@@ -1,3 +1,10 @@
+using Enset.Domain.Common;
+
+namespace Enset.Domain.DataProducts;
+
+/// <summary>
+/// Beschreibt die Veröffentlichung einer Datenproduktversion im Marktplatz.
+/// </summary>
 public class DataProductMarketplacePublication : BaseEntity
 {
     public Guid DataProductVersionId { get; set; }

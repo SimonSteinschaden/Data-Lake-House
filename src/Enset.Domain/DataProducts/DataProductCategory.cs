@@ -1,3 +1,8 @@
+namespace Enset.Domain.DataProducts;
+
+/// <summary>
+/// Kategorisiert Datenproduktdefinitionen nach ihrem fachlichen Anwendungsbereich.
+/// </summary>
 public enum DataProductCategory
 {
     Unknown = 0,

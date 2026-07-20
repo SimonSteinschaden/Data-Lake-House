@@ -2,6 +2,9 @@ using Enset.Domain.Common;
 
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Repräsentiert eine konkrete, kundenspezifische Instanz eines Datenprodukts.
+/// </summary>
 public class DataProduct : BaseEntity
 {
     public string ProductNumber { get; set; } = string.Empty;

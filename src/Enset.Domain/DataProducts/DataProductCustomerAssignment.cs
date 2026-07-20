@@ -3,6 +3,9 @@ using Enset.Domain.Customers;
 
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Ordnet ein Datenprodukt einem Kunden mit Rolle und Gültigkeitszeitraum zu.
+/// </summary>
 public class DataProductCustomerAssignment : BaseEntity
 {
     public Guid DataProductId { get; set; }

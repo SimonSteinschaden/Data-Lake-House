@@ -3,6 +3,9 @@ using Enset.Domain.Data;
 
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Speichert einen typisierten Einzelwert einer Datenproduktversion.
+/// </summary>
 public class DataProductValue : BaseEntity
 {
     public Guid DataProductVersionId { get; set; }

@@ -1,5 +1,8 @@
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Beschreibt den Bearbeitungsstatus eines Generierungslaufs.
+/// </summary>
 public enum DataProductGenerationStatus
 {
     Pending = 0,

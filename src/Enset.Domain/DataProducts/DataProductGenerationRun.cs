@@ -2,6 +2,9 @@ using Enset.Domain.Common;
 
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Protokolliert Ausführung, Parameter und Ergebnis eines Generierungslaufs.
+/// </summary>
 public class DataProductGenerationRun : BaseEntity
 {
     public DateTime StartedAt { get; set; }

@@ -1,5 +1,8 @@
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Beschreibt die fachliche Rolle eines Kunden in Bezug auf ein Datenprodukt.
+/// </summary>
 public enum DataProductCustomerRole
 {
     Owner = 0, // Represents the primary owner of the data product, responsible for its management and decision-making regarding its use and distribution

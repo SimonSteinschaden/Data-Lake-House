@@ -1,3 +1,15 @@
+using Enset.Domain.Buildings;
+using Enset.Domain.Common;
+using Enset.Domain.Customers;
+using Enset.Domain.Energy;
+using Enset.Domain.EnergyCommunities;
+using Enset.Domain.Geography;
+
+namespace Enset.Domain.DataProducts;
+
+/// <summary>
+/// Ordnet ein Datenprodukt genau einem fachlichen oder räumlichen Bezug zu.
+/// </summary>
 public class DataProductScopeAssignment : BaseEntity
 {
     public Guid DataProductId { get; set; }

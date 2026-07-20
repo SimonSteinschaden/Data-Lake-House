@@ -1,5 +1,8 @@
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Beschreibt den Lebenszyklusstatus einer Datenproduktversion.
+/// </summary>
 public enum DataProductVersionStatus
 {
     Draft = 0, // Represents a version of the data product that is still in the development or planning stage, and has not yet been finalized or released for use

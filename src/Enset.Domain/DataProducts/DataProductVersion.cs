@@ -3,6 +3,9 @@ using Enset.Domain.Data;
 
 namespace Enset.Domain.DataProducts;
 
+/// <summary>
+/// Repräsentiert eine erzeugte und fachlich versionierte Ausgabe eines Datenprodukts.
+/// </summary>
 public class DataProductVersion : BaseEntity
 {
     public Guid DataProductId { get; set; }

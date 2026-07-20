@@ -3,6 +3,7 @@ using System;
 using Enset.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Enset.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(EnsetDbContext))]
-    partial class EnsetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260720100420_AddDataProductVerticalSlice")]
+    partial class AddDataProductVerticalSlice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

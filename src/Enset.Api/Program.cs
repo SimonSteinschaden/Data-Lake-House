@@ -1,5 +1,6 @@
 using Enset.Api.Extensions;
 using Enset.Infrastructure.Persistence;
+using Enset.Infrastructure.DataProducts;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,11 @@ var connectionString = builder.Configuration.GetConnectionString(
 builder.Services.AddDbPersistence(connectionString);
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    await app.Services.SeedDataProductDemoAsync();
+}
 
 app.UseApiPipeline();
 

@@ -30,6 +30,10 @@ const navigationItems: NavigationItem[] = [
     label: "Analysen",
   },
   {
+    path: "/data-products",
+    label: "Data Products",
+  },
+  {
     path: "/settings",
     label: "Einstellungen",
   },

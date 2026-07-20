@@ -13,7 +13,23 @@ public sealed class EfDataProductRepository : IDataProductRepository,
 
     public Task<DataProduct?> GetForGenerationAsync(Guid id, CancellationToken cancellationToken = default) =>
         _db.DataProducts.Include(x => x.Definition).Include(x => x.ScopeAssignments)
+            .Include(x => x.CustomerAssignments)
             .SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<DataProduct>> ListAsync(CancellationToken cancellationToken = default) =>
+        await _db.DataProducts.AsNoTracking().Include(x => x.Definition)
+            .Include(x => x.ScopeAssignments).Include(x => x.Versions)
+            .OrderBy(x => x.Name).ToListAsync(cancellationToken);
+
+    public Task<DataProductVersion?> GetLatestVersionAsync(Guid id, CancellationToken cancellationToken = default) =>
+        _db.DataProductVersions.AsNoTracking().Include(x => x.Values)
+            .Include(x => x.GenerationRun).Where(x => x.DataProductId == id)
+            .OrderByDescending(x => x.VersionNumber).FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<DataProductVersion>> GetVersionsAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await _db.DataProductVersions.AsNoTracking().Include(x => x.Values)
+            .Include(x => x.GenerationRun).Where(x => x.DataProductId == id)
+            .OrderByDescending(x => x.VersionNumber).ToListAsync(cancellationToken);
 
     public async Task<int> GetNextVersionNumberAsync(Guid id, CancellationToken cancellationToken = default) =>
         (await _db.DataProductVersions.Where(x => x.DataProductId == id)

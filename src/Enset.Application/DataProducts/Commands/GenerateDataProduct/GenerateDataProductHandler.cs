@@ -1,4 +1,5 @@
 using Enset.Application.DataProducts.Generation.Abstractions;
+using Enset.Domain.DataProducts;
 
 namespace Enset.Application.DataProducts.Commands.GenerateDataProduct;
 
@@ -15,7 +16,7 @@ public sealed class GenerateDataProductHandler
         _generationService = generationService;
     }
 
-    public Task HandleAsync(
+    public Task<DataProductVersion> HandleAsync(
         GenerateDataProductCommand command,
         CancellationToken cancellationToken = default)
     {

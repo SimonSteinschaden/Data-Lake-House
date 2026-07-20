@@ -2,6 +2,7 @@ using Enset.Domain.Buildings;
 using Enset.Domain.Common;
 using Enset.Domain.Energy;
 using Enset.Domain.Geography;
+using Enset.Domain.DataProducts;
 using Enset.Infrastructure.Persistence;
 
 using Microsoft.EntityFrameworkCore;
@@ -75,6 +76,15 @@ public class GeographyModelTests
         AssertRelationship<Address, PostalCodeArea>(
             nameof(Address.PostalCodeAreaId),
             isRequired: false);
+    }
+
+    [Fact]
+    public void Data_product_versions_have_unique_product_version_index()
+    {
+        var entity = _model.FindEntityType(typeof(DataProductVersion))!;
+        Assert.Contains(entity.GetIndexes(), index => index.IsUnique
+            && index.Properties.Select(x => x.Name)
+                .SequenceEqual([nameof(DataProductVersion.DataProductId), nameof(DataProductVersion.VersionNumber)]));
     }
 
     private void AssertRelationship<TDependent, TPrincipal>(

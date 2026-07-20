@@ -10,10 +10,25 @@ namespace Enset.Application.DataProducts.Generation.Services;
 public sealed class DataProductGenerationAuthorizationService
     : IDataProductGenerationAuthorizationService
 {
-    public Task<DataProductGenerationAuthorizationResult> AuthorizeAsync(
+    private readonly IDataProductRepository _repository;
+
+    public DataProductGenerationAuthorizationService(IDataProductRepository repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<DataProductGenerationAuthorizationResult> AuthorizeAsync(
         GenerateDataProductCommand command,
         CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(DataProductGenerationAuthorizationResult.Allowed());
+        if (command.RequestedByUserId == Guid.Empty || command.CustomerId == Guid.Empty)
+            return DataProductGenerationAuthorizationResult.Denied("Benutzer und Kunde sind erforderlich.");
+
+        var product = await _repository.GetForGenerationAsync(command.DataProductId, cancellationToken);
+        return product?.CustomerAssignments.Any(x => x.CustomerId == command.CustomerId
+            && x.IsActive && x.ValidFrom <= DateTime.UtcNow
+            && (x.ValidTo == null || x.ValidTo >= DateTime.UtcNow)) == true
+            ? DataProductGenerationAuthorizationResult.Allowed()
+            : DataProductGenerationAuthorizationResult.Denied("Der Kunde ist für dieses Data Product nicht berechtigt.");
     }
 }

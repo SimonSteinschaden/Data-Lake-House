@@ -31,7 +31,7 @@ public sealed class DataProductGenerationService
             StringComparer.OrdinalIgnoreCase);
     }
 
-    public async Task GenerateAsync(
+    public async Task<DataProductVersion> GenerateAsync(
         GenerateDataProductCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -50,6 +50,12 @@ public sealed class DataProductGenerationService
             throw new UnauthorizedAccessException(
                 authorization.DenialReason
                 ?? "Die Berechnung ist für diesen Benutzer nicht freigegeben.");
+        }
+
+        if (dataProduct.ScopeAssignments.Count != 1)
+        {
+            throw new InvalidOperationException(
+                "Das Data Product muss genau einen fachlichen Scope besitzen.");
         }
 
         var availability = await _availabilityService.CheckAsync(
@@ -95,6 +101,12 @@ public sealed class DataProductGenerationService
             await generator.GenerateAsync(
                 context,
                 cancellationToken);
+
+            if (context.Values.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "Der Generator hat keine DataProductValues erzeugt.");
+            }
             
             var nextVersionNumber =
             await _dataProductRepository.GetNextVersionNumberAsync(
@@ -127,6 +139,8 @@ public sealed class DataProductGenerationService
             await _generationRunRepository.UpdateAsync(
                 run,
                 cancellationToken);
+
+            return version;
         }
         catch (OperationCanceledException)
         {

@@ -47,3 +47,13 @@
 - datenbankgestütztes Repository mit Concurrency Control;
 - API-Integrations-, Sicherheits- und End-to-End-Tests;
 - React-Client.
+# Data Products API
+
+- `GET /api/v1/data-products`
+- `GET /api/v1/data-products/{id}`
+- `GET /api/v1/data-products/{id}/generation-availability`
+- `POST /api/v1/data-products/{id}/generate`
+- `GET /api/v1/data-products/{id}/versions/latest`
+- `GET /api/v1/data-products/{id}/versions`
+
+Die API serialisiert ausschließlich Contracts/DTOs. Fachliche Fehler werden als `ProblemDetails` zurückgegeben. Bis zur Einführung einer Authentifizierung wird die Benutzer-ID analog zum Import-MVP über `X-User-Id` übertragen.

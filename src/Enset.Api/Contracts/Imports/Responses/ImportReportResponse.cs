@@ -28,6 +28,10 @@ public sealed class ImportReportResponse
 
     public int BuildingCount { get; init; }
 
+    public int MeterCount { get; init; }
+
+    public int MeterReadingCount { get; init; }
+
     public int IssueCount { get; init; }
 
     public int ErrorCount { get; init; }

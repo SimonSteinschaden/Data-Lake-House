@@ -1,126 +1,59 @@
 import { useState } from "react";
-
+import { importService } from "../../services/importService";
 import { ImportWizard } from "./components/ImportWizard";
-import type { ImportIssueViewModel } from "./components/models/ImportIssueViewModel";
 import type { ImportResolutionAction } from "./components/models/ImportResolutionAction";
-import type { ImportWizardStep } from "./types/ImportWizardStep";
-
+import type { WizardState } from "./components/models/WizardState";
 import "./ImportFeature.css";
 
-
-const initialIssues: ImportIssueViewModel[] = [
-  {
-    issueId: "building-address-conflict",
-    entityId: "building-42",
-    type: "AddressConflict",
-    severity: "Warning",
-    message: "Die Adresse unterscheidet sich vom Bestand.",
-    fieldName: "Adresse",
-    firstValue: "Hauptstrasse 12",
-    secondValue: "Hauptstrasse 12A",
-    requiresUserDecision: true,
-    isResolved: true,
-    resolutionAction: "KeepSecond",
-    customResolvedValue: null,
-  },
-  {
-    issueId: "customer-vat-missing",
-    entityId: "customer-7",
-    type: "MissingValue",
-    severity: "Info",
-    message: "Die UID-Nummer fehlt in der Importdatei.",
-    fieldName: "UID",
-    firstValue: "ATU12345678",
-    secondValue: null,
-    requiresUserDecision: false,
-    isResolved: true,
-    resolutionAction: "None",
-    customResolvedValue: null,
-  },
-];
+const initialState: WizardState = {
+  currentStep: "upload", selectedFile: null, importId: null,
+  analysisResult: null, isAnalyzing: false, analysisError: null,
+};
 
 export function ImportFeature() {
-  const [selectedFile, setSelectedFile] =
-    useState<File | null>(null);
-
-  const [currentStep, setCurrentStep] =
-    useState<ImportWizardStep>("upload");
-
-  const [issues, setIssues] =
-    useState<ImportIssueViewModel[]>(initialIssues);
-
-  // Temporäre UI-Daten bis zur API-Anbindung.
-  const customerCount = 12;
-  const buildingCount = 8;
+  const [state, setState] = useState<WizardState>(initialState);
 
   function handleFileSelected(file: File | null) {
-    setSelectedFile(file);
+    setState({ ...initialState, selectedFile: file });
   }
 
-  function handleAnalyze() {
-    if (!selectedFile) {
-      return;
+  async function handleAnalyze() {
+    if (!state.selectedFile || state.isAnalyzing) return;
+    setState(current => ({ ...current, isAnalyzing: true, analysisError: null }));
+    try {
+      const result = await importService.analyzeImport(state.selectedFile, "development-user");
+      setState(current => ({ ...current, importId: result.importId,
+        analysisResult: result, isAnalyzing: false, currentStep: "analysis" }));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Die Analyse konnte nicht ausgeführt werden.";
+      setState(current => ({ ...current, isAnalyzing: false, analysisError: message,
+        importId: null, analysisResult: null, currentStep: "upload" }));
     }
-
-    setCurrentStep("analysis");
   }
 
-  function handleResolutionChange(
-    issueId: string,
-    action: ImportResolutionAction,
-    customValue: string | null,
-  ) {
-    setIssues((currentIssues) =>
-      currentIssues.map((issue) =>
-        issue.issueId === issueId
-          ? {
-              ...issue,
-              resolutionAction: action,
-              customResolvedValue: customValue,
-              isResolved:
-                !issue.requiresUserDecision ||
-                action !== "None",
-            }
-          : issue,
-      ),
-    );
+  function handleResolutionChange(issueId: string, action: ImportResolutionAction, customValue: string | null) {
+    setState(current => {
+      if (!current.analysisResult) return current;
+      const issues = current.analysisResult.issues.map(issue => issue.issueId === issueId
+        ? { ...issue, resolutionAction: action, customResolvedValue: customValue,
+            isResolved: !issue.requiresUserDecision || action !== "None" }
+        : issue);
+      return { ...current, analysisResult: { ...current.analysisResult, issues } };
+    });
   }
 
-  function handleRestart() {
-    setSelectedFile(null);
-    setCurrentStep("upload");
-    setIssues(initialIssues);
-  }
+  const moveTo = (currentStep: WizardState["currentStep"]) =>
+    setState(current => ({ ...current, currentStep }));
 
-  return (
-    <div className="import-feature">
-      <header className="import-feature__header">
-        <div>
-          <h1>Datenimport</h1>
-          <p>
-            Excel-Daten analysieren, erkannte Konflikte prüfen und den
-            Import kontrolliert freigeben.
-          </p>
-        </div>
-      </header>
-
-      <ImportWizard
-        currentStep={currentStep}
-        selectedFile={selectedFile}
-        customerCount={customerCount}
-        buildingCount={buildingCount}
-        issues={issues}
-        onFileSelected={handleFileSelected}
-        onAnalyze={handleAnalyze}
-        onResolutionChange={handleResolutionChange}
-        onShowResolutions={() => setCurrentStep("resolution")}
-        onShowCommit={() => setCurrentStep("commit")}
-        onCommit={() => setCurrentStep("completed")}
-        onBackToUpload={() => setCurrentStep("upload")}
-        onBackToAnalysis={() => setCurrentStep("analysis")}
-        onBackToResolution={() => setCurrentStep("resolution")}
-        onRestart={handleRestart}
-      />
-    </div>
-  );
+  return <div className="import-feature">
+    <header className="import-feature__header"><div><h1>Datenimport</h1><p>Excel-Daten analysieren, erkannte Konflikte prüfen und den Import kontrolliert freigeben.</p></div></header>
+    <ImportWizard currentStep={state.currentStep} selectedFile={state.selectedFile}
+      analysisResult={state.analysisResult} issues={state.analysisResult?.issues ?? []}
+      isAnalyzing={state.isAnalyzing} analysisError={state.analysisError}
+      onFileSelected={handleFileSelected} onAnalyze={handleAnalyze}
+      onResolutionChange={handleResolutionChange} onShowResolutions={() => moveTo("resolution")}
+      onShowCommit={() => moveTo("commit")} onCommit={() => moveTo("completed")}
+      onBackToUpload={() => moveTo("upload")} onBackToAnalysis={() => moveTo("analysis")}
+      onBackToResolution={() => moveTo("resolution")} onRestart={() => setState(initialState)} />
+  </div>;
 }

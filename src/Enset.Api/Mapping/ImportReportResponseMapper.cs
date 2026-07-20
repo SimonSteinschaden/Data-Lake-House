@@ -56,6 +56,8 @@ public static class ImportReportResponseMapper
             UpdatedAt = report.UpdatedAt,
             CustomerCount = report.CustomerCount,
             BuildingCount = report.BuildingCount,
+            MeterCount = report.MeterCount,
+            MeterReadingCount = report.MeterReadingCount,
             IssueCount = report.IssueCount,
             ErrorCount = report.ErrorCount,
             WarningCount = report.WarningCount

@@ -7,14 +7,16 @@ import { WizardStepper } from "./WizardStepper";
 import type { ImportWizardStep } from "../types/ImportWizardStep";
 import type { ImportIssueViewModel } from "./models/ImportIssueViewModel";
 import type { ImportResolutionAction } from "./models/ImportResolutionAction";
+import type { ImportAnalysisResult } from "../types/ImportAnalysisResult";
 import "./ImportWizard.css";
 
 interface ImportWizardProps {
   currentStep: ImportWizardStep;
   selectedFile: File | null;
-  customerCount: number;
-  buildingCount: number;
+  analysisResult: ImportAnalysisResult | null;
   issues: ImportIssueViewModel[];
+  isAnalyzing: boolean;
+  analysisError: string | null;
   onFileSelected: (file: File | null) => void;
   onAnalyze: () => void;
   onResolutionChange: (
@@ -34,9 +36,10 @@ interface ImportWizardProps {
 export function ImportWizard({
   currentStep,
   selectedFile,
-  customerCount,
-  buildingCount,
+  analysisResult,
   issues,
+  isAnalyzing,
+  analysisError,
   onFileSelected,
   onAnalyze,
   onResolutionChange,
@@ -48,8 +51,10 @@ export function ImportWizard({
   onBackToResolution,
   onRestart,
 }: ImportWizardProps) {
-  const fileName = selectedFile?.name ?? "Keine Datei";
-  const issueCount = issues.length;
+  const fileName = analysisResult?.fileName ?? selectedFile?.name ?? "Keine Datei";
+  const customerCount = analysisResult?.customerCount ?? 0;
+  const buildingCount = analysisResult?.buildingCount ?? 0;
+  const issueCount = analysisResult?.issueCount ?? 0;
 
   return (
     <section
@@ -77,15 +82,20 @@ export function ImportWizard({
             selectedFile={selectedFile}
             onFileSelected={onFileSelected}
             onAnalyze={onAnalyze}
+            isAnalyzing={isAnalyzing}
+            error={analysisError}
           />
         )}
 
-        {currentStep === "analysis" && (
+        {currentStep === "analysis" && analysisResult && (
           <AnalysisStep
             fileName={fileName}
             customerCount={customerCount}
             buildingCount={buildingCount}
+            meterCount={analysisResult.meterCount}
+            meterReadingCount={analysisResult.meterReadingCount}
             issueCount={issueCount}
+            importId={analysisResult.importId}
             onContinue={onShowResolutions}
             onBack={onBackToUpload}
           />

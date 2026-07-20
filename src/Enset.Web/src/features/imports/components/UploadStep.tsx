@@ -4,12 +4,16 @@ interface UploadStepProps {
   selectedFile: File | null;
   onFileSelected: (file: File | null) => void;
   onAnalyze: () => void;
+  isAnalyzing: boolean;
+  error: string | null;
 }
 
 export function UploadStep({
   selectedFile,
   onFileSelected,
   onAnalyze,
+  isAnalyzing,
+  error,
 }: UploadStepProps) {
   function handleFileChange(
     event: ChangeEvent<HTMLInputElement>,
@@ -41,6 +45,7 @@ export function UploadStep({
         type="file"
         accept=".xlsx,.xlsm"
         onChange={handleFileChange}
+        disabled={isAnalyzing}
       />
 
       {selectedFile ? (
@@ -55,14 +60,21 @@ export function UploadStep({
         </p>
       )}
 
+      {error && (
+        <div className="import-wizard__error" role="alert">
+          {error}
+        </div>
+      )}
+
       <div className="import-wizard__actions">
         <button
           type="button"
           className="import-wizard__primary-action"
-          disabled={!selectedFile}
+          disabled={!selectedFile || isAnalyzing}
           onClick={onAnalyze}
+          aria-busy={isAnalyzing}
         >
-          Analyse starten
+          {isAnalyzing ? "Analyse läuft …" : "Analyse starten"}
         </button>
       </div>
     </section>

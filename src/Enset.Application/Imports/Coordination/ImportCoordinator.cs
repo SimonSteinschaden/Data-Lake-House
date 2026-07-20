@@ -3,6 +3,7 @@ using Enset.Application.Imports.Decisions;
 using Enset.Application.Imports.DuplicationCheck.Abstractions;
 using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Issues;
+using Enset.Application.Imports.Mapping;
 using Enset.Application.Imports.Reports;
 
 namespace Enset.Application.Imports.Coordination;
@@ -41,15 +42,26 @@ public sealed class ImportCoordinator : IImportCoordinator
         var workbook = _reader.Read();
         var customers = workbook.Customers.ToList();
         var buildings = workbook.Buildings.ToList();
+        var meters = workbook.Meters.ToList();
+        var meterReadings = workbook.MeterReadings.ToList();
 
         _logger.Info($"Read {customers.Count} customer row(s).");
         _logger.Info($"Read {buildings.Count} building row(s).");
+        _logger.Info($"Read {meters.Count} meter row(s).");
+        _logger.Info($"Read {meterReadings.Count} meter reading row(s).");
 
         var customerDtos = _mapper.Map(customers);
+        var buildingDtos = buildings.Select(BuildingExcelRowMapper.ToDto).ToList();
+        var meterDtos = meters.Select(MeterExcelRowMapper.ToDto).ToList();
+        var meterReadingDtos = meterReadings.Select(MeterReadingExcelRowMapper.ToDto).ToList();
+        _logger.Info("Mapping finished.");
         cancellationToken.ThrowIfCancellationRequested();
 
-        var report = _validator.Validate(customers, buildings);
+        var report = _validator.Validate(customers, buildings, meters, meterReadings);
         report.Customers = customerDtos;
+        report.Buildings = buildingDtos;
+        report.Meters = meterDtos;
+        report.MeterReadings = meterReadingDtos;
 
         _logger.Info($"Validation finished with {report.Issues.Count} issue(s).");
 

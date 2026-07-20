@@ -14,6 +14,22 @@ public static class ApiProblems
             statusCode: StatusCodes.Status400BadRequest);
     }
 
+    public static ObjectResult InvalidImportFile(
+        ControllerBase controller,
+        string detail,
+        string? developmentException = null)
+    {
+        var result = controller.Problem(
+            title: "Invalid import file",
+            detail: detail,
+            statusCode: StatusCodes.Status400BadRequest);
+
+        if (developmentException is not null && result.Value is ProblemDetails problem)
+            problem.Extensions["exception"] = developmentException;
+
+        return result;
+    }
+
     public static ObjectResult InvalidResolutionRequest(
         ControllerBase controller,
         string detail)

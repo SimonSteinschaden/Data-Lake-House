@@ -4,10 +4,25 @@ using Enset.Infrastructure.DataProducts;
 
 var builder = WebApplication.CreateBuilder(args);
 
+const string developmentFrontendCorsPolicy = "DevelopmentFrontend";
+
 builder.Services
-    .AddApiServices()
+    .AddApiServices(builder.Environment)
     .AddOpenApiServices()
     .AddImportServices(builder.Environment);
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(
+            developmentFrontendCorsPolicy,
+            policy => policy
+                .WithOrigins("http://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod());
+    });
+}
 
 var connectionString = builder.Configuration.GetConnectionString(
     "EnsetDatabase")
@@ -21,6 +36,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     //await app.Services.SeedDataProductDemoAsync();
+    app.UseCors(developmentFrontendCorsPolicy);
 }
 
 app.UseApiPipeline();

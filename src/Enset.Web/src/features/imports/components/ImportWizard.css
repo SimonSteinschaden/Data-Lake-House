@@ -156,3 +156,22 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.import-wizard__error {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #f0a8a8;
+  border-radius: 0.5rem;
+  background: #fff4f4;
+  color: #9f1d1d;
+}
+
+.import-wizard__technical-details {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.import-wizard__technical-details code {
+  display: block;
+  margin-top: 0.5rem;
+}

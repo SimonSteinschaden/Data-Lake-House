@@ -61,14 +61,14 @@ public static class ImportServiceCollectionExtensions
         services.AddSingleton<IImportWriter>(
             new ExcelImportWriter(outputPath));
 
-        services.AddSingleton<
+        services.AddScoped<
             IImportWriter,
             DatabaseImportWriter>();
 
         services.AddSingleton<IRawZoneWriter>(
             new FileSystemRawZoneWriter(rawZonePath));
 
-        services.AddSingleton<
+        services.AddScoped<
             IImportCommitService,
             ImportCommitService>();
 

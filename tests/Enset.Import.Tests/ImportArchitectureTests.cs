@@ -272,7 +272,9 @@ public sealed class ImportArchitectureTests
     {
         public ImportReport Validate(
             IReadOnlyList<CustomerExcelRow> customers,
-            IReadOnlyList<BuildingExcelRow> buildings) => new();
+            IReadOnlyList<BuildingExcelRow> buildings,
+            IReadOnlyList<MeterExcelRow> meters,
+            IReadOnlyList<MeterReadingExcelRow> meterReadings) => new();
     }
 
     private sealed class StubDuplicationCheck : IDuplicationCheckService

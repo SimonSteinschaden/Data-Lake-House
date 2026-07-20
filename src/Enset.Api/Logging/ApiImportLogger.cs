@@ -16,4 +16,7 @@ public sealed class ApiImportLogger : IImportLogger
     public void Warning(string message) => _logger.LogWarning("{Message}", message);
 
     public void Error(string message) => _logger.LogError("{Message}", message);
+
+    public void Error(string message, Exception exception) =>
+        _logger.LogError(exception, "{Message}", message);
 }

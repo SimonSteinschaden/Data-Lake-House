@@ -41,4 +41,5 @@ public class BuildingExcelRow
     public string? SecondaryUsage { get; set; }
     public string? SecondaryUsageSharePercent { get; set; }
     public string? Notes { get; set; }
+    public string? BuildingName { get; set; }
 }

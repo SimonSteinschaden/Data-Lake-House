@@ -23,4 +23,13 @@
     <ProjectReference Include="..\..\src\Enset.Infrastructure\Enset.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\Externe Daten\ENSET_Testimport_MVP.xlsx"
+             Link="TestData\ENSET_Testimport_MVP.xlsx"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\Externe Daten\Datenbasis Grundlage RDW.xlsm"
+             Link="TestData\Datenbasis Grundlage RDW.xlsm"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

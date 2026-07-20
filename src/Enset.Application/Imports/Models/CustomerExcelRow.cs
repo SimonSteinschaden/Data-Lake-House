@@ -27,4 +27,8 @@ public class CustomerExcelRow
     public string? Subsidies { get; set; }
     public string? LastContact { get; set; }
     public string? Notes { get; set; }
+    public string? VatNumber { get; set; }
+    public string? CompanyRegistrationNumber { get; set; }
+    public string? ContactPerson { get; set; }
+    public string? Country { get; set; }
 }

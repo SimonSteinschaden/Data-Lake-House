@@ -3,6 +3,7 @@ using Enset.Api.Contracts.Imports.Responses;
 using Enset.Api.Errors;
 using Enset.Api.Mapping;
 using Enset.Application.Imports.Abstractions;
+using Enset.Application.Imports.Exceptions;
 using Enset.Application.Imports.WriteGate;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,17 +28,23 @@ public sealed class ImportsController : ControllerBase
     private readonly IImportReportRepository _reports;
     private readonly IApplyResolutionService _resolutionService;
     private readonly IImportCommitService _commitService;
+    private readonly ILogger<ImportsController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
     public ImportsController(
         IImportAnalysisService analysisService,
         IImportReportRepository reports,
         IApplyResolutionService resolutionService,
-        IImportCommitService commitService)
+        IImportCommitService commitService,
+        ILogger<ImportsController> logger,
+        IWebHostEnvironment environment)
     {
         _analysisService = analysisService;
         _reports = reports;
         _resolutionService = resolutionService;
         _commitService = commitService;
+        _logger = logger;
+        _environment = environment;
     }
 
     [HttpPost("analyze")]
@@ -72,16 +79,35 @@ public sealed class ImportsController : ControllerBase
                 "X-User-Id header is required.");
         }
 
-        await using var source = request.ImportFile.OpenReadStream();
-
-        var report = await _analysisService.AnalyzeAsync(
-            source,
+        _logger.LogInformation(
+            "Import file received. FileName={FileName}, Length={Length}, ContentType={ContentType}",
             request.ImportFile.FileName,
-            request.ImportFile.ContentType,
-            userId,
-            cancellationToken);
+            request.ImportFile.Length,
+            request.ImportFile.ContentType);
 
-        return Ok(report.ToResponse());
+        try
+        {
+            await using var source = request.ImportFile.OpenReadStream();
+            var report = await _analysisService.AnalyzeAsync(
+                source,
+                request.ImportFile.FileName,
+                request.ImportFile.ContentType,
+                userId,
+                cancellationToken);
+
+            return Ok(report.ToResponse());
+        }
+        catch (InvalidImportFileException exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Invalid import file rejected. FileName={FileName}",
+                request.ImportFile.FileName);
+            return ApiProblems.InvalidImportFile(
+                this,
+                exception.Message,
+                _environment.IsDevelopment() ? exception.ToString() : null);
+        }
     }
 
     [HttpGet("{importId:guid}")]

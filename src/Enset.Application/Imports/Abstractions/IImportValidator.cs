@@ -7,5 +7,7 @@ public interface IImportValidator
 {
     ImportReport Validate(
         IReadOnlyList<CustomerExcelRow> customers,
-        IReadOnlyList<BuildingExcelRow> buildings);
+        IReadOnlyList<BuildingExcelRow> buildings,
+        IReadOnlyList<MeterExcelRow> meters,
+        IReadOnlyList<MeterReadingExcelRow> meterReadings);
 }

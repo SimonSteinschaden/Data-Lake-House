@@ -1,0 +1,10 @@
+using Enset.Domain.DataProducts;
+
+namespace Enset.Application.DataProducts.Generation.Abstractions;
+
+public interface IDataProductRepository
+{
+    Task<DataProduct?> GetForGenerationAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<int> GetNextVersionNumberAsync(Guid id, CancellationToken cancellationToken = default);
+    Task AddVersionAsync(DataProductVersion version, CancellationToken cancellationToken = default);
+}

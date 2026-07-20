@@ -1,3 +1,5 @@
+namespace Enset.Domain.Data;
+
 public enum DataQuality
 {
     Unknown = 0,

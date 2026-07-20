@@ -1,4 +1,5 @@
 using Enset.Application.DataProducts.Generation.Abstractions;
+using Enset.Application.DataProducts.Commands.GenerateDataProduct;
 using Enset.Application.DataProducts.Generation.Models;
 
 namespace Enset.Application.DataProducts.Generation.Services;
@@ -10,11 +11,9 @@ public sealed class DataProductGenerationAuthorizationService
     : IDataProductGenerationAuthorizationService
 {
     public Task<DataProductGenerationAuthorizationResult> AuthorizeAsync(
-        Guid userId,
-        Guid customerId,
-        Guid dataProductDefinitionId,
+        GenerateDataProductCommand command,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(DataProductGenerationAuthorizationResult.Allowed());
     }
 }

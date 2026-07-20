@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Enset.Application.DataProducts.Generation.Abstractions;
+using Enset.Application.DataProducts.Generation.Generators;
+using Enset.Application.DataProducts.Generation.Services;
+using Enset.Infrastructure.DataProducts;
 
 namespace Enset.Infrastructure.Persistence;
 
@@ -24,6 +28,18 @@ public static class PersistenceServiceCollectionExtensions
             options.UseNpgsql(
                 connectionString,
                 npgsql => npgsql.MigrationsAssembly(migrationsAssembly)));
+
+        services.AddScoped<EfDataProductRepository>();
+        services.AddScoped<IDataProductRepository>(sp => sp.GetRequiredService<EfDataProductRepository>());
+        services.AddScoped<IDataProductGenerationRunRepository>(sp => sp.GetRequiredService<EfDataProductRepository>());
+        services.AddScoped<EfDataProductReader>();
+        services.AddScoped<IMeterReadingDataReader>(sp => sp.GetRequiredService<EfDataProductReader>());
+        services.AddScoped<IBuildingDataReader>(sp => sp.GetRequiredService<EfDataProductReader>());
+        services.AddScoped<IDataProductGenerator, MeterConsumptionSummaryGenerator>();
+        services.AddScoped<IDataProductGenerator, BuildingEnergyProfileGenerator>();
+        services.AddScoped<IDataProductGenerationAuthorizationService, DataProductGenerationAuthorizationService>();
+        services.AddScoped<IDataProductGenerationAvailabilityService, DataProductGenerationAvailabilityService>();
+        services.AddScoped<IDataProductGenerationService, DataProductGenerationService>();
 
         return services;
     }

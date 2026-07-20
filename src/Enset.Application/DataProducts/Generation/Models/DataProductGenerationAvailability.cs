@@ -40,4 +40,8 @@ public sealed record DataProductGenerationAvailability(
             MissingInputs: missingInputs,
             Warnings: warnings ?? Array.Empty<string>());
     }
+
+    public static DataProductGenerationAvailability MissingData(
+        params string[] missingInputs) =>
+        MissingData((IReadOnlyCollection<string>)missingInputs);
 }

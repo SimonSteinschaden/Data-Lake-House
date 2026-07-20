@@ -24,6 +24,9 @@ public class DataProduct : BaseEntity
 
     public ICollection<DataProductVersion> Versions
         { get; set; } = new List<DataProductVersion>();
+
+    public ICollection<DataProductScopeAssignment> ScopeAssignments
+        { get; set; } = new List<DataProductScopeAssignment>();
 }
 
 /*DataProductDefinition

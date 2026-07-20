@@ -1,3 +1,5 @@
+using Enset.Domain.Data;
+
 namespace Enset.Domain.Energy;
 
 public class MeterReading

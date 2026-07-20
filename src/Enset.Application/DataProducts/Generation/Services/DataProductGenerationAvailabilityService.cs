@@ -1,4 +1,5 @@
 using Enset.Application.DataProducts.Generation.Abstractions;
+using Enset.Application.DataProducts.Commands.GenerateDataProduct;
 using Enset.Application.DataProducts.Generation.Models;
 
 namespace Enset.Application.DataProducts.Generation.Services;
@@ -10,9 +11,16 @@ public sealed class DataProductGenerationAvailabilityService
     : IDataProductGenerationAvailabilityService
 {
     public Task<DataProductGenerationAvailability> CheckAsync(
-        DataProductGenerationAvailabilityRequest request,
+        GenerateDataProductCommand command,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        if (command.PeriodFrom is null || command.PeriodTo is null
+            || command.PeriodFrom >= command.PeriodTo)
+        {
+            return Task.FromResult(
+                DataProductGenerationAvailability.MissingData("Gültiger Zeitraum"));
+        }
+
+        return Task.FromResult(DataProductGenerationAvailability.Available());
     }
 }

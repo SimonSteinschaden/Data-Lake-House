@@ -7,6 +7,7 @@ using Enset.Domain.Documents;
 using Enset.Domain.Energy;
 using Enset.Domain.EnergyCommunities;
 using Enset.Domain.Geography;
+using Enset.Domain.DataProducts;
 using Enset.Domain.Projects;
 
 using Enset.Infrastructure.Imports.Persistence.Entities;
@@ -36,6 +37,13 @@ public class EnsetDbContext : DbContext
     public DbSet<PostalCodeArea> PostalCodeAreas => Set<PostalCodeArea>();
     public DbSet<Region> Regions => Set<Region>();
     public DbSet<Address> Addresses => Set<Address>();
+
+    public DbSet<DataProductDefinition> DataProductDefinitions => Set<DataProductDefinition>();
+    public DbSet<DataProduct> DataProducts => Set<DataProduct>();
+    public DbSet<DataProductScopeAssignment> DataProductScopeAssignments => Set<DataProductScopeAssignment>();
+    public DbSet<DataProductVersion> DataProductVersions => Set<DataProductVersion>();
+    public DbSet<DataProductValue> DataProductValues => Set<DataProductValue>();
+    public DbSet<DataProductGenerationRun> DataProductGenerationRuns => Set<DataProductGenerationRun>();
 
     public DbSet<EnergySystem> EnergySystems => Set<EnergySystem>();
     public DbSet<EnergySystemBuildingAssignment> EnergySystemBuildingAssignments

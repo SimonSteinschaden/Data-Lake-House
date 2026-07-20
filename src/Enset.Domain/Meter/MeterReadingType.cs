@@ -1,3 +1,5 @@
+namespace Enset.Domain.Energy;
+
 public enum MeterReadingType
 {
     Unknown = 0,

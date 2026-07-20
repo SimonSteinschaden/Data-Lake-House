@@ -1,4 +1,5 @@
 using Enset.Domain.Common;
+using Enset.Domain.Geography;
 
 namespace Enset.Domain.Energy;
 
@@ -13,6 +14,10 @@ public class EnergySystem : BaseEntity
     public string? ExternalIdentifier { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    public Guid? AddressId { get; set; }
+
+    public Address? Address { get; set; }
 
     public ICollection<EnergySystemBuildingAssignment> BuildingAssignments { get; set; }
         = new List<EnergySystemBuildingAssignment>();

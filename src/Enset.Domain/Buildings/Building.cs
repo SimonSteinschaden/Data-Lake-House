@@ -2,7 +2,6 @@ using Enset.Domain.Common;
 using Enset.Domain.Customers;
 using Enset.Domain.Documents;
 using Enset.Domain.Energy;
-using Enset.Domain.Geography;
 using Enset.Domain.Projects;
 
 namespace Enset.Domain.Buildings;
@@ -16,10 +15,6 @@ public class Building : BaseEntity
     public Guid? ProjectId { get; set; }
 
     public Project? Project { get; set; }
-
-    public Guid? DistrictId { get; set; }
-
-    public District? District { get; set; }
 
     public string? ExternalIdentifier { get; set; }
 

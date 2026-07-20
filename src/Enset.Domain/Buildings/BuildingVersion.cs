@@ -1,4 +1,5 @@
 using Enset.Domain.Common;
+using Enset.Domain.Geography;
 
 namespace Enset.Domain.Buildings;
 
@@ -18,19 +19,9 @@ public class BuildingVersion : BaseEntity
 
     public string? ChangeReason { get; set; }
 
-    public string? Street { get; set; }
+    public Guid? AddressId { get; set; }
 
-    public string? HouseNumber { get; set; }
-
-    public string? PostalCode { get; set; }
-
-    public string? City { get; set; }
-
-    public string CountryCode { get; set; } = "AT";
-
-    public decimal? Latitude { get; set; }
-
-    public decimal? Longitude { get; set; }
+    public Address? Address { get; set; }
 
     public string? CadastralMunicipality { get; set; }
 

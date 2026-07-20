@@ -34,21 +34,10 @@ public class BuildingVersionConfiguration
         builder.Property(x => x.ChangeReason)
             .HasMaxLength(512);
 
-        builder.Property(x => x.Street)
-            .HasMaxLength(256);
-
-        builder.Property(x => x.HouseNumber)
-            .HasMaxLength(32);
-
-        builder.Property(x => x.PostalCode)
-            .HasMaxLength(32);
-
-        builder.Property(x => x.City)
-            .HasMaxLength(128);
-
-        builder.Property(x => x.CountryCode)
-            .HasMaxLength(2)
-            .IsRequired();
+        builder.HasOne(x => x.Address)
+            .WithMany(x => x.BuildingVersions)
+            .HasForeignKey(x => x.AddressId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Property(x => x.CadastralMunicipality)
             .HasMaxLength(256);
@@ -70,12 +59,6 @@ public class BuildingVersionConfiguration
         builder.Property(x => x.OwnershipType)
             .HasConversion<string>()
             .HasMaxLength(64);
-
-        builder.Property(x => x.Latitude)
-            .HasPrecision(9, 6);
-
-        builder.Property(x => x.Longitude)
-            .HasPrecision(9, 6);
 
         builder.Property(x => x.GrossFloorAreaM2)
             .HasPrecision(18, 2);

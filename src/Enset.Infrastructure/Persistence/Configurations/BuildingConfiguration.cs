@@ -30,10 +30,5 @@ public class BuildingConfiguration : IEntityTypeConfiguration<Building>
             .WithMany(x => x.Buildings)
             .HasForeignKey(x => x.ProjectId)
             .OnDelete(DeleteBehavior.SetNull);
-
-        builder.HasOne(x => x.District)
-            .WithMany()
-            .HasForeignKey(x => x.DistrictId)
-            .OnDelete(DeleteBehavior.SetNull);
     }
 }

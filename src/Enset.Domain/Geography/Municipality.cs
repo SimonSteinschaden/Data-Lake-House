@@ -4,13 +4,18 @@ namespace Enset.Domain.Geography;
 
 public class Municipality : BaseEntity
 {
-    public Guid RegionId { get; set; }
+    public Guid DistrictId { get; set; }
 
-    public Region Region { get; set; } = null!;
+    public District District { get; set; } = null!;
+
+    public string? Code { get; set; }
 
     public string Name { get; set; } = string.Empty;
 
-    public string? ZipCode { get; set; }
+    public ICollection<PostalCodeArea> PostalCodeAreas { get; set; }
+        = new List<PostalCodeArea>();
 
-    public ICollection<District> Districts { get; set; } = new List<District>();
+    public ICollection<Region> Regions { get; set; } = new List<Region>();
+
+    public ICollection<Address> Addresses { get; set; } = new List<Address>();
 }

@@ -39,3 +39,6 @@
 - `DatabaseImportWriter` ist vorhanden, blockiert aber sicher bis zum fachlichen Mapping;
 - kein nachgewiesener TimescaleDB-Hypertable;
 - keine Data-Product-Entities mit Version, Schema und Publikationsmetadaten.
+# Stand 1.0 RC
+
+Dieses Dokument ist ergänzend. Maßgeblich sind die Domainklassen, `EnsetDbContext` und [das aktuelle ER-Diagramm](UML/10_Database_ER.puml). DataProductDefinition, DataProduct, ScopeAssignment, GenerationRun, Version und Value sind inzwischen implementiert und migriert.

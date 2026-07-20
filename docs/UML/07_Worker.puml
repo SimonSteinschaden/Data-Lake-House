@@ -1,0 +1,22 @@
+@startuml
+title Worker - aktueller Entwicklungsflow
+component "Program.cs" as Program
+class ImportRunner
+class ExcelImportReader
+class ExcelWorkbookReader
+class CustomerImportMapper
+class ExcelImportValidator
+class DuplicationCheckService
+class ImportCoordinator
+class ConsoleImportLogger
+Program --> ExcelImportReader
+ExcelImportReader --> ExcelWorkbookReader
+Program --> ImportCoordinator
+ImportCoordinator --> CustomerImportMapper
+ImportCoordinator --> ExcelImportValidator
+ImportCoordinator --> DuplicationCheckService
+ImportCoordinator --> ConsoleImportLogger
+Program --> ImportRunner
+ImportRunner --> ImportCoordinator
+note right of Program : Fest verdrahteter lokaler Workbook-Pfad;\nkeine produktive Host-/Queue-Ausführung.
+@enduml

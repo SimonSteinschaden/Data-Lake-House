@@ -565,3 +565,6 @@ Diese Dokumentationsbereinigung ist wichtig, blockiert aber nicht den Beginn des
 | Raw-Zone-Ziel | Port/Filesystem-Prototyp vorhanden | GO für Port, NO-GO für produktiven Object-Storage-Nachweis |
 
 **Endentscheidung:** Das Repository und das ergänzte Review sind ausreichend vollständig und konsistent, um Phase 3 als kontrollierte Implementierungsphase zu eröffnen. Der erste Arbeitsschritt ist jedoch der relationale Workflow-/Concurrency-/Payload-Foundation-Slice, nicht der direkte Domainwrite. `DatabaseImportWriter` bleibt bis zum erfolgreichen Abschluss der Gates in Abschnitt 16.5 sicher blockierend. Danach kann der Customer-Vertical-Slice ohne großflächige Restrukturierung innerhalb der bestehenden Kernarchitektur umgesetzt werden.
+# Historischer Review-Hinweis
+
+Dieses Dokument bleibt als vorheriger Review-Stand erhalten. Für den Architecture Freeze gilt [ARCHITECTURE_REVIEW_V1_0_RC.md](ARCHITECTURE_REVIEW_V1_0_RC.md) zusammen mit der [Architecture Baseline 1.0 RC](../ARCHITECTURE_BASELINE_V1_0_RC.md).

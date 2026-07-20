@@ -1,0 +1,24 @@
+@startuml
+title REST API - implementiert
+class ImportsController
+class DataProductsController
+interface IImportAnalysisService
+interface IImportReportRepository
+interface IApplyResolutionService
+interface IImportCommitService
+interface IDataProductRepository
+interface IDataProductGenerationAvailabilityService
+interface IDataProductGenerationService
+class "Import DTOs" as ImportDtos
+class "Data Product DTOs" as ProductDtos
+ImportsController --> IImportAnalysisService
+ImportsController --> IImportReportRepository
+ImportsController --> IApplyResolutionService
+ImportsController --> IImportCommitService
+ImportsController --> ImportDtos
+DataProductsController --> IDataProductRepository
+DataProductsController --> IDataProductGenerationAvailabilityService
+DataProductsController --> IDataProductGenerationService
+DataProductsController --> ProductDtos
+note bottom : Controller verwenden ProblemDetails.\nAuthentifizierung ist noch nicht integriert; X-User-Id ist MVP-Konvention.
+@enduml

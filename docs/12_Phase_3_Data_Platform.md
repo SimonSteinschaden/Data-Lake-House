@@ -382,4 +382,7 @@ Phase 3 implementiert keine vollständige Benutzerverwaltung, legt aber folgende
 - mindestens Verbrauch, Intensität, Peak, Coverage und CO2e sind versioniert/reproduzierbar berechnet.
 - kein Import-, API- oder Workerpfad greift direkt an Application-Regeln vorbei auf Persistenz zu.
 - Auth-/Mandanten-/Krypto-Hooks sind dokumentiert, ohne Phase-4-Funktionalität vorwegzunehmen.
+# Stand 1.0 RC
+
+EF Core, PostgreSQL-Migrationen, Geography und DataProduct-Persistenz sind implementiert. Der relationale Import-Writer ist weiterhin offen. Der tatsächliche Stand und die Risiken sind in [ARCHITECTURE_BASELINE_V1_0_RC.md](ARCHITECTURE_BASELINE_V1_0_RC.md) und [ARCHITECTURE_REVIEW_V1_0_RC.md](Decisions/ARCHITECTURE_REVIEW_V1_0_RC.md) festgehalten.
 

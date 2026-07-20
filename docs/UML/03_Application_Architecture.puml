@@ -1,0 +1,43 @@
+@startuml
+title ENSET 1.0 RC - Application
+package DataProducts {
+  class GenerateDataProductCommand
+  class GenerateDataProductHandler
+  interface IDataProductGenerationService
+  class DataProductGenerationService
+  interface IDataProductGenerationAuthorizationService
+  interface IDataProductGenerationAvailabilityService
+  interface IDataProductGenerator
+  interface IDataProductRepository
+  interface IDataProductGenerationRunRepository
+  interface IMeterReadingDataReader
+  interface IBuildingDataReader
+  class MeterConsumptionSummaryGenerator
+  class BuildingEnergyProfileGenerator
+  class EnergyCalculationService
+}
+package Imports {
+  interface IImportCoordinator
+  class ImportCoordinator
+  interface IImportAnalysisService
+  interface IApplyResolutionService
+  interface IImportCommitService
+  interface IImportWriteGate
+  interface IImportWriter
+  interface IImportReportRepository
+  class ImportCommitService
+}
+GenerateDataProductHandler --> IDataProductGenerationService
+DataProductGenerationService --> IDataProductGenerationAuthorizationService
+DataProductGenerationService --> IDataProductGenerationAvailabilityService
+DataProductGenerationService --> IDataProductGenerator
+DataProductGenerationService --> IDataProductRepository
+DataProductGenerationService --> IDataProductGenerationRunRepository
+MeterConsumptionSummaryGenerator --> IMeterReadingDataReader
+BuildingEnergyProfileGenerator --> IMeterReadingDataReader
+BuildingEnergyProfileGenerator --> IBuildingDataReader
+MeterConsumptionSummaryGenerator --> EnergyCalculationService
+BuildingEnergyProfileGenerator --> EnergyCalculationService
+ImportCoordinator ..|> IImportCoordinator
+ImportCommitService ..|> IImportCommitService
+@enduml

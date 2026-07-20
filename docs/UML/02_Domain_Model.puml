@@ -1,0 +1,78 @@
+@startuml
+title ENSET 1.0 RC - Domainmodell (Kern)
+hide methods
+class Customer
+class CustomerBuildingAssignment
+class Project
+class Building
+class BuildingVersion
+class Address
+class EnergySystem
+class EnergySystemBuildingAssignment
+class Meter
+class MeterReading
+class Document
+class EnergyCommunity
+class EnergyCommunityMeterAssignment
+class Country
+class State
+class District
+class Municipality
+class PostalCodeArea
+class Region
+class CalculationResult
+class BenchmarkDataset
+class DataProductDefinition
+class DataProductDefinitionScope
+class DataProduct
+class DataProductCustomerAssignment
+class DataProductScopeAssignment
+class DataProductGenerationRun
+class DataProductVersion
+class DataProductValue
+enum MeterReadingType
+enum MeterQuantity
+enum MeterUnit
+enum MeterDirection
+enum DataQuality
+enum DataProductScopeType
+Customer "1" -- "*" CustomerBuildingAssignment
+Building "1" -- "*" CustomerBuildingAssignment
+Customer "1" -- "*" Project
+Project "1" -- "*" Building
+Project "1" -- "*" Document
+Building "1" -- "*" BuildingVersion
+BuildingVersion "*" --> "0..1" Address
+Building "1" -- "*" Meter
+EnergySystem "1" -- "*" Meter
+EnergySystem "1" -- "*" EnergySystemBuildingAssignment
+Building "1" -- "*" EnergySystemBuildingAssignment
+Meter "1" -- "*" MeterReading
+Building "1" -- "*" Document
+EnergyCommunity "1" -- "*" EnergyCommunityMeterAssignment
+Meter "1" -- "*" EnergyCommunityMeterAssignment
+Country "1" -- "*" State
+State "1" -- "*" District
+District "1" -- "*" Municipality
+Country "1" -- "*" PostalCodeArea
+Country "0..1" -- "*" Region
+Municipality "*" -- "*" PostalCodeArea
+Municipality "*" -- "*" Region
+Address "*" --> "1" Country
+Address "*" --> "0..1" Municipality
+Address "*" --> "0..1" PostalCodeArea
+DataProductDefinition "1" -- "*" DataProductDefinitionScope
+DataProductDefinition "1" -- "*" DataProduct
+DataProduct "1" -- "*" DataProductCustomerAssignment
+DataProduct "1" -- "*" DataProductScopeAssignment
+DataProduct "1" -- "*" DataProductVersion
+DataProductGenerationRun "1" -- "*" DataProductVersion
+DataProductVersion "1" -- "*" DataProductValue
+MeterReading --> MeterReadingType
+Meter --> MeterQuantity
+Meter --> MeterUnit
+Meter --> MeterDirection
+MeterReading --> DataQuality
+DataProductScopeAssignment --> DataProductScopeType
+note bottom : Keine eigenen Value-Object-Typen implementiert;\nDomainobjekte sind überwiegend mutable Entities.
+@enduml

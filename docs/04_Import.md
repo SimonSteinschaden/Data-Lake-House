@@ -90,3 +90,6 @@ Es existiert keine parallele Console-Resolution- oder Writerlogik.
 - Authentifizierung statt übermittelter UserId;
 - Building-, Meter- und MeterReading-End-to-End-Pipeline;
 - breitere Excel-, API-, Sicherheits- und End-to-End-Tests.
+# Stand 1.0 RC
+
+Analyse, Issues, Decisions, Resolutions, Write Gate, Report-/Audit-Persistenz, Excel-Writer und Raw-Zone-Archivierung sind implementiert. Der `DatabaseImportWriter` ist noch nicht implementiert und wirft bewusst `NotSupportedException`; ein produktiver relationaler Fachimport darf daher nicht als fertig betrachtet werden.

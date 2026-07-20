@@ -60,3 +60,6 @@ Die Roadmap konkretisiert ausschließlich die noch offenen Arbeiten der verbindl
 - [ ] vorhandene Kern- und Architekturtests um Integrations-, Sicherheits- und End-to-End-Tests erweitern
 - [ ] API- und Betriebsdokumentation fertigstellen
 - [ ] Abschlussreview gegen `ARCHITECTURE_REVIEW_V1_0.md` durchführen
+# Architecture Freeze 1.0 RC
+
+Die verbindliche offene Arbeitsliste wurde nach [IMPLEMENTATION_ROADMAP_V1_0_RC.md](IMPLEMENTATION_ROADMAP_V1_0_RC.md) konsolidiert. Dieses Dokument bleibt als historische Langfrist-Roadmap erhalten.

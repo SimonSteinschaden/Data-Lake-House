@@ -1,0 +1,28 @@
+@startuml
+title Data Product Generation - Ist-Sequenz
+actor User
+participant DataProductsController as API
+participant DataProductGenerationService as Service
+participant AuthorizationService as Auth
+participant AvailabilityService as Availability
+participant IDataProductGenerator as Generator
+participant IDataProductGenerationRunRepository as Runs
+participant IDataProductRepository as Products
+User -> API : POST /api/v1/data-products/{id}/generate
+API -> Service : GenerateAsync(command)
+Service -> Products : GetForGenerationAsync
+Service -> Auth : AuthorizeAsync
+Service -> Service : validate exactly one scope
+Service -> Availability : CheckAsync
+Service -> Service : lookup generator by Definition.Code
+Service -> Runs : AddAsync(Running)
+Service -> Generator : GenerateAsync(context)
+Service -> Service : reject empty Values
+Service -> Products : GetNextVersionNumberAsync
+Service -> Products : AddVersionAsync(version + values)
+Service -> Runs : UpdateAsync(Completed/Warnings)
+Service --> API : DataProductVersion
+API --> User : GenerateDataProductResponse
+... on exception/cancellation after run creation ...
+Service -> Runs : UpdateAsync(Failed/Cancelled)
+@enduml

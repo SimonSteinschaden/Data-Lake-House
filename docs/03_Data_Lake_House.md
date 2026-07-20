@@ -35,3 +35,6 @@ Der `ImportReport` wird derzeit dateibasiert persistiert, ist aber weiterhin ein
 - Background Jobs und Wiederanlauf;
 - Berechnungs-, QA- und Publikationspipeline;
 - Data-Product-Ports und standardisierte Ausgabe.
+# Stand 1.0 RC
+
+Implementiert sind PostgreSQL als relationale Fach- und Workflow-Persistenz sowie eine Filesystem Raw Zone. Silver und Gold sind derzeit logische Qualitäts-/Produktstufen, keine separaten technischen Speicherzonen. Uploads sind Ingestion-Wege; Data Products lesen scopebezogene Daten aus dem qualitätsgesicherten relationalen Bestand.

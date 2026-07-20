@@ -101,3 +101,6 @@ API und `DuplicationResolutionRunner` verwenden denselben Application-Pfad. Nur 
 - Authentifizierung/Autorisierung
 - Data-Product-Ports und produktive Zonenpipeline
 - OpenAPI sowie breitere Integrations-, Sicherheits- und End-to-End-Tests
+# Architecture Freeze 1.0 RC
+
+Für implementierte Komponenten, Abhängigkeiten und Grenzen gilt die [Architecture Baseline 1.0 RC](ARCHITECTURE_BASELINE_V1_0_RC.md). Die zugehörigen Ist-Diagramme liegen unter [UML](UML/). Abweichende Aussagen in diesem älteren Dokument sind Zielbild, nicht Implementierungsnachweis.

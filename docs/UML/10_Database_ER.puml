@@ -1,0 +1,52 @@
+@startuml
+title PostgreSQL ER - EnsetDbContext 1.0 RC
+hide methods
+entity Customers { * Id : uuid <<PK>> }
+entity Projects { * Id : uuid <<PK>>; CustomerId : uuid <<FK>> }
+entity Buildings { * Id : uuid <<PK>>; ProjectId : uuid <<FK>> }
+entity BuildingVersions { * Id : uuid <<PK>>; BuildingId : uuid <<FK>>; AddressId : uuid <<FK>> }
+entity Meters { * Id : uuid <<PK>>; BuildingId : uuid <<FK>>; EnergySystemId : uuid <<FK>> }
+entity MeterReadings { * MeterId : uuid <<PK,FK>>; * Timestamp : timestamptz <<PK>> }
+entity EnergySystems { * Id : uuid <<PK>>; AddressId : uuid <<FK>> }
+entity EnergyCommunities { * Id : uuid <<PK>> }
+entity EnergyCommunityMeterAssignments { * Id : uuid <<PK>>; EnergyCommunityId : uuid <<FK>>; MeterId : uuid <<FK>> }
+entity Documents { * Id : uuid <<PK>> }
+entity DataProductDefinitions { * Id : uuid <<PK>>; Code : varchar <<UQ>> }
+entity DataProducts { * Id : uuid <<PK>>; DefinitionId : uuid <<FK>>; ProductNumber : varchar <<UQ>> }
+entity DataProductScopeAssignments { * Id : uuid <<PK>>; DataProductId : uuid <<FK>>; MeterId : uuid <<FK>>; BuildingId : uuid <<FK>> }
+entity DataProductGenerationRuns { * Id : uuid <<PK>> }
+entity DataProductVersions { * Id : uuid <<PK>>; DataProductId : uuid <<FK>>; GenerationRunId : uuid <<FK>>; VersionNumber : int <<UQ with DataProductId>> }
+entity DataProductValues { * Id : uuid <<PK>>; DataProductVersionId : uuid <<FK>> }
+entity ImportReports { * Id : uuid <<PK>> }
+entity ImportIssues { * Id : uuid <<PK>>; ImportReportId : uuid <<FK>> }
+entity ImportAuditEntries { * Id : uuid <<PK>>; ImportReportId : uuid <<FK>> }
+entity CalculationResults { * Id : uuid <<PK>> }
+entity BenchmarkDatasets { * Id : uuid <<PK>> }
+entity Countries { * Id : uuid <<PK>> }
+entity States { * Id : uuid <<PK>>; CountryId : uuid <<FK>> }
+entity Districts { * Id : uuid <<PK>>; StateId : uuid <<FK>> }
+entity Municipalities { * Id : uuid <<PK>>; DistrictId : uuid <<FK>> }
+entity PostalCodeAreas { * Id : uuid <<PK>>; CountryId : uuid <<FK>> }
+entity Regions { * Id : uuid <<PK>>; CountryId : uuid <<FK>> }
+entity Addresses { * Id : uuid <<PK>>; CountryId : uuid <<FK>> }
+DataProductDefinitions ||--o{ DataProducts
+DataProducts ||--o{ DataProductScopeAssignments
+DataProducts ||--o{ DataProductVersions
+DataProductGenerationRuns ||--o{ DataProductVersions
+DataProductVersions ||--|{ DataProductValues
+Customers ||--o{ Projects
+Projects ||--o{ Buildings
+Projects ||--o{ Documents
+Buildings ||--o{ Meters
+EnergySystems ||--o{ Meters
+Meters ||--o{ MeterReadings
+EnergyCommunities ||--o{ EnergyCommunityMeterAssignments
+Meters ||--o{ EnergyCommunityMeterAssignments
+Buildings ||--o{ BuildingVersions
+Countries ||--o{ States
+States ||--o{ Districts
+Districts ||--o{ Municipalities
+ImportReports ||--o{ ImportIssues
+ImportReports ||--o{ ImportAuditEntries
+note bottom : Weitere Join-/Neben-Tabellen existieren: CustomerBuildingAssignments,\nEnergySystemBuildingAssignments, EnergyCommunityMeterAssignments,\nDataProductCustomerAssignment, DataProductDefinitionScope,\nRegionMunicipalities und MunicipalityPostalCodeAreas.
+@enduml

@@ -41,3 +41,6 @@ Excel-spezifische Workbook-Reader/-Writer und ClosedXML-Typen liegen in Infrastr
 - vollständige Provenance für Raw- und Curated-Daten;
 - aktive Persistenz von `ImportJob` und `DataSource`;
 - Namespaces für mehrere aktuell global definierte Domain-Enums.
+# Stand 1.0 RC
+
+Die aktuelle Domainübersicht ist in [02_Domain_Model.puml](UML/02_Domain_Model.puml) dokumentiert. Entities in Mobility, Subscriptions, Marketplace und Aggregation sind teilweise nur vorbereitete Gerüste und keine vollständigen Module.

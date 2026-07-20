@@ -1,0 +1,30 @@
+@startuml
+title Data Product Engine
+class DataProductDefinition
+class DataProductDefinitionScope
+class DataProduct
+class DataProductCustomerAssignment
+class DataProductScopeAssignment
+class DataProductGenerationRun
+class DataProductVersion
+class DataProductValue
+interface IDataProductGenerator
+interface IMeterReadingDataReader
+interface IBuildingDataReader
+class EfDataProductReader
+class DataProductsController
+class BuildingEnergyDashboard
+DataProductDefinition "1" -- "*" DataProductDefinitionScope
+DataProductDefinition "1" -- "*" DataProduct
+DataProduct "1" -- "*" DataProductCustomerAssignment
+DataProduct "1" -- "1" DataProductScopeAssignment : GenerationService requires exactly one
+DataProduct "1" -- "*" DataProductVersion
+DataProductGenerationRun "1" -- "*" DataProductVersion
+DataProductVersion "1" -- "1..*" DataProductValue
+IDataProductGenerator --> IMeterReadingDataReader
+IDataProductGenerator --> IBuildingDataReader
+EfDataProductReader ..|> IMeterReadingDataReader
+EfDataProductReader ..|> IBuildingDataReader
+DataProductsController --> DataProduct
+DataProductValue --> BuildingEnergyDashboard : REST DTO
+@enduml

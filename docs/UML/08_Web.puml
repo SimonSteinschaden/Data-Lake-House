@@ -1,0 +1,29 @@
+@startuml
+title React Web - implementierter Stand
+component AppRouter
+component MainLayout
+component MainNavigation
+component ImportPage
+component DataProductsPage
+component DataProductDetailPage
+component BuildingEnergyPage
+component BuildingEnergyDashboard
+component DataProductVersionHistory
+component dataProductService
+component importService
+component "REST API" as API
+AppRouter --> MainLayout
+MainLayout --> MainNavigation
+AppRouter --> ImportPage
+AppRouter --> DataProductsPage
+AppRouter --> DataProductDetailPage
+AppRouter --> BuildingEnergyPage
+DataProductDetailPage --> BuildingEnergyDashboard
+DataProductDetailPage --> DataProductVersionHistory
+DataProductsPage --> dataProductService
+DataProductDetailPage --> dataProductService
+BuildingEnergyPage --> dataProductService
+dataProductService --> API : fetch /api/v1/data-products
+ImportPage --> importService
+importService --> API : fetch /api/v1/imports
+@enduml

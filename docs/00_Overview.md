@@ -29,3 +29,6 @@ Die Reviews v1.1 und v1.2 ersetzen oder verändern die Baseline nicht.
 ## Kurzstatus
 
 Die Importpipeline ist zweistufig: Analyse erzeugt und persistiert einen `ImportReport`; Resolution und Commit laufen über denselben Application-Pfad für API und Console-Test-Runner. Die REST-Endpunkte und dateibasierte Report-/Raw-Persistenz sind vorhanden. UI, Authentifizierung, Background Jobs, fachliches Database-Mapping und eine datenbankgestützte Importhistorie fehlen weiterhin.
+# Architecture Freeze 1.0 RC
+
+Der verbindliche Ist-Stand ist in [ARCHITECTURE_BASELINE_V1_0_RC.md](ARCHITECTURE_BASELINE_V1_0_RC.md) beschrieben. Offene Punkte stehen ausschließlich in [IMPLEMENTATION_ROADMAP_V1_0_RC.md](IMPLEMENTATION_ROADMAP_V1_0_RC.md). Dieses Dokument enthält ergänzende Produktübersicht und kann historische Zielbilder enthalten.

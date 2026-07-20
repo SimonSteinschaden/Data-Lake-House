@@ -1,0 +1,25 @@
+@startuml
+title ENSET 1.0 RC - Komponentenarchitektur (Ist-Stand)
+skinparam componentStyle rectangle
+actor User
+component "Enset.Web\nReact/Vite" as Web
+component "Enset.Api\nASP.NET Core" as Api
+component "Enset.Worker\nConsole Import Host" as Worker
+component "Enset.Application\nUse Cases + Ports" as App
+component "Enset.Domain\nEntities + Enums" as Domain
+component "Enset.Infrastructure\nEF Core + Import Adapter" as Infra
+database PostgreSQL
+folder "Raw Zone\nFilesystem" as Raw
+User --> Web
+Web --> Api : REST /api/v1
+Api --> App
+Api --> Infra : DI composition
+Worker --> App
+Worker --> Infra
+App --> Domain
+Infra --> App : implements ports
+Infra --> Domain
+Infra --> PostgreSQL : Npgsql/EF Core
+Infra --> Raw : FileSystemRawZoneWriter
+note right of Worker : Aktuell Entwicklungsmodus\nmit festem Excel-Pfad
+@enduml

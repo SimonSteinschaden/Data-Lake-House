@@ -1,0 +1,32 @@
+@startuml
+title Import Pipeline - API und Application
+actor User
+participant ImportsController
+participant ExcelImportAnalysisService
+participant ImportCoordinator
+participant IImportReader
+participant IImportMapper
+participant IImportValidator
+participant DuplicationCheckService
+participant ApplyResolutionService
+participant ImportCommitService
+participant ImportWriteGate
+participant IImportWriter
+participant IRawZoneWriter
+participant IImportReportRepository
+User -> ImportsController : analyze workbook
+ImportsController -> ExcelImportAnalysisService
+ExcelImportAnalysisService -> IImportReader
+ExcelImportAnalysisService -> IImportMapper
+ExcelImportAnalysisService -> IImportValidator
+ExcelImportAnalysisService -> DuplicationCheckService
+ExcelImportAnalysisService -> IImportReportRepository : persist report/issues/audit
+User -> ImportsController : resolutions
+ImportsController -> ApplyResolutionService
+User -> ImportsController : commit
+ImportsController -> ImportCommitService
+ImportCommitService -> ImportWriteGate
+ImportCommitService -> IImportWriter : Database or Excel adapter
+ImportCommitService -> IRawZoneWriter : optional original file
+note right : Silver/Gold-Zonen sind konzeptionell,\nnicht als eigene technische Speicheradapter implementiert.
+@enduml

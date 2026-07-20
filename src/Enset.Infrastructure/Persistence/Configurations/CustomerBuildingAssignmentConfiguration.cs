@@ -36,4 +36,4 @@ public class CustomerBuildingAssignmentConfiguration
             x.ValidFrom
         });
     }
-}
+}//TODO: Der Writer muss daher selbst vor Duplikaten schützen.

@@ -20,7 +20,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    await app.Services.SeedDataProductDemoAsync();
+    //await app.Services.SeedDataProductDemoAsync();
 }
 
 app.UseApiPipeline();

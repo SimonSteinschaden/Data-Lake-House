@@ -1,14 +1,22 @@
 namespace Enset.Application.Imports.DTOs;
 
-public class MeterImportDto
+public sealed class MeterImportDto
 {
-    public string MeterNumber { get; set; } = null!;
-    public string FileName { get; set; } = null!;
+    public string MeterNumber { get; set; } = string.Empty;
+
+    public string FileName { get; set; } = string.Empty;
 
     public string? ProfileName { get; set; }
+
     public string? Unit { get; set; }
 
     public string? PostalCode { get; set; }
-    public Guid? BuildingId { get; set; }
+
+    public string? ExternalCustomerId { get; set; }
+
+    public string? ExternalBuildingId { get; set; }
+
     public Guid? CustomerId { get; set; }
+
+    public Guid? BuildingId { get; set; }
 }

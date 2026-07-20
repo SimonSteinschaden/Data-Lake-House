@@ -1,8 +1,10 @@
 namespace Enset.Application.Imports.DTOs;
 
-public class BuildingImportDto
+public sealed class BuildingImportDto
 {
     public string? ExternalBuildingId { get; set; }
+
+    public string? ExternalCustomerId { get; set; }
 
     public string? BuildingName { get; set; }
 

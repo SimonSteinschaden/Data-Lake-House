@@ -17,6 +17,12 @@ public class ImportReport
 
     public IReadOnlyList<CustomerImportDto> Customers { get; set; } = [];
 
+    public IReadOnlyList<BuildingImportDto> Buildings { get; set; } = [];
+
+    public IReadOnlyList<MeterImportDto> Meters { get; set; } = [];
+
+    public IReadOnlyList<MeterReadingImportDto> MeterReadings { get; set; } = [];
+
     public List<ImportAuditEntry> AuditTrail { get; init; } = [];
 
     public ImportDecision Decision { get; set; } = new();
@@ -29,6 +35,10 @@ public class ImportReport
 
     public int BuildingCount { get; init; }
 
+    public int MeterCount { get; init; }
+
+    public int MeterReadingCount { get; init; }
+
     public int IssueCount => Issues.Count;
 
     public int ErrorCount => Errors.Count;
@@ -36,6 +46,7 @@ public class ImportReport
     public int WarningCount => Warnings.Count;
 
     public bool HasErrors => Errors.Any();
+
     public bool HasWarnings => Warnings.Any();
 
     public IReadOnlyList<ImportIssue> Errors =>

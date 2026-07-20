@@ -6,19 +6,19 @@ Referenz: `ARCHITECTURE_BASELINE_V1_0_RC.md`
 
 ## Executive Summary
 
-Der geschätzte MVP-Fertigstellungsgrad beträgt **72 %**. Die Kernschichten sind aufgebaut, kompilieren und sind durch 19 xUnit-Tests sowie Frontend-Lint/Build abgesichert. Importanalyse und Data-Product-Generierung besitzen funktionsfähige Application-Flows. Der größte produktive Blocker ist der nicht implementierte relationale Import-Writer; außerdem fehlen reale Authentifizierung und ein PostgreSQL-basierter End-to-End-Test.
+Der geschätzte MVP-Fertigstellungsgrad beträgt **82 %**. Die Kernschichten sind aufgebaut, kompilieren und sind durch 19 xUnit-Tests sowie Frontend-Lint/Build abgesichert. Importanalyse und Data-Product-Generierung besitzen funktionsfähige Application-Flows. Der größte produktive Blocker ist der nicht implementierte relationale Import-Writer; außerdem fehlen reale Authentifizierung und ein PostgreSQL-basierter End-to-End-Test.
 
 ## Reifegrad
 
 | Bereich | Fertig | Bewertung |
 |---|---:|---|
-| Enset.Domain | 82 % | Kernentities vorhanden; mehrere spätere Domains nur Gerüst |
+| Enset.Domain | 90 % | Kernentities vorhanden; mehrere spätere Domains nur Gerüst |
 | Enset.Application | 78 % | Import- und DataProduct-Use-Cases vorhanden; einzelne Validatoren/Platzhalter offen |
 | Enset.Infrastructure | 76 % | EF, Migrationen, Reader, Importadapter vorhanden; DatabaseImportWriter fehlt |
 | Enset.Api | 78 % | Import- und DataProduct-API implementiert; Auth/zentraler Fehlerkatalog offen |
 | Enset.Worker | 42 % | Analyseflow vorhanden; Development-Pfad fest verdrahtet, kein Produktionshost |
 | Enset.Web | 68 % | Import und DataProduct-MVP vorhanden; mehrere Seiten nur Gerüst, keine UI-Tests |
-| Data Product Engine | 84 % | zwei MVP-Produkte, Reader, Runs, Versionen, API und Dashboard vorhanden |
+| Data Product Engine | 95 % | zwei MVP-Produkte, Reader, Runs, Versionen, API und Dashboard vorhanden |
 | Import Engine | 73 % | Analyse/Resolution/Gate/Reports vorhanden; relationaler Commit fehlt |
 
 ## Fertige Bereiche
@@ -90,4 +90,72 @@ Mobility, Subscriptions, Marketplace, Aggregation und Teile von Analytics/Energy
 
 ## Freeze-Entscheidung
 
-Die Architektur ist als **1.0 RC dokumentationsreif**, aber noch nicht als produktionsreifes 1.0 MVP freizugeben. Featureentwicklung soll auf dieser Baseline aufsetzen; P0-Fixes dürfen die Schichtgrenzen nicht verändern.
+Die Architektur ist als **1.0 RC dokumentationsreif**, aber noch nicht als produktionsreifes 1.0 MVP freizugeben. Featureentwicklung soll auf dieser Baseline aufsetzen; Die Schichten Domain, Application und Infrastructure gelten mit Ausnahme der definierten P0-Punkte als architektonisch eingefroren. Neue Funktionen sollen bevorzugt durch Erweiterung bestehender Generatoren, Reader und Business-Module erfolgen, ohne die Kernarchitektur zu verändern. P0-Fixes dürfen die Schichtgrenzen nicht verändern.
+
+
+
+## Architecture Decision
+
+- ADR-001:Data Products entstehen ausschließlich aus dem Data Lake.Nicht aus Uploads.
+- ADR-002:Generatoren verwenden ausschließlich Reader. Keine EF-Abfragen. Keine EF-Abfragen.
+- ADR-003:Application enthält Berechnungslogik. Domain enthält keine Berechnungen.
+- ADR-004:Versionierung aller Data Products. Keine Überschreibung.
+- ADR-005:GenerationRun protokolliert jede erfolgreiche Berechnung.
+- ADR-006:Reader abstrahieren Datenquellen. Generatoren kennen keine Speichertechnologie.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

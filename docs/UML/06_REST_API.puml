@@ -20,5 +20,5 @@ DataProductsController --> IDataProductRepository
 DataProductsController --> IDataProductGenerationAvailabilityService
 DataProductsController --> IDataProductGenerationService
 DataProductsController --> ProductDtos
-note bottom : Controller verwenden ProblemDetails.\nAuthentifizierung ist noch nicht integriert; X-User-Id ist MVP-Konvention.
+note bottom : Controller verwenden ProblemDetails.\nAuthentifizierung erfolgt über JWT Bearer.
 @enduml

@@ -4,6 +4,10 @@ using Enset.Application.DataProducts.Generation.Abstractions;
 using Enset.Application.DataProducts.Generation.Generators;
 using Enset.Application.DataProducts.Generation.Services;
 using Enset.Infrastructure.DataProducts;
+using Enset.Application.Authorization;
+using Enset.Infrastructure.Authorization;
+using Enset.Application.ReadModel;
+using Enset.Infrastructure.ReadModel;
 
 namespace Enset.Infrastructure.Persistence;
 
@@ -40,6 +44,9 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IDataProductGenerationAuthorizationService, DataProductGenerationAuthorizationService>();
         services.AddScoped<IDataProductGenerationAvailabilityService, DataProductGenerationAvailabilityService>();
         services.AddScoped<IDataProductGenerationService, DataProductGenerationService>();
+        services.AddScoped<ICurrentUserResolver, EfCurrentUserResolver>();
+        services.AddScoped<IDataAccessScope, EfDataAccessScope>();
+        services.AddScoped<IEntityReadService, EfEntityReadService>();
 
         return services;
     }

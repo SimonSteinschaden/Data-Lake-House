@@ -10,7 +10,7 @@ public class EnsetDbContextFactory
         "ENSET_CONNECTION_STRING";
 
     private const string DevelopmentConnectionString =
-        "Host=localhost;Port=5432;Database=enset_datalakehouse;Username=postgres;Password=postgres";
+        "Host=localhost;Port=5432;Database=enset_datalakehouse;Username=postgres;Password=postgres_dev";
 
     public EnsetDbContext CreateDbContext(string[] args)
     {

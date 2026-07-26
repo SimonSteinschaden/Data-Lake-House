@@ -3,6 +3,8 @@ using Enset.Application.Imports.Issues;
 using Enset.Application.Imports.Mapping;
 using Enset.Application.Imports.Models;
 using Enset.Application.Imports.Reports;
+using Enset.Application.Imports.Enums;
+using Enset.Application.Imports.Resolution;
 
 namespace Enset.Application.Imports.Validation;
 
@@ -12,7 +14,8 @@ public class ExcelImportValidator : IImportValidator
         IReadOnlyList<CustomerExcelRow> customers,
         IReadOnlyList<BuildingExcelRow> buildings,
         IReadOnlyList<MeterExcelRow> meters,
-        IReadOnlyList<MeterReadingExcelRow> meterReadings)
+        IReadOnlyList<MeterReadingExcelRow> meterReadings,
+        ImportSourceType sourceType = ImportSourceType.Excel)
     {
         var report = new ImportReport
         {
@@ -22,11 +25,16 @@ public class ExcelImportValidator : IImportValidator
             MeterReadingCount = meterReadings.Count
         };
 
-        ValidateCustomers(customers, report.Issues);
-        ValidateBuildings(buildings, report.Issues);
-        ValidateCustomerBuildingRelations(customers, buildings, report.Issues);
-        ValidateMeters(customers, buildings, meters, report.Issues);
-        ValidateMeterReadings(meters, meterReadings, report.Issues);
+        if (sourceType is ImportSourceType.Excel or
+            ImportSourceType.EnsetWorkbook)
+        {
+            ValidateCustomers(customers, report.Issues);
+            ValidateBuildings(buildings, report.Issues);
+            ValidateCustomerBuildingRelations(customers, buildings, report.Issues);
+            ValidateMeters(customers, buildings, meters, report.Issues);
+        }
+
+        ValidateMeterReadings(meters, meterReadings, report.Issues, sourceType);
 
         return report;
     }
@@ -74,16 +82,26 @@ public class ExcelImportValidator : IImportValidator
             .GroupBy(meter => meter.MeterNumber!.Trim(), StringComparer.OrdinalIgnoreCase)
             .Where(group => group.Count() > 1))
         {
-            AddIssue(issues, ImportIssueType.DuplicateMeter,
-                $"Duplicate MeterNumber '{duplicate.Key}' found in rows: {string.Join(", ", duplicate.Select(row => row.RowNumber))}.",
-                requiresUserDecision: true);
+            issues.Add(new ImportIssue
+            {
+                Type = ImportIssueType.DuplicateMeter,
+                Severity = ImportIssueSeverity.Error,
+                Message =
+                    $"Duplicate MeterNumber '{duplicate.Key}' found in rows: " +
+                    $"{string.Join(", ", duplicate.Select(row => row.RowNumber))}.",
+                RequiresUserDecision = true,
+                FieldName = "MeterIdentity",
+                FirstValue = duplicate.Key,
+                ValuePattern = ImportIssueValuePattern.ExactValue
+            });
         }
     }
 
     private static void ValidateMeterReadings(
         IReadOnlyList<MeterExcelRow> meters,
         IReadOnlyList<MeterReadingExcelRow> readings,
-        ICollection<ImportIssue> issues)
+        ICollection<ImportIssue> issues,
+        ImportSourceType sourceType)
     {
         var meterNumbers = meters
             .Select(meter => meter.MeterNumber?.Trim())
@@ -92,8 +110,12 @@ public class ExcelImportValidator : IImportValidator
 
         foreach (var reading in readings)
         {
-            if (string.IsNullOrWhiteSpace(reading.MeterNumber) ||
-                !meterNumbers.Contains(reading.MeterNumber.Trim()))
+            if ((sourceType != ImportSourceType.Csv &&
+                 string.IsNullOrWhiteSpace(reading.MeterNumber)) ||
+                ((sourceType is ImportSourceType.Excel or
+                    ImportSourceType.EnsetWorkbook) &&
+                 !string.IsNullOrWhiteSpace(reading.MeterNumber) &&
+                 !meterNumbers.Contains(reading.MeterNumber.Trim())))
             {
                 AddIssue(issues, ImportIssueType.MissingMeter,
                     $"MeterReading row {reading.RowNumber}: references unknown MeterNumber '{reading.MeterNumber}'.");
@@ -108,6 +130,39 @@ public class ExcelImportValidator : IImportValidator
                 : ImportIssueType.InvalidValue;
             AddIssue(issues, issueType,
                 $"MeterReading row {reading.RowNumber}: {mapped.ErrorMessage}.");
+        }
+
+        foreach (var duplicate in readings
+            .Select(reading => new
+            {
+                Row = reading,
+                Mapped = MeterReadingExcelRowMapper.ToDto(reading)
+            })
+            .Where(item => !item.Mapped.HasError &&
+                           !string.IsNullOrWhiteSpace(item.Mapped.MeterNumber))
+            .GroupBy(item => new
+            {
+                MeterNumber = item.Mapped.MeterNumber.ToUpperInvariant(),
+                item.Mapped.Timestamp
+            })
+            .Where(group => group.Count() > 1))
+        {
+            var issue = new ImportIssue
+            {
+                Type = ImportIssueType.InvalidValue,
+                Severity = ImportIssueSeverity.Error,
+                RequiresUserDecision = false,
+                FieldName = "MeterNumber,Timestamp",
+                FirstValue = duplicate.Key.MeterNumber,
+                Message =
+                    $"Duplicate meter reading for MeterNumber '{duplicate.Key.MeterNumber}' " +
+                    $"and Timestamp '{duplicate.Key.Timestamp:O}' in rows: " +
+                    $"{string.Join(", ", duplicate.Select(item => item.Row.RowNumber))}."
+            };
+            issue.ResolveAutomatically(
+                ImportResolutionAction.KeepFirst,
+                DateTime.UtcNow);
+            issues.Add(issue);
         }
     }
 
@@ -148,7 +203,10 @@ public class ExcelImportValidator : IImportValidator
                 Type = ImportIssueType.MissingCustomer,
                 Severity = ImportIssueSeverity.Error,
                 Message = $"Customer row {customer.RowNumber}: InternalCustomerId is empty.",
-                RequiresUserDecision = false
+                RequiresUserDecision = true,
+                FieldName = "Customer.InternalCustomerId",
+                SourceRowNumber = customer.RowNumber,
+                FirstValue = CustomerGroupKey(customer)
             });
         }
 
@@ -195,18 +253,10 @@ public class ExcelImportValidator : IImportValidator
                     Type = ImportIssueType.MissingBuilding,
                     Severity = ImportIssueSeverity.Error,
                     Message = $"Building row {building.RowNumber}: InternalBuildingId is empty.",
-                    RequiresUserDecision = false
-                });
-            }
-
-            if (string.IsNullOrWhiteSpace(building.InternalCustomerId))
-            {
-                issues.Add(new ImportIssue
-                {
-                    Type = ImportIssueType.MissingCustomer,
-                    Severity = ImportIssueSeverity.Error,
-                    Message = $"Building row {building.RowNumber}: InternalCustomerId is empty.",
-                    RequiresUserDecision = false
+                    RequiresUserDecision = true,
+                    FieldName = "Building.InternalBuildingId",
+                    SourceRowNumber = building.RowNumber,
+                    FirstValue = BuildingGroupKey(building)
                 });
             }
         }
@@ -235,28 +285,153 @@ public class ExcelImportValidator : IImportValidator
         IReadOnlyList<BuildingExcelRow> buildings,
         ICollection<ImportIssue> issues)
     {
-        var validCustomerIds = customers
+        var validCustomers = customers
             .Where(c => !string.IsNullOrWhiteSpace(c.InternalCustomerId))
-            .Select(c => c.InternalCustomerId!.Trim())
-            .ToHashSet();
+            .ToList();
 
         foreach (var building in buildings)
         {
-            if (string.IsNullOrWhiteSpace(building.InternalCustomerId))
+            var suggestion = FindUniqueCustomerSuggestion(
+                building,
+                validCustomers);
+            var currentId = Normalize(building.InternalCustomerId);
+            var currentExists = validCustomers.Any(customer =>
+                Normalize(customer.InternalCustomerId) == currentId);
+
+            if (suggestion is not null &&
+                currentId == Normalize(suggestion.Customer.InternalCustomerId))
                 continue;
 
-            var customerId = building.InternalCustomerId.Trim();
+            if (suggestion is null && currentExists)
+                continue;
 
-            if (!validCustomerIds.Contains(customerId))
+            var suggestedId = suggestion?.Customer.InternalCustomerId?.Trim();
+            var description = suggestion is null
+                ? "No unique customer reference could be reconstructed."
+                : $"Unique suggestion '{suggestedId}' based on {suggestion.Evidence}.";
+
+            issues.Add(new ImportIssue
             {
-                issues.Add(new ImportIssue
-                {
-                    Type = ImportIssueType.MissingCustomer,
-                    Severity = ImportIssueSeverity.Error,
-                    Message = $"Building row {building.RowNumber}: references unknown CustomerID '{customerId}'.",
-                    RequiresUserDecision = false
-                });
-            }
+                Type = ImportIssueType.MissingCustomer,
+                Severity = ImportIssueSeverity.Error,
+                Message =
+                    $"Building row {building.RowNumber}: customer reference " +
+                    $"'{building.InternalCustomerId}' is missing or inconsistent. " +
+                    description,
+                RequiresUserDecision = true,
+                FieldName = "Building.InternalCustomerId",
+                SourceRowNumber = building.RowNumber,
+                FirstValue = BuildingCustomerGroupKey(building),
+                SecondValue = suggestedId
+            });
         }
     }
+
+    private static CustomerSuggestion? FindUniqueCustomerSuggestion(
+        BuildingExcelRow building,
+        IReadOnlyList<CustomerExcelRow> customers)
+    {
+        var candidates = customers
+            .Select(customer => ScoreCandidate(building, customer))
+            .Where(candidate => candidate is not null)
+            .Select(candidate => candidate!)
+            .ToList();
+        if (candidates.Count == 0)
+            return null;
+
+        var highestScore = candidates.Max(candidate => candidate.Score);
+        var best = candidates
+            .Where(candidate => candidate.Score == highestScore)
+            .GroupBy(candidate => Normalize(candidate.Customer.InternalCustomerId))
+            .Select(group => group.First())
+            .ToList();
+
+        return best.Count == 1 ? best[0] : null;
+    }
+
+    private static CustomerSuggestion? ScoreCandidate(
+        BuildingExcelRow building,
+        CustomerExcelRow customer)
+    {
+        var folder = Same(building.FolderNumber, customer.FolderNumber);
+        var project = Same(building.ProjectName, customer.ProjectName);
+        var organization = Same(
+            building.OrganizationName,
+            customer.OrganizationName);
+        var addressMatches = new[]
+            {
+                Same(building.PostalCode, customer.PostalCode),
+                Same(building.City, customer.City),
+                Same(building.Street, customer.Street),
+                Same(building.HouseNumber, customer.HouseNumber)
+            }
+            .Count(matches => matches);
+
+        var hasStrongEvidence =
+            folder ||
+            (project && organization) ||
+            (organization && addressMatches >= 1) ||
+            addressMatches >= 3;
+        if (!hasStrongEvidence)
+            return null;
+
+        var evidence = new List<string>();
+        if (folder)
+            evidence.Add("FolderNumber");
+        if (project && organization)
+            evidence.Add("ProjectName+OrganizationName");
+        if (organization && addressMatches >= 1)
+            evidence.Add($"OrganizationName+Address({addressMatches})");
+        if (addressMatches >= 3)
+            evidence.Add($"Address({addressMatches})");
+
+        return new CustomerSuggestion(
+            customer,
+            (folder ? 100 : 0) +
+            (project ? 20 : 0) +
+            (organization ? 10 : 0) +
+            addressMatches,
+            string.Join(", ", evidence));
+    }
+
+    private static string CustomerGroupKey(CustomerExcelRow customer) =>
+        string.Join("|",
+            Normalize(customer.OrganizationName),
+            Normalize(customer.PostalCode),
+            Normalize(customer.City),
+            Normalize(customer.Street),
+            Normalize(customer.HouseNumber));
+
+    private static string BuildingCustomerGroupKey(BuildingExcelRow building) =>
+        string.Join("|",
+            Normalize(building.OrganizationName),
+            Normalize(building.PostalCode),
+            Normalize(building.City),
+            Normalize(building.Street),
+            Normalize(building.HouseNumber));
+
+    private static string BuildingGroupKey(BuildingExcelRow building) =>
+        string.Join("|",
+            Normalize(building.ProjectName),
+            Normalize(building.OrganizationName),
+            Normalize(building.PostalCode),
+            Normalize(building.City),
+            Normalize(building.Street),
+            Normalize(building.HouseNumber));
+
+    private static bool Same(string? first, string? second)
+    {
+        var normalized = Normalize(first);
+        return normalized is not null && normalized == Normalize(second);
+    }
+
+    private static string? Normalize(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim().ToUpperInvariant();
+
+    private sealed record CustomerSuggestion(
+        CustomerExcelRow Customer,
+        int Score,
+        string Evidence);
 }

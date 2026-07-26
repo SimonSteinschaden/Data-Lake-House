@@ -5,6 +5,7 @@ using Enset.Application.DataProducts.Generation.Models;
 using Enset.Domain.DataProducts;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
+using Enset.Application.Authorization;
 
 namespace Enset.Import.Tests;
 
@@ -29,7 +30,14 @@ public class DataProductsControllerTests
     }
 
     private static DataProductsController Controller(IDataProductRepository repository) =>
-        new(repository, new Availability(), new Generation());
+        new(repository, new Availability(), new Generation(), CurrentUser());
+
+    private static ICurrentUserContext CurrentUser()
+    {
+        var context = new CurrentUserContext();
+        context.Initialize(Guid.NewGuid(), true, ["EnsetEmployee"]);
+        return context;
+    }
 
     private sealed class Availability : IDataProductGenerationAvailabilityService { public Task<DataProductGenerationAvailability> CheckAsync(GenerateDataProductCommand command, CancellationToken cancellationToken = default) => Task.FromResult(DataProductGenerationAvailability.Available()); }
     private sealed class Generation : IDataProductGenerationService { public Task<DataProductVersion> GenerateAsync(GenerateDataProductCommand command, CancellationToken cancellationToken = default) => Task.FromResult(new DataProductVersion()); }

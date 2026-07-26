@@ -2,6 +2,7 @@ using Enset.Application.Imports.DTOs;
 using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Issues;
 using Enset.Application.Imports.Reports;
+using Enset.Application.Imports.Models;
 
 namespace Enset.Application.Imports.WriteGate;
 
@@ -22,6 +23,10 @@ public sealed class ImportWriteContext
     public string? TargetLocation { get; init; }
 
     public bool ArchiveRawSource { get; init; }
+
+    public string? DefaultMeterNumber => Report?.DefaultMeterNumber;
+    public Guid? AssignedMeterId => Report?.AssignedMeterId;
+    public CsvMeterReadingMapping? CsvMapping => Report?.CsvMapping;
 
     public IReadOnlyCollection<ImportIssue> Issues =>
         Report?.Issues ?? [];

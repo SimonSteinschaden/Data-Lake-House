@@ -1,10 +1,14 @@
 interface CompletedStepProps {
   fileName: string;
+  importId: string;
+  status: string;
   onRestart: () => void;
 }
 
 export function CompletedStep({
   fileName,
+  importId,
+  status,
   onRestart,
 }: CompletedStepProps) {
   return (
@@ -19,10 +23,16 @@ export function CompletedStep({
       <div>
         <h3>Import abgeschlossen</h3>
         <p>
-          Die Datei <strong>{fileName}</strong> wurde erfolgreich
-          verarbeitet und übernommen.
+          Die Datei <strong>{fileName}</strong> wurde erfolgreich in die
+          relationale Datenbank übernommen.
         </p>
       </div>
+
+      <details className="import-wizard__technical-details">
+        <summary>Technische Details</summary>
+        <code>ImportId: {importId}</code>
+        <code>Status: {status}</code>
+      </details>
 
       <button
         type="button"

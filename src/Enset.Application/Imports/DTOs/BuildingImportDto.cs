@@ -2,6 +2,8 @@ namespace Enset.Application.Imports.DTOs;
 
 public sealed class BuildingImportDto
 {
+    public int SourceRowNumber { get; set; }
+
     public string? ExternalBuildingId { get; set; }
 
     public string? ExternalCustomerId { get; set; }

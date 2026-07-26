@@ -8,6 +8,8 @@ using Enset.Infrastructure.Imports.Database;
 using Enset.Infrastructure.Imports.Excel;
 using Enset.Infrastructure.Imports.Persistence;
 using Enset.Infrastructure.Imports.RawZone;
+using Enset.Infrastructure.Imports.Validation;
+using Enset.Application.Authorization;
 
 namespace Enset.Api.Extensions;
 
@@ -44,11 +46,16 @@ public static class ImportServiceCollectionExtensions
         services.AddSingleton<IImportReportRepository>(
             new JsonImportReportRepository(reportPath));
 
-        services.AddSingleton<IImportAnalysisService>(serviceProvider =>
+        services.AddScoped<IImportReferenceValidationService,
+            EfImportReferenceValidationService>();
+
+        services.AddScoped<IImportAnalysisService>(serviceProvider =>
             new ExcelImportAnalysisService(
                 stagingPath,
                 serviceProvider.GetRequiredService<IImportReportRepository>(),
-                serviceProvider.GetRequiredService<IImportLogger>()));
+                serviceProvider.GetRequiredService<IImportLogger>(),
+                serviceProvider.GetRequiredService<IImportReferenceValidationService>(),
+                serviceProvider.GetRequiredService<ICurrentUserContext>()));
 
         services.AddSingleton<
             IApplyResolutionService,

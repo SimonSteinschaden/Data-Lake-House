@@ -10,12 +10,24 @@ interface ImportIssueTableProps {
     action: ImportResolutionAction,
     customValue: string | null,
   ) => void;
+  onApplyGroupResolution: (
+    issueId: string,
+    scope:
+      | "SingleIssue"
+      | "MatchingIssuesInCurrentImport"
+      | "MatchingIssueTypeInCurrentImport",
+  ) => void;
+  disabled?: boolean;
 }
 
 export function ImportIssueTable({
   issues,
   onResolutionChange,
+  onApplyGroupResolution,
+  disabled = false,
 }: ImportIssueTableProps) {
+  const showSecondValue = issues.some(issue =>
+    issue.secondValue !== null && issue.secondValue !== undefined);
   if (issues.length === 0) {
     return (
       <div className="import-issue-table__empty">
@@ -33,7 +45,7 @@ export function ImportIssueTable({
             <th>Typ</th>
             <th>Feld</th>
             <th>Erster Wert</th>
-            <th>Zweiter Wert</th>
+            {showSecondValue && <th>Zweiter Wert</th>}
             <th>Meldung</th>
             <th>Entscheidung</th>
           </tr>
@@ -45,6 +57,9 @@ export function ImportIssueTable({
               key={issue.issueId}
               issue={issue}
               onResolutionChange={onResolutionChange}
+              onApplyGroupResolution={onApplyGroupResolution}
+              disabled={disabled}
+              showSecondValue={showSecondValue}
             />
           ))}
         </tbody>

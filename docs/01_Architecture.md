@@ -78,6 +78,10 @@ API und `DuplicationResolutionRunner` verwenden denselben Application-Pfad. Nur 
 ## REST API und Persistenz
 
 - `Enset.Api` stellt Analyze-, GET-, Resolution- und Commit-Endpunkte bereit.
+
+Die zusätzliche, fachlich getrennte Importquelle Landesenergiebuchhaltung ist
+in [14_Landesenergiebuchhaltung_Import.md](14_Landesenergiebuchhaltung_Import.md)
+beschrieben.
 - `JsonImportReportRepository` speichert Reports dateibasiert und atomar austauschbar über `IImportReportRepository`.
 - Uploads werden gestaged, per SHA-256 identifiziert und als Source-Metadaten am Report gespeichert.
 - Interne Staging-/Raw-Pfade werden nicht im API-Response veröffentlicht.

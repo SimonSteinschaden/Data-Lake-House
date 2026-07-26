@@ -1,6 +1,7 @@
 using Enset.Domain.Common;
 using Enset.Domain.Projects;
 using Enset.Domain.Buildings;
+using Enset.Domain.Users;
 
 namespace Enset.Domain.Customers;
 
@@ -41,4 +42,7 @@ public class Customer : BaseEntity
 
     public ICollection<CustomerBuildingAssignment> BuildingAssignments { get; set; }
         = new List<CustomerBuildingAssignment>();
+
+    public ICollection<UserCustomerAssignment> UserAssignments { get; set; }
+        = new List<UserCustomerAssignment>();
 }

@@ -1,0 +1,15 @@
+/*
+CustomerNumber
+Name
+
+Street
+ZipCode
+City
+Country
+
+Email
+Phone
+ContactPerson
+
+Notes
+*/

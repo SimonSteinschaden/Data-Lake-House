@@ -6,6 +6,10 @@ using Enset.Application.Imports.Abstractions;
 using Enset.Application.Imports.Exceptions;
 using Enset.Application.Imports.WriteGate;
 using Microsoft.AspNetCore.Mvc;
+using Enset.Application.Authorization;
+using Microsoft.AspNetCore.Authorization;
+using Enset.Api.Authorization;
+using Enset.Application.Imports.Resolution;
 
 namespace Enset.Api.Controllers;
 
@@ -15,13 +19,15 @@ namespace Enset.Api.Controllers;
 [ApiController]
 [Route("api/v1/imports")]
 [Produces("application/json")]
+[Authorize(Policy = AuthorizationPolicyNames.Authenticated)]
 public sealed class ImportsController : ControllerBase
 {
     private static readonly HashSet<string> SupportedExtensions =
         new(StringComparer.OrdinalIgnoreCase)
         {
             ".xlsx",
-            ".xlsm"
+            ".xlsm",
+            ".csv"
         };
 
     private readonly IImportAnalysisService _analysisService;
@@ -30,6 +36,7 @@ public sealed class ImportsController : ControllerBase
     private readonly IImportCommitService _commitService;
     private readonly ILogger<ImportsController> _logger;
     private readonly IWebHostEnvironment _environment;
+    private readonly ICurrentUserContext _currentUser;
 
     public ImportsController(
         IImportAnalysisService analysisService,
@@ -37,7 +44,8 @@ public sealed class ImportsController : ControllerBase
         IApplyResolutionService resolutionService,
         IImportCommitService commitService,
         ILogger<ImportsController> logger,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        ICurrentUserContext currentUser)
     {
         _analysisService = analysisService;
         _reports = reports;
@@ -45,6 +53,7 @@ public sealed class ImportsController : ControllerBase
         _commitService = commitService;
         _logger = logger;
         _environment = environment;
+        _currentUser = currentUser;
     }
 
     [HttpPost("analyze")]
@@ -53,7 +62,6 @@ public sealed class ImportsController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ImportReportResponse>> Analyze(
         [FromForm] AnalyzeImportRequest request,
-        [FromHeader(Name = "X-User-Id")] string? userId, // User ID is required for auditing purposes. Nullable for MVP. TODO:var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); or ICurrentUserService
         CancellationToken cancellationToken)
     {
         if (request.ImportFile.Length == 0)
@@ -69,14 +77,14 @@ public sealed class ImportsController : ControllerBase
         {
             return ApiProblems.InvalidImportRequest(
                 this,
-                "Only .xlsx and .xlsm files are supported.");
+                "Only .xlsx, .xlsm and .csv files are supported.");
         }
 
-        if (string.IsNullOrWhiteSpace(userId))
+        if (!_currentUser.UserId.HasValue)
         {
             return ApiProblems.InvalidImportRequest(
                 this,
-                "X-User-Id header is required.");
+                "An authenticated user is required.");
         }
 
         _logger.LogInformation(
@@ -92,8 +100,11 @@ public sealed class ImportsController : ControllerBase
                 source,
                 request.ImportFile.FileName,
                 request.ImportFile.ContentType,
-                userId,
-                cancellationToken);
+                _currentUser.UserId.Value.ToString(),
+                cancellationToken,
+                request.SourceType,
+                request.Medium,
+                request.DefaultMeterNumber);
 
             return Ok(report.ToResponse());
         }
@@ -137,7 +148,7 @@ public sealed class ImportsController : ControllerBase
         if (report is null)
             return ApiProblems.ImportNotFound(this, importId);
 
-        if (string.IsNullOrWhiteSpace(request.UserId))
+        if (!_currentUser.UserId.HasValue)
         {
             return ApiProblems.InvalidResolutionRequest(
                 this,
@@ -149,7 +160,7 @@ public sealed class ImportsController : ControllerBase
             _resolutionService.Apply(
                 report,
                 request.Resolutions,
-                request.UserId,
+                _currentUser.UserId.Value.ToString(),
                 DateTime.UtcNow);
         }
         catch (ArgumentException exception)
@@ -172,6 +183,58 @@ public sealed class ImportsController : ControllerBase
         return Ok(report.ToResponse());
     }
 
+    [HttpPost("{importId:guid}/resolution-rules")]
+    public async Task<ActionResult<ApplyResolutionRuleResponse>> ApplyResolutionRule(
+        Guid importId,
+        [FromBody] ApplyResolutionRuleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var report = await _reports.GetAsync(importId, cancellationToken);
+        if (report is null)
+            return ApiProblems.ImportNotFound(this, importId);
+        if (!_currentUser.UserId.HasValue)
+            return ApiProblems.InvalidResolutionRequest(
+                this, "An authenticated user is required.");
+
+        try
+        {
+            var result = _resolutionService.ApplyRule(
+                report,
+                new ApplyResolutionRuleCommand
+                {
+                    RuleId = request.RuleId,
+                    SeedIssueId = request.SeedIssueId,
+                    Scope = request.Scope,
+                    ResolutionType = request.ResolutionType,
+                    ResolutionAction = request.ResolutionAction,
+                    ResolutionPayload = request.ResolutionPayload
+                },
+                _currentUser.UserId.Value.ToString(),
+                DateTime.UtcNow);
+
+            await _reports.SaveAsync(report, cancellationToken);
+            return Ok(new ApplyResolutionRuleResponse
+            {
+                RuleId = result.RuleId,
+                MatchedIssueCount = result.MatchedIssueCount,
+                ResolvedIssueCount = result.ResolvedIssueCount,
+                FailedIssueCount = result.FailedIssueCount,
+                SkippedIssueCount = result.SkippedIssueCount,
+                RemainingBlockingIssueCount = result.RemainingBlockingIssueCount,
+                Status = result.Status,
+                Report = report.ToResponse()
+            });
+        }
+        catch (ArgumentException exception)
+        {
+            return ApiProblems.InvalidResolutionRequest(this, exception.Message);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return ApiProblems.ImportConflict(this, exception.Message);
+        }
+    }
+
     [HttpPost("{importId:guid}/commit")]
     public async Task<ActionResult<ImportReportResponse>> Commit(
         Guid importId,
@@ -182,7 +245,7 @@ public sealed class ImportsController : ControllerBase
             new ImportCommitCommand
             {
                 ImportId = importId,
-                UserId = request.UserId,
+                UserId = _currentUser.UserId?.ToString() ?? string.Empty,
                 Timestamp = DateTime.UtcNow,
                 TargetMode = request.TargetMode,
                 TargetWriter = request.TargetWriter,

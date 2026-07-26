@@ -9,6 +9,7 @@ using Enset.Domain.EnergyCommunities;
 using Enset.Domain.Geography;
 using Enset.Domain.DataProducts;
 using Enset.Domain.Projects;
+using Enset.Domain.Users;
 
 using Enset.Infrastructure.Imports.Persistence.Entities;
 
@@ -22,6 +23,9 @@ public class EnsetDbContext : DbContext
     }
 
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<ApplicationUser> ApplicationUsers => Set<ApplicationUser>();
+    public DbSet<UserCustomerAssignment> UserCustomerAssignments
+        => Set<UserCustomerAssignment>();
     public DbSet<CustomerBuildingAssignment> CustomerBuildingAssignments
         => Set<CustomerBuildingAssignment>();
 
@@ -51,6 +55,8 @@ public class EnsetDbContext : DbContext
 
     public DbSet<Meter> Meters => Set<Meter>();
     public DbSet<MeterReading> MeterReadings => Set<MeterReading>();
+    public DbSet<ImportedMeterReading> ImportedMeterReadings
+        => Set<ImportedMeterReading>();
 
     public DbSet<EnergyCommunity> EnergyCommunities
         => Set<EnergyCommunity>();

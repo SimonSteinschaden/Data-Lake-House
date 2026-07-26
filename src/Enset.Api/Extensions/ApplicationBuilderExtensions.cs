@@ -7,6 +7,8 @@ public static class ApplicationBuilderExtensions
     {
         app.UseExceptionHandler();
         app.UseStatusCodePages();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         if (app.Environment.IsDevelopment())
         {

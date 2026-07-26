@@ -1,6 +1,7 @@
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using Enset.Application.Imports.Abstractions;
+using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Exceptions;
 using Enset.Application.Imports.Models;
 
@@ -38,6 +39,7 @@ public sealed class ExcelWorkbookReader : IExcelReader, IExcelWorkbookReader
 
             return new ImportWorkbook
             {
+                SourceType = ImportSourceType.EnsetWorkbook,
                 Customers = ReadCustomers(workbook),
                 Buildings = ReadBuildings(workbook),
                 Meters = hasMeters ? ReadMeters(workbook) : [],
@@ -78,6 +80,8 @@ public sealed class ExcelWorkbookReader : IExcelReader, IExcelWorkbookReader
         {
             RowNumber = row.RowNumber(),
             InternalCustomerId = Get(row, sheet.Headers, "ExternalCustomerId", "InternalCustomerId"),
+            FolderNumber = Get(row, sheet.Headers, "FolderNumber"),
+            ProjectName = Get(row, sheet.Headers, "ProjectName"),
             OrganizationName = Get(row, sheet.Headers, "OrganizationName", "CompanyName"),
             FirstName = Get(row, sheet.Headers, "FirstName"),
             LastName = Get(row, sheet.Headers, "LastName"),
@@ -102,6 +106,8 @@ public sealed class ExcelWorkbookReader : IExcelReader, IExcelWorkbookReader
             RowNumber = row.RowNumber(),
             InternalBuildingId = Get(row, sheet.Headers, "ExternalBuildingId", "InternalBuildingId"),
             InternalCustomerId = Get(row, sheet.Headers, "ExternalCustomerId", "InternalCustomerId"),
+            FolderNumber = Get(row, sheet.Headers, "FolderNumber"),
+            OrganizationName = Get(row, sheet.Headers, "OrganizationName"),
             BuildingName = Get(row, sheet.Headers, "BuildingName", "ProjectName"),
             ProjectName = Get(row, sheet.Headers, "ProjectName", "BuildingName"),
             Street = Get(row, sheet.Headers, "Street"),

@@ -7,6 +7,7 @@ public static class BuildingExcelRowMapper
 {
     public static BuildingImportDto ToDto(BuildingExcelRow row) => new()
     {
+        SourceRowNumber = row.RowNumber,
         ExternalBuildingId = row.InternalBuildingId,
         ExternalCustomerId = row.InternalCustomerId,
         BuildingName = row.BuildingName ?? row.ProjectName,

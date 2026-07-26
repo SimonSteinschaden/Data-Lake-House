@@ -36,7 +36,16 @@ public class MeterReadingConfiguration
             .HasForeignKey(x => x.MeterId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasOne(x => x.SourceRawReading)
+            .WithMany(x => x.CuratedReadings)
+            .HasForeignKey(x => x.SourceRawReadingId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(x => x.Timestamp);
+
+        builder.HasIndex(x => x.SourceImportJobId);
+
+        builder.HasIndex(x => x.SourceRawReadingId);
 
         builder.HasIndex(x => new
         {

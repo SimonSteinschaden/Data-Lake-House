@@ -14,6 +14,8 @@ public sealed class ImportReportResponse
 
     public IReadOnlyList<CustomerImportDto> Customers { get; init; } = [];
 
+    public IReadOnlyList<ImportSourceColumnResponse> SourceColumns { get; init; } = [];
+
     public IReadOnlyList<ImportIssueResponse> Issues { get; init; } = [];
 
     public IReadOnlyList<ImportAuditEntryResponse> AuditTrail { get; init; } = [];
@@ -33,6 +35,22 @@ public sealed class ImportReportResponse
     public int MeterReadingCount { get; init; }
 
     public int IssueCount { get; init; }
+
+    public int ReturnedIssueCount { get; init; }
+
+    public bool HasMoreIssues { get; init; }
+
+    public int UnresolvedIssueCount { get; init; }
+
+    public int OpenIssueCount { get; init; }
+
+    public int BlockingOpenIssueCount { get; init; }
+
+    public int AutomaticallyResolvedIssueCount { get; init; }
+
+    public int ManuallyResolvedIssueCount { get; init; }
+
+    public string? ReadinessMessage { get; init; }
 
     public int ErrorCount { get; init; }
 

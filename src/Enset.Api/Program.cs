@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 const string developmentFrontendCorsPolicy = "DevelopmentFrontend";
 
 builder.Services
-    .AddApiServices(builder.Environment)
+    .AddApiServices(builder.Configuration, builder.Environment)
     .AddOpenApiServices()
     .AddImportServices(builder.Environment);
 
@@ -35,6 +35,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    await app.Services.SeedDevelopmentIdentityAsync();
     //await app.Services.SeedDataProductDemoAsync();
     app.UseCors(developmentFrontendCorsPolicy);
 }

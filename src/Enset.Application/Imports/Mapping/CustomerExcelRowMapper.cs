@@ -13,6 +13,7 @@ public static class CustomerExcelRowMapper
 
         return new CustomerImportDto
         {
+            SourceRowNumber = row.RowNumber,
             ExternalCustomerId = row.InternalCustomerId,
             CompanyName = companyName,
             VatNumber = row.VatNumber,

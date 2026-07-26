@@ -61,9 +61,14 @@ public sealed class DatabaseImportWriter : IImportWriter
                 buildings,
                 cancellationToken);
 
-            await InsertMeterReadingsAsync(
+            var rawReadings = await InsertRawMeterReadingsAsync(
                 context,
                 meters,
+                cancellationToken);
+
+            await InsertCuratedMeterReadingsAsync(
+                context,
+                rawReadings,
                 cancellationToken);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -324,6 +329,12 @@ public sealed class DatabaseImportWriter : IImportWriter
                 meterNumber);
 
             meter.Unit = ParseMeterUnit(dto.Unit);
+            meter.Medium = dto.ProfileName switch
+            {
+                nameof(ImportMedium.Electricity) => MeterMedium.Electricity,
+                nameof(ImportMedium.Heat) => MeterMedium.Heat,
+                _ => meter.Medium
+            };
             meter.BuildingId = await ResolveBuildingIdAsync(
                 dto,
                 importedBuildings,
@@ -339,7 +350,7 @@ public sealed class DatabaseImportWriter : IImportWriter
         return result;
     }
 
-    private async Task<Guid> ResolveBuildingIdAsync(
+    private async Task<Guid?> ResolveBuildingIdAsync(
         MeterImportDto dto,
         IReadOnlyDictionary<string, Building> importedBuildings,
         CancellationToken cancellationToken)
@@ -357,6 +368,12 @@ public sealed class DatabaseImportWriter : IImportWriter
             }
 
             return dto.BuildingId.Value;
+        }
+
+        if (dto.AllowUnassignedBuilding &&
+            string.IsNullOrWhiteSpace(dto.ExternalBuildingId))
+        {
+            return null;
         }
 
         var buildingNumber = NormalizeRequired(
@@ -381,60 +398,161 @@ public sealed class DatabaseImportWriter : IImportWriter
                 $"'{dto.MeterNumber}' was not found.");
     }
 
-    private async Task InsertMeterReadingsAsync(
+    private async Task<IReadOnlyList<RawReadingCandidate>>
+        InsertRawMeterReadingsAsync(
         ImportWriteContext context,
         IReadOnlyDictionary<string, Meter> meters,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(meters);
+
+        var resolvedMeters = new Dictionary<string, Meter>(
+            meters,
+            StringComparer.OrdinalIgnoreCase);
+        var resolvedMetersById = meters.Values
+            .ToDictionary(meter => meter.Id);
+        var sourceMeterIds = context.MeterReadings
+            .Where(reading => reading.MeterId.HasValue)
+            .Select(reading => reading.MeterId!.Value)
+            .Distinct()
+            .Where(id => !resolvedMetersById.ContainsKey(id))
+            .ToList();
+        if (sourceMeterIds.Count > 0)
+        {
+            var existingMetersById = await _dbContext.Meters
+                .Where(meter => sourceMeterIds.Contains(meter.Id))
+                .ToListAsync(cancellationToken);
+            foreach (var meter in existingMetersById)
+            {
+                resolvedMetersById[meter.Id] = meter;
+                resolvedMeters[meter.MeterNumber] = meter;
+            }
+        }
+        var sourceMeterNumbers = context.MeterReadings
+            .Select(reading => NormalizeOptional(
+                reading.MeterNumberRaw ?? reading.MeterNumber))
+            .Where(number => number is not null)
+            .Select(number => number!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Where(number => !resolvedMeters.ContainsKey(number))
+            .ToList();
+
+        if (sourceMeterNumbers.Count > 0)
+        {
+            var existingMeters = await _dbContext.Meters
+                .Where(meter => sourceMeterNumbers.Contains(meter.MeterNumber))
+                .ToListAsync(cancellationToken);
+            foreach (var meter in existingMeters)
+                resolvedMeters[meter.MeterNumber] = meter;
+        }
+
+        var result = new List<RawReadingCandidate>(
+            context.MeterReadings.Count);
+
         foreach (var dto in context.MeterReadings)
         {
-            if (dto.HasError || dto.Value is null)
+            Meter? meter = null;
+            if (dto.MeterId.HasValue)
+                resolvedMetersById.TryGetValue(dto.MeterId.Value, out meter);
+            if (dto.MeterId.HasValue && meter is null)
+                throw new InvalidOperationException(
+                    $"Meter '{dto.MeterId}' was not found.");
+            var effectiveMeterNumber =
+                NormalizeOptional(dto.MeterNumber) ??
+                meter?.MeterNumber;
+            var normalizedMeterNumber =
+                NormalizeOptional(effectiveMeterNumber);
+            if (meter is null)
+                resolvedMeters.TryGetValue(
+                    normalizedMeterNumber ?? string.Empty,
+                    out meter);
+
+            var raw = new ImportedMeterReading
             {
-                continue;
-            }
+                ImportId = context.ImportId,
+                MeterId = meter?.Id,
+                MeterNumberRaw = dto.MeterNumberRaw,
+                TimestampRaw = dto.TimestampRaw,
+                ValueRaw = dto.ValueRaw,
+                QualityRaw = dto.QualityRaw,
+                Timestamp = dto.Timestamp.HasValue
+                    ? NormalizeUtc(dto.Timestamp.Value)
+                    : null,
+                Value = dto.Value,
+                Quality = dto.QualityFlag,
+                RowNumber = dto.RowNumber,
+                SourceName = context.Report?.SourceFile?.FileName,
+                ParsingError = dto.ErrorMessage ?? dto.ParsingError
+            };
+            _dbContext.ImportedMeterReadings.Add(raw);
+            result.Add(new RawReadingCandidate(dto, raw));
+        }
 
-            var meterNumber = NormalizeRequired(
-                dto.MeterNumber,
-                "MeterNumber");
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return result;
+    }
 
-            if (!meters.TryGetValue(meterNumber, out var meter))
-            {
-                meter = await _dbContext.Meters.SingleOrDefaultAsync(
-                    x => x.MeterNumber == meterNumber,
-                    cancellationToken);
+    private async Task InsertCuratedMeterReadingsAsync(
+        ImportWriteContext context,
+        IReadOnlyList<RawReadingCandidate> candidates,
+        CancellationToken cancellationToken)
+    {
+        var eligible = candidates
+            .Where(candidate =>
+                !candidate.Dto.HasError &&
+                candidate.Raw.MeterId.HasValue &&
+                candidate.Raw.Timestamp.HasValue &&
+                candidate.Raw.Value.HasValue)
+            .ToList();
+        if (eligible.Count == 0)
+            return;
 
-                if (meter is null)
+        var meterIds = eligible
+            .Select(candidate => candidate.Raw.MeterId!.Value)
+            .Distinct()
+            .ToList();
+        var timestamps = eligible
+            .Select(candidate => candidate.Raw.Timestamp!.Value)
+            .Distinct()
+            .ToList();
+        var knownKeys = (await _dbContext.MeterReadings
+                .AsNoTracking()
+                .Where(reading =>
+                    meterIds.Contains(reading.MeterId) &&
+                    timestamps.Contains(reading.Timestamp))
+                .Select(reading => new
                 {
-                    throw new InvalidOperationException(
-                        $"Meter '{meterNumber}' was not found.");
-                }
-            }
+                    reading.MeterId,
+                    reading.Timestamp
+                })
+                .ToListAsync(cancellationToken))
+            .Select(reading => (reading.MeterId, reading.Timestamp))
+            .ToHashSet();
 
-            var timestamp = NormalizeUtc(dto.Timestamp);
-
-            var readingExists = await _dbContext.MeterReadings.AnyAsync(
-                x =>
-                    x.MeterId == meter.Id &&
-                    x.Timestamp == timestamp,
-                cancellationToken);
-
-            if (readingExists)
-            {
+        foreach (var candidate in eligible)
+        {
+            var meterId = candidate.Raw.MeterId!.Value;
+            var timestamp = candidate.Raw.Timestamp!.Value;
+            if (!knownKeys.Add((meterId, timestamp)))
                 continue;
-            }
 
-            _dbContext.MeterReadings.Add(
-                new MeterReading
-                {
-                    MeterId = meter.Id,
-                    Timestamp = timestamp,
-                    Value = dto.Value.Value,
-                    ReadingType = MeterReadingType.Unknown,
-                    QualityFlag = ParseDataQuality(dto.QualityFlag),
-                    SourceImportJobId = context.ImportId
-                });
+            _dbContext.MeterReadings.Add(new MeterReading
+            {
+                MeterId = meterId,
+                Timestamp = timestamp,
+                Value = candidate.Raw.Value!.Value,
+                ReadingType = MeterReadingType.Unknown,
+                QualityFlag = ParseDataQuality(candidate.Raw.Quality),
+                SourceRawReadingId = candidate.Raw.Id,
+                SourceImportJobId = context.ImportId
+            });
         }
     }
+
+    private sealed record RawReadingCandidate(
+        MeterReadingImportDto Dto,
+        ImportedMeterReading Raw);
 
     private static string ResolveCustomerNumber(
         string? externalCustomerId,

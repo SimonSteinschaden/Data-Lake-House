@@ -1,10 +1,12 @@
 import { NavLink } from "react-router";
 import "./MainNavigation.css";
+import { navigationVisibility } from "../../auth/navigationVisibility";
 
 interface NavigationItem {
   path: string;
   label: string;
   end?: boolean;
+  internalCustomerAdministration?: boolean;
 }
 
 const navigationItems: NavigationItem[] = [
@@ -20,10 +22,15 @@ const navigationItems: NavigationItem[] = [
   {
     path: "/customers",
     label: "Kunden",
+    internalCustomerAdministration: true,
   },
   {
     path: "/buildings",
     label: "Gebäude",
+  },
+  {
+    path: "/meters",
+    label: "Zähler",
   },
   {
     path: "/analytics",
@@ -46,7 +53,7 @@ export function MainNavigation() {
       aria-label="Hauptnavigation"
     >
       <ul className="main-navigation__list">
-        {navigationItems.map((item) => (
+        {navigationItems.filter(item => !item.internalCustomerAdministration || navigationVisibility.showInternalCustomerAdministration).map((item) => (
           <li
             key={item.path}
             className="main-navigation__item"

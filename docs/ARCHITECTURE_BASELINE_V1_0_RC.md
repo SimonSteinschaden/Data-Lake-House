@@ -49,7 +49,7 @@ Der Worker führt denselben Analysepfad als Console-Anwendung aus, verwendet akt
 
 ## API und Web
 
-Implementiert sind die Endpunkte unter `/api/v1/imports` und `/api/v1/data-products`. Controller liefern DTOs und ProblemDetails. Eine echte Authentifizierung fehlt; `X-User-Id` ist eine MVP-Konvention.
+Implementiert sind die Endpunkte unter `/api/v1/imports` und `/api/v1/data-products`. Controller liefern DTOs und ProblemDetails. JWT Bearer Authentication bildet die verbindliche Sicherheitsgrenze.
 
 React implementiert Import Wizard, Data-Product-Liste, Detail/Generate-Flow, Latest Version, Versionshistorie und Building Energy Dashboard. Kunden-, Gebäude-, Analytics- und Settings-Seiten sind derzeit einfache Seitengerüste.
 

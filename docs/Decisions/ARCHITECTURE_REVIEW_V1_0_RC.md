@@ -54,7 +54,7 @@ Die Projektgraphen sind korrekt: Domain hat keine Projektreferenz, Application r
 5. `DataProductMarketplacePublication` besitzt noch keinen vollständigen End-to-End-Persistenz-/API-Flow.
 6. `IExcelReader`/`IExcelWorkbookReader` und zwei Excel-Writer bilden überlappende Verträge mit unterschiedlichem Zweck und unzureichend klarer Benennung.
 7. Mehrere ältere Enums liegen in globalen Namespaces oder ihre Datei-/Namespace-Namen weichen ab; dies kompiliert, erschwert jedoch Navigation.
-8. Authorization wird über `X-User-Id` und CustomerId angestoßen; eine authentifizierte Identität fehlt.
+8. Dieser historische Befund ist behoben: Authorization verwendet eine validierte JWT-Identität und den serverseitigen Customer-Scope.
 9. Der Availability-Service führt im Generation-Flow die Authorization nach der expliziten Authorization erneut aus. Funktional konsistent, aber redundant.
 10. Development-Seeding migriert die Datenbank beim API-Start; für produktive Umgebungen ist ein separates Deploymentverfahren nötig.
 
@@ -157,5 +157,16 @@ Die Architektur ist als **1.0 RC dokumentationsreif**, aber noch nicht als produ
 
 
 
+# Ergänzung: Landesenergiebuchhaltung
 
+Die Landesenergiebuchhaltung ist als gekapselte Importquelle für das Segment
+Gemeinden ergänzt. Sie besitzt eigene Reader, Quell-DTOs, Mapper und
+Validatoren; der klassische ENSET-Workbook-Pfad wird nicht erweitert.
+
+Die Gebäudeidentität ist ausschließlich die externe Referenz
+`(GemID, GebID)`. Attribute wie Ort, Bezeichnung, Baujahr und Fläche sind keine
+zulässigen Matchingkriterien. Quellennamensräume verhindern deshalb eine
+automatische Zusammenführung mit ENSET-Gebäuden. Details und die langfristige
+Migration von `Customer` zu `Organization` enthält
+[`../14_Landesenergiebuchhaltung_Import.md`](../14_Landesenergiebuchhaltung_Import.md).
 

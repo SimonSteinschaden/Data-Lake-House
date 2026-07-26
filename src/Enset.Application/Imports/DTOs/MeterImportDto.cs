@@ -19,4 +19,6 @@ public sealed class MeterImportDto
     public Guid? CustomerId { get; set; }
 
     public Guid? BuildingId { get; set; }
+
+    public bool AllowUnassignedBuilding { get; set; }
 }

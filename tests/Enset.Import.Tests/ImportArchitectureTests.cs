@@ -160,6 +160,112 @@ public sealed class ImportArchitectureTests
     }
 
     [Fact]
+    public void DatabaseWriteGate_BlocksMissingEnsetReferencesBeforeWriter()
+    {
+        var report = new ImportReport
+        {
+            Status = ImportStatus.ReadyToCommit,
+            Decision = new ImportDecision
+            {
+                Type = ImportDecisionType.Continue,
+                Reason = "Test"
+            },
+            Customers =
+            [
+                new CustomerImportDto
+                {
+                    CompanyName = "Customer without external id"
+                }
+            ],
+            Buildings =
+            [
+                new BuildingImportDto
+                {
+                    ExternalBuildingId = "BUILDING-1",
+                    BuildingName = "Building without customer reference"
+                }
+            ]
+        };
+        var context = new ImportWriteContext
+        {
+            ImportId = report.ImportId,
+            Report = report,
+            TargetMode = ImportTargetMode.Upsert,
+            TargetWriter = ImportWriterType.Database,
+            UserId = "tester"
+        };
+
+        var result = new ImportWriteGate().Evaluate(context);
+
+        Assert.False(result.IsAllowed);
+        Assert.Contains(
+            result.Errors,
+            error => error.Contains(
+                "ExternalCustomerId",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void DatabaseWriteGate_AllowsConsistentEnsetReferences()
+    {
+        var report = new ImportReport
+        {
+            Status = ImportStatus.ReadyToCommit,
+            Decision = new ImportDecision
+            {
+                Type = ImportDecisionType.Continue,
+                Reason = "Test"
+            },
+            Customers =
+            [
+                new CustomerImportDto
+                {
+                    ExternalCustomerId = "CUSTOMER-1",
+                    CompanyName = "Customer"
+                }
+            ],
+            Buildings =
+            [
+                new BuildingImportDto
+                {
+                    ExternalBuildingId = "BUILDING-1",
+                    ExternalCustomerId = "CUSTOMER-1",
+                    BuildingName = "Building"
+                }
+            ],
+            Meters =
+            [
+                new MeterImportDto
+                {
+                    MeterNumber = "METER-1",
+                    ExternalBuildingId = "BUILDING-1"
+                }
+            ],
+            MeterReadings =
+            [
+                new MeterReadingImportDto
+                {
+                    MeterNumber = "METER-1",
+                    Timestamp = DateTime.UtcNow,
+                    Value = 1
+                }
+            ]
+        };
+        var context = new ImportWriteContext
+        {
+            ImportId = report.ImportId,
+            Report = report,
+            TargetMode = ImportTargetMode.Upsert,
+            TargetWriter = ImportWriterType.Database,
+            UserId = "tester"
+        };
+
+        var result = new ImportWriteGate().Evaluate(context);
+
+        Assert.True(result.IsAllowed);
+    }
+
+    [Fact]
     public async Task Commit_InvokesWriterOnlyAfterSuccessfulGate()
     {
         var blockedReport = CreateReport(ImportStatus.AwaitingResolution, resolved: false);
@@ -274,7 +380,8 @@ public sealed class ImportArchitectureTests
             IReadOnlyList<CustomerExcelRow> customers,
             IReadOnlyList<BuildingExcelRow> buildings,
             IReadOnlyList<MeterExcelRow> meters,
-            IReadOnlyList<MeterReadingExcelRow> meterReadings) => new();
+            IReadOnlyList<MeterReadingExcelRow> meterReadings,
+            ImportSourceType sourceType = ImportSourceType.Excel) => new();
     }
 
     private sealed class StubDuplicationCheck : IDuplicationCheckService

@@ -9,15 +9,24 @@ import type { ImportIssueViewModel } from "./models/ImportIssueViewModel";
 import type { ImportResolutionAction } from "./models/ImportResolutionAction";
 import type { ImportAnalysisResult } from "../types/ImportAnalysisResult";
 import "./ImportWizard.css";
-
+//TODO: Import speed must be maximized. Implementing LoadBar. 
 interface ImportWizardProps {
   currentStep: ImportWizardStep;
   selectedFile: File | null;
+  sourceType: "EnsetWorkbook" | "Landesenergiebuchhaltung";
+  medium: "Electricity" | "Heat" | null;
   analysisResult: ImportAnalysisResult | null;
   issues: ImportIssueViewModel[];
   isAnalyzing: boolean;
   analysisError: string | null;
+  isApplyingResolutions: boolean;
+  resolutionError: string | null;
+  resolutionNotice: string | null;
+  isCommitting: boolean;
+  commitError: string | null;
   onFileSelected: (file: File | null) => void;
+  onSourceTypeChanged: (value: "EnsetWorkbook" | "Landesenergiebuchhaltung") => void;
+  onMediumChanged: (value: "Electricity" | "Heat") => void;
   onAnalyze: () => void;
   onResolutionChange: (
     issueId: string,
@@ -25,7 +34,14 @@ interface ImportWizardProps {
     customValue: string | null,
   ) => void;
   onShowResolutions: () => void;
-  onShowCommit: () => void;
+  onApplyResolutions: () => void;
+  onApplyGroupResolution: (
+    issueId: string,
+    scope:
+      | "SingleIssue"
+      | "MatchingIssuesInCurrentImport"
+      | "MatchingIssueTypeInCurrentImport",
+  ) => void;
   onCommit: () => void;
   onBackToUpload: () => void;
   onBackToAnalysis: () => void;
@@ -36,15 +52,25 @@ interface ImportWizardProps {
 export function ImportWizard({
   currentStep,
   selectedFile,
+  sourceType,
+  medium,
   analysisResult,
   issues,
   isAnalyzing,
   analysisError,
+  isApplyingResolutions,
+  resolutionError,
+  resolutionNotice,
+  isCommitting,
+  commitError,
   onFileSelected,
+  onSourceTypeChanged,
+  onMediumChanged,
   onAnalyze,
   onResolutionChange,
   onShowResolutions,
-  onShowCommit,
+  onApplyResolutions,
+  onApplyGroupResolution,
   onCommit,
   onBackToUpload,
   onBackToAnalysis,
@@ -80,7 +106,11 @@ export function ImportWizard({
         {currentStep === "upload" && (
           <UploadStep
             selectedFile={selectedFile}
+            sourceType={sourceType}
+            medium={medium}
             onFileSelected={onFileSelected}
+            onSourceTypeChanged={onSourceTypeChanged}
+            onMediumChanged={onMediumChanged}
             onAnalyze={onAnalyze}
             isAnalyzing={isAnalyzing}
             error={analysisError}
@@ -104,9 +134,24 @@ export function ImportWizard({
         {currentStep === "resolution" && (
           <ResolutionStep
             issues={issues}
+            sourceColumns={analysisResult?.sourceColumns ?? []}
             onResolutionChange={onResolutionChange}
-            onContinue={onShowCommit}
+            onApplyGroupResolution={onApplyGroupResolution}
+            onContinue={onApplyResolutions}
             onBack={onBackToAnalysis}
+            isApplying={isApplyingResolutions}
+            error={resolutionError}
+            notice={resolutionNotice}
+            issueCount={analysisResult?.issueCount}
+            hasMoreIssues={analysisResult?.hasMoreIssues}
+            totalIssueCount={analysisResult?.issueCount ?? 0}
+            automaticallyResolvedIssueCount={
+              analysisResult?.automaticallyResolvedIssueCount ?? 0
+            }
+            manuallyResolvedIssueCount={
+              analysisResult?.manuallyResolvedIssueCount ?? 0
+            }
+            openIssueCount={analysisResult?.openIssueCount ?? 0}
           />
         )}
 
@@ -115,7 +160,12 @@ export function ImportWizard({
             fileName={fileName}
             customerCount={customerCount}
             buildingCount={buildingCount}
+            meterCount={analysisResult?.meterCount ?? 0}
+            meterReadingCount={analysisResult?.meterReadingCount ?? 0}
             issueCount={issueCount}
+            status={analysisResult?.status ?? "Pending"}
+            isCommitting={isCommitting}
+            error={commitError}
             onCommit={onCommit}
             onBack={onBackToResolution}
           />
@@ -124,6 +174,8 @@ export function ImportWizard({
         {currentStep === "completed" && (
           <CompletedStep
             fileName={fileName}
+            importId={analysisResult?.importId ?? ""}
+            status={analysisResult?.status ?? "Committed"}
             onRestart={onRestart}
           />
         )}

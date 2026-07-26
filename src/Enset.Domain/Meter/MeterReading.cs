@@ -22,4 +22,8 @@ public class MeterReading
     public int? IntervalSeconds { get; set; }
 
     public Guid? SourceImportJobId { get; set; }
+
+    public Guid? SourceRawReadingId { get; set; }
+
+    public ImportedMeterReading? SourceRawReading { get; set; }
 }

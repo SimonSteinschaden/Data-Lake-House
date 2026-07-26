@@ -2,7 +2,12 @@ interface CommitStepProps {
   fileName: string;
   customerCount: number;
   buildingCount: number;
+  meterCount: number;
+  meterReadingCount: number;
   issueCount: number;
+  status: string;
+  isCommitting: boolean;
+  error: string | null;
   onCommit: () => void;
   onBack: () => void;
 }
@@ -11,7 +16,12 @@ export function CommitStep({
   fileName,
   customerCount,
   buildingCount,
+  meterCount,
+  meterReadingCount,
   issueCount,
+  status,
+  isCommitting,
+  error,
   onCommit,
   onBack,
 }: CommitStepProps) {
@@ -21,44 +31,39 @@ export function CommitStep({
         <h3>Import freigeben</h3>
         <p className="import-wizard__hint">
           Kontrolliere die Zusammenfassung. Erst mit der Freigabe werden
-          die Daten tatsächlich geschrieben.
+          die Daten tatsächlich relational in PostgreSQL geschrieben.
         </p>
       </div>
 
       <dl className="import-wizard__commit-summary">
-        <div>
-          <dt>Datei</dt>
-          <dd>{fileName}</dd>
-        </div>
-
-        <div>
-          <dt>Kunden</dt>
-          <dd>{customerCount}</dd>
-        </div>
-
-        <div>
-          <dt>Gebäude</dt>
-          <dd>{buildingCount}</dd>
-        </div>
-
-        <div>
-          <dt>Gelöste Issues</dt>
-          <dd>{issueCount}</dd>
-        </div>
+        <div><dt>Datei</dt><dd>{fileName}</dd></div>
+        <div><dt>Kunden</dt><dd>{customerCount}</dd></div>
+        <div><dt>Gebäude</dt><dd>{buildingCount}</dd></div>
+        <div><dt>Zähler</dt><dd>{meterCount}</dd></div>
+        <div><dt>Messwerte</dt><dd>{meterReadingCount}</dd></div>
+        <div><dt>Issues</dt><dd>{issueCount}</dd></div>
+        <div><dt>Serverstatus</dt><dd>{status}</dd></div>
       </dl>
 
       <div className="import-wizard__notice">
         <strong>Wichtiger Hinweis</strong>
         <p>
-          Dieser Schritt entspricht dem Write Gate des Data Lake House.
-          Ohne erfolgreiche Prüfung darf kein Writer ausgeführt werden.
+          Der Server prüft vor dem Schreiben das Write Gate. Der Wizard
+          wertet ausschließlich den zurückgegebenen ImportReport aus.
         </p>
       </div>
+
+      {error && (
+        <div className="import-wizard__error" role="alert">
+          {error}
+        </div>
+      )}
 
       <div className="import-wizard__actions">
         <button
           type="button"
           className="import-wizard__secondary-action"
+          disabled={isCommitting}
           onClick={onBack}
         >
           Zurück
@@ -67,9 +72,13 @@ export function CommitStep({
         <button
           type="button"
           className="import-wizard__primary-action"
+          disabled={isCommitting || status !== "ReadyToCommit"}
           onClick={onCommit}
+          aria-busy={isCommitting}
         >
-          Import verbindlich übernehmen
+          {isCommitting
+            ? "Import wird geschrieben …"
+            : "Import verbindlich übernehmen"}
         </button>
       </div>
     </section>

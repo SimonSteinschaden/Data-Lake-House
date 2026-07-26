@@ -31,4 +31,10 @@ public sealed class ImportIssueEntity
     public string? CustomResolvedValue { get; set; }
 
     public bool IsResolved { get; set; }
+
+    public string ResolutionSource { get; set; } = string.Empty;
+
+    public DateTime? ResolvedAt { get; set; }
+
+    public string? ResolvedBy { get; set; }
 }

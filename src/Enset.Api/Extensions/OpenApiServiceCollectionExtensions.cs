@@ -21,6 +21,23 @@ public static class OpenApiServiceCollectionExtensions
                         "REST API des ENSET Data Lake House für Importprozesse, " +
                         "Stammdaten, Analysen und zukünftige Data Products."
                 });
+
+            options.AddSecurityDefinition(
+                "Bearer",
+                new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Bearer token"
+                });
+
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+            });
         });
 
         return services;

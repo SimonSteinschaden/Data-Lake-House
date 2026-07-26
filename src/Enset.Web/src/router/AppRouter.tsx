@@ -10,6 +10,7 @@ import { SettingsPage } from "../pages/SettingsPage";
 import { DataProductsPage } from "../pages/DataProductsPage";
 import { DataProductDetailPage } from "../pages/DataProductDetailPage";
 import { BuildingEnergyPage } from "../pages/BuildingEnergyPage";
+import { MetersPage } from "../pages/MetersPage";
 
 export function AppRouter() {
   return (
@@ -18,7 +19,11 @@ export function AppRouter() {
         <Route index element={<DashboardPage />} />
         <Route path="imports" element={<ImportPage />} />
         <Route path="customers" element={<CustomersPage />} />
+        <Route path="customers/:customerId" element={<CustomersPage />} />
         <Route path="buildings" element={<BuildingsPage />} />
+        <Route path="buildings/:buildingId" element={<BuildingsPage />} />
+        <Route path="meters" element={<MetersPage />} />
+        <Route path="meters/:meterId" element={<MetersPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="data-products" element={<DataProductsPage />} />
         <Route path="data-products/:id" element={<DataProductDetailPage />} />

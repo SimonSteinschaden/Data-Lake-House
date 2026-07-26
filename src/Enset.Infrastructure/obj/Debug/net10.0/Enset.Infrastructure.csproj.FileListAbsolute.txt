@@ -85,3 +85,191 @@ C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data
 C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.dll
 C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Infrastructure\obj\Debug\net10.0\refint\Enset.Infrastructure.dll
 C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-build\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-build\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-build\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-build\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-full\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-full\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-full\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-full\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-final\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-final\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-final\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-final\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-tests\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-tests\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-tests\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-tests\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-tests2\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-tests2\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-tests2\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-tests2\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-full\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-full\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-full\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-full\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-build\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-build\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-build\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-build\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-final2\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-final2\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-final2\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-leb-header-final2\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-readiness-tests\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-readiness-tests\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-readiness-tests\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-readiness-tests\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-readiness-build\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-readiness-build\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-readiness-build\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-readiness-build\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-test\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-test\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-test\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-test\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-full\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-full\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-full\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-full\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-full2\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-full2\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-full2\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-full2\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-final\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-final\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-final\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-final\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-build\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-build\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-build\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-rules-build\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-matrix-test\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-matrix-test\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-matrix-test\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-matrix-test\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-tests\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-tests\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-tests\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-tests\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-final\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-final\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-final\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-final\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-build\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-build\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-build\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-quality-build\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\csv-meter-reading\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\csv-meter-reading\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\csv-meter-reading\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\csv-meter-reading\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\csv-meter-reading\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\csv-meter-reading\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\csv-meter-reading\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\csv-meter-reading\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv-final\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv-final\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv-final\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv-final\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv-final\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv-final\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv-final\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\dynamic-csv-final\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter-final\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter-final\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter-final\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter-final\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter-final\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter-final\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter-final\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\assign-meter-final\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-2\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-2\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-2\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-2\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-2\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-2\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-2\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-2\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-3\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-3\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-3\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-3\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-3\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-3\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-3\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\create-meter-3\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate-full\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate-full\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate-full\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate-full\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate-full\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate-full\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate-full\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-gate-full\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-2\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-2\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-2\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-2\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-2\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-2\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-2\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-2\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-3\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-3\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-3\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-3\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-3\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-3\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-3\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-api-3\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-final\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-final\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-final\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-final\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-final\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-final\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-final\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\.artifacts\meter-resolution-final\bin\Debug\net10.0\Enset.Application.pdb

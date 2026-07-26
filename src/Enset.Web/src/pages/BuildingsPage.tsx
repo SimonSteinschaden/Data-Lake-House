@@ -1,8 +1,27 @@
-export function BuildingsPage() {
-  return (
-    <section>
-      <h1>Gebäude</h1>
-      <p>Die Gebäudeverwaltung wird später ergänzt.</p>
-    </section>
-  );
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, useParams, useSearchParams } from "react-router";
+import { AdminPageHeader, PageState, Pagination, StatusBadge } from "../components/admin/AdminUi";
+import { displayDate, displayNumber, errorMessage } from "../components/admin/adminFormat";
+import "../components/admin/admin.css";
+import { buildingService } from "../services/buildingService";
+import { customerService } from "../services/customerService";
+import type { BuildingDetail, BuildingSummary } from "../features/buildings/types";
+import type { CustomerSummary } from "../features/customers/types";
+import type { PagedResult } from "../types/paging";
+
+export function BuildingsPage() { const { buildingId } = useParams(); return buildingId ? <Detail id={buildingId} /> : <List />; }
+
+function List() {
+  const [params, setParams] = useSearchParams(); const page = Math.max(1, Number(params.get("page")) || 1);
+  const [search, setSearch] = useState(params.get("search") ?? ""); const [result, setResult] = useState<PagedResult<BuildingSummary>>(); const [customers, setCustomers] = useState<CustomerSummary[]>([]); const [error, setError] = useState("");
+  useEffect(() => { const c = new AbortController(); customerService.list({ pageSize: 200 }, c.signal).then(x => setCustomers(x.items)).catch(() => setCustomers([])); return () => c.abort(); }, []);
+  useEffect(() => { const c = new AbortController(); buildingService.list({ search: params.get("search") ?? undefined, customerId: params.get("customerId") ?? undefined, isActive: params.has("isActive") ? params.get("isActive") === "true" : undefined, page, pageSize: 50, sortBy: params.get("sortBy") ?? "name", sortDirection: params.get("sortDirection") === "desc" ? "desc" : "asc" }, c.signal).then(setResult).catch(e => { if (!c.signal.aborted) setError(errorMessage(e)); }); return () => c.abort(); }, [params, page]);
+  const update = (values: Record<string, string | undefined>) => setParams(current => { const next = new URLSearchParams(current); Object.entries(values).forEach(([k, v]) => !v ? next.delete(k) : next.set(k, v)); return next; });
+  const submit = (e: FormEvent) => { e.preventDefault(); update({ search: search.trim() || undefined, page: "1" }); };
+  return <section className="admin-page"><AdminPageHeader title="Gebäude" description="Gebäudestammdaten und Messdatenabdeckung" /><form className="list-toolbar" onSubmit={submit}><label>Suche<input value={search} onChange={e => setSearch(e.target.value)} /></label>{customers.length > 0 && <label>Kunde<select value={params.get("customerId") ?? ""} onChange={e => update({ customerId: e.target.value || undefined, page: "1" })}><option value="">Alle</option>{customers.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>}<label>Status<select value={params.get("isActive") ?? ""} onChange={e => update({ isActive: e.target.value || undefined, page: "1" })}><option value="">Alle</option><option value="true">Aktiv</option><option value="false">Inaktiv</option></select></label><button>Suchen</button></form>{error ? <PageState>{error}</PageState> : !result ? <PageState>Daten werden geladen …</PageState> : result.items.length === 0 ? <PageState>Keine Gebäude gefunden.</PageState> : <><div className="table-wrap"><table className="admin-table"><thead><tr><th>Nummer</th><th>Name</th><th>Externe ID</th><th>Zähler</th><th>Erster Messwert</th><th>Letzter Messwert</th><th>Status</th><th></th></tr></thead><tbody>{result.items.map(x => <tr key={x.id}><td>{x.buildingNumber}</td><td>{x.name}</td><td>{x.externalIdentifier ?? "–"}</td><td>{displayNumber(x.meterCount)}</td><td>{displayDate(x.firstReadingAt)}</td><td>{displayDate(x.lastReadingAt)}</td><td><StatusBadge active={x.isActive} /></td><td><Link className="table-link" to={`/buildings/${encodeURIComponent(x.id)}`}>Öffnen</Link></td></tr>)}</tbody></table></div><Pagination page={result.page} totalPages={result.totalPages} onPage={p => update({ page: String(p) })} /></>}</section>;
+}
+
+function Detail({ id }: { id: string }) {
+  const [item, setItem] = useState<BuildingDetail>(); const [error, setError] = useState(""); useEffect(() => { const c = new AbortController(); buildingService.get(id, c.signal).then(setItem).catch(e => { if (!c.signal.aborted) setError(errorMessage(e)); }); return () => c.abort(); }, [id]);
+  return <section className="admin-page"><Link className="back-link" to="/buildings">← Gebäude</Link><AdminPageHeader title={item?.name ?? "Gebäudedetail"} description={item?.buildingNumber ?? ""} />{error ? <PageState>{error}</PageState> : !item ? <PageState>Daten werden geladen …</PageState> : <><dl className="detail-grid"><div><dt>Externe ID</dt><dd>{item.externalIdentifier ?? "–"}</dd></div><div><dt>Zähler</dt><dd>{displayNumber(item.meterCount)}</dd></div><div><dt>Messzeitraum</dt><dd>{displayDate(item.firstReadingAt)} – {displayDate(item.lastReadingAt)}</dd></div></dl><h2>Kunden</h2>{item.customers.length === 0 ? <PageState>Keine sichtbaren Kundenzuordnungen.</PageState> : <div className="table-wrap"><table className="admin-table"><tbody>{item.customers.map(x => <tr key={x.customerId}><td>{x.customerNumber}</td><td>{x.customerName}</td><td>{x.role}</td></tr>)}</tbody></table></div>}<h2>Zähler</h2>{item.meters.length === 0 ? <PageState>Keine Zähler zugeordnet.</PageState> : <div className="table-wrap"><table className="admin-table"><thead><tr><th>Nummer</th><th>Name</th><th>Quantity</th><th>Einheit</th><th></th></tr></thead><tbody>{item.meters.map(x => <tr key={x.id}><td>{x.meterNumber}</td><td>{x.name}</td><td>{x.quantity}</td><td>{x.unit}</td><td><Link className="table-link" to={`/meters/${encodeURIComponent(x.id)}`}>Öffnen</Link></td></tr>)}</tbody></table></div>}</>}</section>;
 }

@@ -755,7 +755,7 @@
             },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
-              "version": "[10.0.1, )"
+              "version": "[10.0.3, )"
             },
             "System.Security.Cryptography.Xml": {
               "target": "Package",

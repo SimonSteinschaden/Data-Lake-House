@@ -7,6 +7,8 @@ namespace Enset.Api.Contracts.Imports.Responses;
 public sealed class ImportReportResponse
 {
     public Guid ImportId { get; init; }
+    public Guid? AssignedMeterId { get; init; }
+    public string? DefaultMeterNumber { get; init; }
 
     public ImportStatus Status { get; init; }
 
@@ -33,6 +35,14 @@ public sealed class ImportReportResponse
     public int MeterCount { get; init; }
 
     public int MeterReadingCount { get; init; }
+    public DateTime? MeasurementPeriodStart { get; init; }
+    public DateTime? MeasurementPeriodEnd { get; init; }
+    public int? IntervalSeconds { get; init; }
+    public int ValidReadingCount { get; init; }
+    public int InvalidReadingCount { get; init; }
+    public int ExpectedIntervalCount { get; init; }
+    public int MissingIntervalCount { get; init; }
+    public int DuplicateReadingCount { get; init; }
 
     public int IssueCount { get; init; }
 

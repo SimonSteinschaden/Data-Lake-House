@@ -24,9 +24,10 @@ public sealed class MetersController : ControllerBase
     [ProducesResponseType(typeof(MeterDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<MeterDetailDto>> Get(Guid meterId,
+        [FromQuery] bool includeDeleted,
         CancellationToken cancellationToken)
     {
-        var meter = await _reads.GetMeterAsync(meterId, cancellationToken);
+        var meter = await _reads.GetMeterAsync(meterId, includeDeleted, cancellationToken);
         return meter is null
             ? Problem(title: "Meter not found", statusCode: StatusCodes.Status404NotFound)
             : Ok(meter);

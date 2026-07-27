@@ -14,6 +14,8 @@ using Enset.Application.Crud;
 using Enset.Infrastructure.Crud;
 using Enset.Application.Curation;
 using Enset.Infrastructure.Curation;
+using Enset.Application.GoldProfiles;
+using Enset.Infrastructure.GoldProfiles;
 
 namespace Enset.Infrastructure.Persistence;
 
@@ -57,6 +59,8 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IAnalyticsDataProductService, EfAnalyticsDataProductService>();
         services.AddScoped<IEntityCrudService, EfEntityCrudService>();
         services.AddScoped<ICurationService, EfCurationService>();
+        services.AddScoped<IGoldProfileVersionService, GoldProfileVersionService>();
+        services.AddScoped<IDataProductReadinessService, DataProductReadinessService>();
 
         return services;
     }

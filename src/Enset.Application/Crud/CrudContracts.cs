@@ -1,14 +1,20 @@
 namespace Enset.Application.Crud;
 
 public sealed record CustomerWriteModel(string CustomerNumber, string Name, string Type,
-    string? LegalName, string? Email, string? Phone, string CountryCode, uint RowVersion = 0);
+    string? LegalName, string? Email, string? Phone, string CountryCode, uint RowVersion = 0,
+    string? ContactPerson = null, string? Street = null, string? HouseNumber = null,
+    string? PostalCode = null, string? City = null);
 public sealed record BuildingWriteModel(string BuildingNumber, string Name,
     string? ExternalIdentifier, Guid? CustomerId, decimal? GrossFloorAreaM2 = null,
     int? YearOfConstruction = null, decimal? Latitude = null, decimal? Longitude = null,
-    uint RowVersion = 0);
+    uint RowVersion = 0, string? BuildingCategory = null, string? PrimaryUseType = null,
+    decimal? HeatedFloorAreaM2 = null, int? YearOfLastMajorRenovation = null,
+    string? BenchmarkState = null, string? PostalCode = null, string? City = null,
+    string? Street = null, string? HouseNumber = null);
 public sealed record MeterWriteModel(string MeterNumber, string Name, Guid BuildingId,
     string Medium, string Quantity, string Unit, string Direction, string Type,
-    Guid? EnergySystemId, uint RowVersion = 0);
+    Guid? EnergySystemId, uint RowVersion = 0, string? Description = null,
+    string? ExternalIdentifier = null, decimal? AnnualValue = null);
 public sealed record EnergySystemWriteModel(string EnergySystemNumber, string Name,
     string Type, Guid BuildingId, decimal? RatedPowerKw = null,
     DateTime? CommissionedAt = null, DateTime? DecommissionedAt = null,

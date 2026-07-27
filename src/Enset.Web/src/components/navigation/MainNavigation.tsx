@@ -43,7 +43,7 @@ const navigationGroups: NavigationGroup[] = [
       },
       {
         path: "/buildings",
-        label: "Gebäude",
+        label: "Objekte / Gebäude",
         //TODO: internalCustomerAdministration: true, Customers can only see their own products.
       },
       {
@@ -96,7 +96,7 @@ const navigationGroups: NavigationGroup[] = [
         label: "Datenqualität",
       },
       {
-        path: "/tools/curation",
+        path: "/tools/data-curation",
         label: "Datenkurationscenter",
       },
       {

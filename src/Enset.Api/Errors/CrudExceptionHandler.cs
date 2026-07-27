@@ -2,6 +2,7 @@ using Enset.Application.Crud;
 using Enset.Application.Curation;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Enset.Api.Errors;
 
@@ -25,6 +26,9 @@ public sealed class CrudExceptionHandler(IProblemDetailsService problemDetails) 
                 { Title = "Nicht gefunden", Detail = exception.Message, Status = StatusCodes.Status404NotFound },
             CurationConflictException => new()
                 { Title = "Konflikt", Detail = exception.Message, Status = StatusCodes.Status409Conflict },
+            DbUpdateConcurrencyException => new()
+                { Title = "Konflikt", Detail = "Die Kurationsaufgabe wurde zwischenzeitlich geändert.",
+                  Status = StatusCodes.Status409Conflict },
             _ => new()
                 { Title = "Interner Serverfehler", Detail = "Die Anfrage konnte nicht verarbeitet werden.",
                   Status = StatusCodes.Status500InternalServerError }

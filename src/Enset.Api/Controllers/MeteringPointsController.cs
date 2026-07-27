@@ -13,12 +13,13 @@ public sealed class MeteringPointsController(CrudQueryHandler queries, CrudComma
     /// <summary>Listet Zählpunkte paginiert.</summary>
     [HttpGet, ProducesResponseType(typeof(PagedResult<MeterSummaryDto>), StatusCodes.Status200OK)]
     public Task<PagedResult<MeterSummaryDto>> List([FromQuery] int page = 1, [FromQuery] int pageSize = 50,
-        [FromQuery] string? search = null, CancellationToken ct = default) =>
-        queries.Handle(new GetMeteringPointsQuery(page, pageSize, search), ct);
+        [FromQuery] string? search = null, [FromQuery] bool includeDeleted = false,
+        CancellationToken ct = default) =>
+        queries.Handle(new GetMeteringPointsQuery(page, pageSize, search, includeDeleted), ct);
     /// <summary>Liefert einen Zählpunkt.</summary>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<MeterDetailDto>> Get(Guid id, CancellationToken ct)
-    { var item = await queries.Handle(new GetMeteringPointByIdQuery(id), ct); return item is null ? NotFound() : Ok(item); }
+    public async Task<ActionResult<MeterDetailDto>> Get(Guid id, [FromQuery] bool includeDeleted, CancellationToken ct)
+    { var item = await queries.Handle(new GetMeteringPointByIdQuery(id, includeDeleted), ct); return item is null ? NotFound() : Ok(item); }
     /// <summary>Legt einen Zählpunkt an.</summary>
     [HttpPost, Authorize(Policy = AuthorizationPolicyNames.CustomerWriter)]
     public async Task<ActionResult<EntityMutationResult>> Create(MeterWriteModel request, CancellationToken ct)

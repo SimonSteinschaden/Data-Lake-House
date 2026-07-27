@@ -12,6 +12,7 @@ using Enset.Domain.Projects;
 using Enset.Domain.Users;
 using Enset.Domain.Common;
 using Enset.Domain.Curation;
+using Enset.Domain.GoldProfiles;
 using Enset.Application.Authorization;
 
 using Enset.Infrastructure.Imports.Persistence.Entities;
@@ -94,6 +95,9 @@ public class EnsetDbContext : DbContext
     public DbSet<EntityAuditEntry> EntityAuditEntries => Set<EntityAuditEntry>();
     public DbSet<CurationTask> CurationTasks => Set<CurationTask>();
     public DbSet<CurationDecision> CurationDecisions => Set<CurationDecision>();
+    public DbSet<CuratedFieldValue> CuratedFieldValues => Set<CuratedFieldValue>();
+    public DbSet<GoldProfileVersion> GoldProfileVersions => Set<GoldProfileVersion>();
+    public DbSet<GoldProfileEvent> GoldProfileEvents => Set<GoldProfileEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -2,12 +2,22 @@ import type { ImportIssueViewModel } from "../components/models/ImportIssueViewM
 
 export interface ImportAnalysisResult {
   importId: string;
+  assignedMeterId: string | null;
+  defaultMeterNumber: string | null;
   status: ImportStatus;
   fileName: string;
   customerCount: number;
   buildingCount: number;
   meterCount: number;
   meterReadingCount: number;
+  measurementPeriodStart: string | null;
+  measurementPeriodEnd: string | null;
+  intervalSeconds: number | null;
+  validReadingCount: number;
+  invalidReadingCount: number;
+  expectedIntervalCount: number;
+  missingIntervalCount: number;
+  duplicateReadingCount: number;
   issueCount: number;
   returnedIssueCount: number;
   hasMoreIssues: boolean;

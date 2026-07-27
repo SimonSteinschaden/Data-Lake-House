@@ -53,12 +53,22 @@ interface ImportIssueResponse {
 
 interface ImportReportResponse {
   importId: string;
+  assignedMeterId: string | null;
+  defaultMeterNumber: string | null;
   status: ImportStatus;
   sourceFile: ImportSourceFileResponse | null;
   customerCount: number;
   buildingCount: number;
   meterCount: number;
   meterReadingCount: number;
+  measurementPeriodStart: string | null;
+  measurementPeriodEnd: string | null;
+  intervalSeconds: number | null;
+  validReadingCount: number;
+  invalidReadingCount: number;
+  expectedIntervalCount: number;
+  missingIntervalCount: number;
+  duplicateReadingCount: number;
   issueCount: number;
   returnedIssueCount: number;
   hasMoreIssues: boolean;
@@ -115,12 +125,22 @@ const importPath = (importId: string): string => {
 
 const mapReport = (report: ImportReportResponse): ImportAnalysisResult => ({
   importId: report.importId,
+  assignedMeterId: report.assignedMeterId ?? null,
+  defaultMeterNumber: report.defaultMeterNumber ?? null,
   status: report.status,
   fileName: report.sourceFile?.fileName ?? "Unbekannte Datei",
   customerCount: report.customerCount,
   buildingCount: report.buildingCount,
   meterCount: report.meterCount,
   meterReadingCount: report.meterReadingCount,
+  measurementPeriodStart: report.measurementPeriodStart ?? null,
+  measurementPeriodEnd: report.measurementPeriodEnd ?? null,
+  intervalSeconds: report.intervalSeconds ?? null,
+  validReadingCount: report.validReadingCount ?? 0,
+  invalidReadingCount: report.invalidReadingCount ?? 0,
+  expectedIntervalCount: report.expectedIntervalCount ?? 0,
+  missingIntervalCount: report.missingIntervalCount ?? 0,
+  duplicateReadingCount: report.duplicateReadingCount ?? 0,
   issueCount: report.issueCount,
   returnedIssueCount: report.returnedIssueCount ?? report.issues.length,
   hasMoreIssues: report.hasMoreIssues ?? false,
@@ -141,12 +161,16 @@ export const importService = {
     file: File,
     sourceType: "CRM_Excel" | "Csv" | "Landesenergiebuchhaltung",
     medium: "Electricity" | "Heat" | null,
+    targetMeteringPointId?: string,
+    defaultMeterNumber?: string,
     signal?: AbortSignal,
   ): Promise<ImportAnalysisResult> {
     const formData = new FormData();
     formData.append("ImportFile", file, file.name);
     formData.append("SourceType", sourceType);
     if (medium) formData.append("Medium", medium);
+    if (targetMeteringPointId) formData.append("TargetMeteringPointId", targetMeteringPointId);
+    if (defaultMeterNumber) formData.append("DefaultMeterNumber", defaultMeterNumber);
     const report = await apiRequest<ImportReportResponse>("/api/v1/imports/analyze", {
       method: "POST",
       body: formData,

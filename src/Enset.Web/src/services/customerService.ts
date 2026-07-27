@@ -18,6 +18,7 @@ const createQueryString = (query: CustomerListQuery): string => {
   if (query.isActive !== undefined) {
     parameters.set("isActive", String(query.isActive));
   }
+  if (query.includeDeleted) parameters.set("includeDeleted", "true");
 
   parameters.set("page", String(query.page ?? 1));
   parameters.set("pageSize", String(query.pageSize ?? 50));
@@ -47,7 +48,7 @@ export const customerService = {
     }
 
     return apiGet<CustomerDetail>(
-      `/api/v1/customers/${encodeURIComponent(customerId)}`, { signal },
+      `/api/v1/customers/${encodeURIComponent(customerId)}?includeDeleted=true`, { signal },
     );
   },
   create(model: CustomerWriteModel) {

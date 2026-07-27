@@ -22,6 +22,7 @@ public class Customer : BaseEntity
     public string? Email { get; set; }
 
     public string? Phone { get; set; }
+    public string? ContactPerson { get; set; }
 
     public string? Website { get; set; }
 

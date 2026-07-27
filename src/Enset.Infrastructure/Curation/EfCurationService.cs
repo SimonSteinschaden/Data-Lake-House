@@ -10,15 +10,37 @@ namespace Enset.Infrastructure.Curation;
 public sealed class EfCurationService(
     EnsetDbContext db,
     ICurrentUserContext currentUser,
-    TimeProvider timeProvider) : ICurationService
+    TimeProvider timeProvider,
+    IDataAccessScope scope) : ICurationService
 {
-    public async Task<IReadOnlyList<CurationTaskSummary>> GetTasksAsync(CancellationToken ct)
+    public async Task<CurationTaskPage> GetTasksAsync(CurationTaskQuery request, CancellationToken ct)
     {
         await DiscoverTasksAsync(ct);
-        return await db.CurationTasks.AsNoTracking()
+        var buildingIds = scope.ApplyBuildingScope(db.Buildings).Select(x => x.Id);
+        var meterIds = scope.ApplyMeterScope(db.Meters).Select(x => x.Id);
+        var query = db.CurationTasks.AsNoTracking().Where(x =>
+            (x.EntityType == "Building" && buildingIds.Contains(x.EntityId)) ||
+            (x.EntityType == "MeteringPoint" && meterIds.Contains(x.EntityId)));
+        if (!string.IsNullOrWhiteSpace(request.EntityType)) query = query.Where(x => x.EntityType == request.EntityType);
+        if (!string.IsNullOrWhiteSpace(request.FieldName)) query = query.Where(x => x.FieldName == request.FieldName);
+        if (request.Status.HasValue) query = query.Where(x => x.Status == request.Status);
+        if (request.MinimumConfidence.HasValue) query = query.Where(x => x.ConfidencePercent >= request.MinimumConfidence);
+        if (request.BuildingId.HasValue) query = query.Where(x => x.EntityId == request.BuildingId ||
+            (x.EntityType == "MeteringPoint" && db.Meters.Any(m => m.Id == x.EntityId && m.BuildingId == request.BuildingId)));
+        if (request.MeteringPointId.HasValue)
+            query = query.Where(x => x.EntityType == "MeteringPoint" &&
+                x.EntityId == request.MeteringPointId);
+        if (request.CustomerId.HasValue) query = query.Where(x =>
+            (x.EntityType == "Building" && db.CustomerBuildingAssignments.Any(a => a.BuildingId == x.EntityId && a.CustomerId == request.CustomerId)) ||
+            (x.EntityType == "MeteringPoint" && db.Meters.Any(m => m.Id == x.EntityId && m.Building!.CustomerAssignments.Any(a => a.CustomerId == request.CustomerId))));
+        var page = Math.Max(1, request.Page); var pageSize = Math.Clamp(request.PageSize, 1, 100);
+        var total = await query.CountAsync(ct);
+        var items = await query
             .OrderBy(x => x.Status).ThenByDescending(x => x.ConfidencePercent)
             .ThenBy(x => x.EntityDisplayName)
-            .Select(x => Map(x)).ToListAsync(ct);
+            .Skip((page - 1) * pageSize).Take(pageSize).Select(x => Map(x)).ToListAsync(ct);
+        return new CurationTaskPage(items, page, pageSize, total,
+            Math.Max(1, (int)Math.Ceiling(total / (double)pageSize)));
     }
 
     public async Task<CurationTaskDetail?> GetTaskAsync(Guid id, CancellationToken ct)
@@ -26,7 +48,7 @@ public sealed class EfCurationService(
         await DiscoverTasksAsync(ct);
         var task = await db.CurationTasks.AsNoTracking().Include(x => x.Decisions)
             .SingleOrDefaultAsync(x => x.Id == id, ct);
-        return task is null ? null : MapDetail(task);
+        return task is null || !await IsVisible(task, ct) ? null : MapDetail(task);
     }
 
     public Task<CurationTaskDetail> AcceptAsync(Guid id, CancellationToken ct) =>
@@ -60,8 +82,14 @@ public sealed class EfCurationService(
             .GroupBy(x => new { x.EntityType, x.FieldName })
             .Select(x => new CurationTaskGroup(x.Key.EntityType, x.Key.FieldName, x.Count()))
             .OrderByDescending(x => x.Count).ToListAsync(ct);
+        int Open(string entity, string field) => groups
+            .Where(x => x.EntityType == entity && x.FieldName == field).Sum(x => x.Count);
+        var rejected = await db.CurationTasks.CountAsync(x => x.Status == CurationTaskStatus.Rejected, ct);
         return new CurationStatistics(bronze, Math.Max(0, entityCount - gold), gold,
-            groups.Sum(x => x.Count), groups);
+            groups.Sum(x => x.Count), rejected, Open("Building", "PrimaryUseType"),
+            Open("Building", "HeatedAreaSquareMeters"), Open("Building", "PostalCode"),
+            Open("MeteringPoint", "UsageType"), Open("MeteringPoint", "Medium"),
+            await CountIncompleteMeters(ct), groups);
     }
 
     private async Task<CurationTaskDetail> DecideAsync(Guid id, CurationTaskStatus status,
@@ -70,6 +98,8 @@ public sealed class EfCurationService(
         var task = await db.CurationTasks.Include(x => x.Decisions)
             .SingleOrDefaultAsync(x => x.Id == id, ct)
             ?? throw new CurationNotFoundException("Die Kurationsaufgabe wurde nicht gefunden.");
+        if (!await IsVisible(task, ct))
+            throw new CurationNotFoundException("Die Kurationsaufgabe wurde nicht gefunden.");
         if (task.Status != CurationTaskStatus.Open)
             throw new CurationConflictException("Über diese Kurationsaufgabe wurde bereits entschieden.");
 
@@ -95,9 +125,27 @@ public sealed class EfCurationService(
             SuggestedValue = task.SuggestedValue,
             NewValue = curatedValue,
             Source = source,
-            ConfidencePercent = task.ConfidencePercent,
+            ConfidencePercent = status == CurationTaskStatus.Customized ? 100 : task.ConfidencePercent,
             Reason = reason
         });
+        if (curatedValue is not null)
+        {
+            var previous = await db.CuratedFieldValues.SingleOrDefaultAsync(x =>
+                x.EntityType == task.EntityType && x.EntityId == task.EntityId &&
+                x.FieldName == task.FieldName && x.ValidToUtc == null, ct);
+            if (previous is not null) previous.ValidToUtc = now;
+            db.CuratedFieldValues.Add(new CuratedFieldValue
+            {
+                EntityType = task.EntityType, EntityId = task.EntityId,
+                FieldName = task.FieldName, OriginalValue = task.OriginalValue,
+                CuratedValue = curatedValue, NormalizedValue = curatedValue.Trim(),
+                Source = source, MaturityLevel = DataMaturityLevel.Gold,
+                ConfidencePercent = status == CurationTaskStatus.Customized ? 100 : task.ConfidencePercent,
+                RuleId = task.RuleId, RuleVersion = task.RuleVersion,
+                Confirmed = true, ConfirmedByUserId = userId,
+                ConfirmedAtUtc = now, ValidFromUtc = now
+            });
+        }
         await db.SaveChangesAsync(ct);
         return MapDetail(task);
     }
@@ -184,6 +232,152 @@ public sealed class EfCurationService(
         await db.SaveChangesAsync(ct);
     }
 
+    public async Task<BuildingGoldProfile?> GetBuildingProfileAsync(Guid id, CancellationToken ct)
+    {
+        var building = await scope.ApplyBuildingScope(db.Buildings).AsNoTracking()
+            .Include(x => x.CustomerAssignments).Include(x => x.Versions)
+            .ThenInclude(x => x.Address).ThenInclude(x => x!.PostalCodeArea)
+            .SingleOrDefaultAsync(x => x.Id == id, ct);
+        if (building is null) return null;
+        var fields = await CurrentFields("Building", id, ct);
+        var version = building.Versions.OrderByDescending(x => x.VersionNumber).FirstOrDefault();
+        string? Field(string name, string? fallback = null) =>
+            fields.FirstOrDefault(x => x.FieldName == name)?.NormalizedValue ?? fallback;
+        decimal? DecimalField(string name, decimal? fallback = null) =>
+            decimal.TryParse(Field(name), System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var value) ? value : fallback;
+        var readiness = BuildReadiness(id, "Building", fields, new[]
+        {
+            ("CustomerId", building.CustomerAssignments.FirstOrDefault()?.CustomerId.ToString()),
+            ("UsageType", Field("PrimaryUseType", version?.PrimaryUseType.ToString())),
+            ("HeatedAreaSquareMeters", DecimalField("HeatedAreaSquareMeters", version?.HeatedFloorAreaM2)?.ToString()),
+            ("PostalCode", Field("PostalCode", version?.Address?.PostalCodeArea?.Code)),
+            ("BenchmarkState", Field("BenchmarkState"))
+        });
+        var benchmark = Enum.TryParse<BenchmarkState>(Field("BenchmarkState"), true, out var state)
+            ? state : BenchmarkState.Unknown;
+        return new BuildingGoldProfile(id,
+            building.CustomerAssignments.FirstOrDefault()?.CustomerId,
+            Field("PrimaryUseType", version?.PrimaryUseType.ToString()),
+            DecimalField("HeatedAreaSquareMeters", version?.HeatedFloorAreaM2),
+            Field("PostalCode", version?.Address?.PostalCodeArea?.Code),
+            DecimalField("ElectricityConsumptionKwh"), DecimalField("ProductionKwh"),
+            DecimalField("HwbKwhPerSquareMeterYear"), benchmark,
+            Field("RenovationYear", version?.YearOfLastMajorRenovation.ToString()),
+            Field("BuildingCategory", version?.BuildingCategory.ToString()),
+            Field("Address", version?.Address is null ? null :
+                $"{version.Address.Street} {version.Address.HouseNumber}".Trim()),
+            Field("ConstructionYear", version?.YearOfConstruction.ToString()),
+            Field("EnergyCarrier"), Field("ClimateRegion"), Field("AdditionalClassification"),
+            readiness.MaturityLevel, readiness.ReadinessPercent,
+            readiness.BlockingIssues.Count == 0 ? "Keine blockierenden Qualitätsprobleme." :
+                string.Join(" ", readiness.BlockingIssues), readiness.Fields);
+    }
+
+    public async Task<MeteringPointGoldProfile?> GetMeteringPointProfileAsync(Guid id, CancellationToken ct)
+    {
+        var meter = await scope.ApplyMeterScope(db.Meters).AsNoTracking()
+            .Include(x => x.Building).ThenInclude(x => x!.CustomerAssignments)
+            .SingleOrDefaultAsync(x => x.Id == id, ct);
+        if (meter is null) return null;
+        var fields = await CurrentFields("MeteringPoint", id, ct);
+        var readings = await scope.ApplyMeterReadingScope(db.MeterReadings).AsNoTracking()
+            .Where(x => x.MeterId == id).Select(x => new
+            { x.Timestamp, x.IntervalSeconds, x.QualityFlag }).ToListAsync(ct);
+        var start = readings.Count == 0 ? null : readings.Min(x => x.Timestamp) as DateTime?;
+        var end = readings.Count == 0 ? null : readings.Max(x => x.Timestamp) as DateTime?;
+        var intervalSeconds = readings.Where(x => x.IntervalSeconds > 0)
+            .GroupBy(x => x.IntervalSeconds!.Value).OrderByDescending(x => x.Count())
+            .Select(x => (int?)x.Key).FirstOrDefault();
+        var actual = readings.Select(x => x.Timestamp).Distinct().LongCount();
+        var expected = start.HasValue && end.HasValue && intervalSeconds.HasValue
+            ? (long)Math.Floor((end.Value - start.Value).TotalSeconds / intervalSeconds.Value) + 1 : 0;
+        var missing = Math.Max(0, expected - actual);
+        decimal Percent(long count) => actual == 0 ? 0 : Math.Round(count * 100m / actual, 2);
+        var invalid = readings.LongCount(x => x.QualityFlag is Enset.Domain.Data.DataQuality.Invalid or Enset.Domain.Data.DataQuality.Missing);
+        var estimated = readings.LongCount(x => x.QualityFlag == Enset.Domain.Data.DataQuality.Estimated);
+        var interpolated = readings.LongCount(x => x.QualityFlag == Enset.Domain.Data.DataQuality.Interpolated);
+        var measured = readings.LongCount(x => x.QualityFlag is Enset.Domain.Data.DataQuality.Measured or Enset.Domain.Data.DataQuality.Validated);
+        var derived = readings.LongCount(x => x.QualityFlag == Enset.Domain.Data.DataQuality.Calculated);
+        var readiness = BuildReadiness(id, "MeteringPoint", fields, new[]
+        {
+            ("BuildingId", meter.BuildingId?.ToString()),
+            ("CustomerId", meter.Building?.CustomerAssignments.FirstOrDefault()?.CustomerId.ToString()),
+            ("UsageType", Value(fields, "UsageType")),
+            ("EnergyCarrier", Value(fields, "Medium", meter.Medium == MeterMedium.Unknown ? null : meter.Medium.ToString())),
+            ("MeasurementType", meter.Quantity == MeterQuantity.Unknown ? null : meter.Quantity.ToString()),
+            ("Unit", meter.Unit == MeterUnit.Unknown ? null : meter.Unit.ToString()),
+            ("MeasurementPeriod", start.HasValue && end.HasValue ? $"{start:O}/{end:O}" : null),
+            ("IntervalMinutes", intervalSeconds.HasValue ? (intervalSeconds.Value / 60).ToString() : null),
+            ("Quality", invalid == 0 && missing == 0 ? "Valid" : null)
+        });
+        return new MeteringPointGoldProfile(id, meter.BuildingId,
+            meter.Building?.CustomerAssignments.FirstOrDefault()?.CustomerId,
+            Value(fields, "UsageType"), Value(fields, "Medium", meter.Medium.ToString()),
+            meter.Quantity.ToString(), meter.Unit.ToString(), start, end,
+            intervalSeconds / 60, expected, actual, missing, invalid, estimated, interpolated,
+            expected == 0 ? 0 : Math.Round(actual * 100m / expected, 2),
+            Percent(measured), Percent(derived), null, BenchmarkState.Unknown,
+            readiness.MaturityLevel,
+            $"Fehlend: {missing}; ungültig: {invalid}; geschätzt: {estimated}; interpoliert: {interpolated}.",
+            readiness.Fields);
+    }
+
+    public async Task<CurationReadiness?> GetBuildingReadinessAsync(Guid id, CancellationToken ct) =>
+        (await GetBuildingProfileAsync(id, ct)) is { } p
+            ? new CurationReadiness(id, p.MaturityLevel, p.DataCompleteness,
+                p.MaturityLevel == DataMaturityLevel.Gold, p.FieldMaturity,
+                p.FieldMaturity.Where(x => !x.Satisfied).Select(x => x.Explanation).ToList()) : null;
+
+    public async Task<CurationReadiness?> GetMeteringPointReadinessAsync(Guid id, CancellationToken ct) =>
+        (await GetMeteringPointProfileAsync(id, ct)) is { } p
+            ? new CurationReadiness(id, p.MaturityLevel,
+                p.FieldMaturity.Count == 0 ? 0 : p.FieldMaturity.Count(x => x.Satisfied) * 100 / p.FieldMaturity.Count,
+                p.MaturityLevel == DataMaturityLevel.Gold, p.FieldMaturity,
+                p.FieldMaturity.Where(x => !x.Satisfied).Select(x => x.Explanation).ToList()) : null;
+
+    public async Task<int> EvaluateBuildingAsync(Guid id, CancellationToken ct)
+    { if (!await scope.CanReadBuilding(id, ct)) throw new CurationNotFoundException("Gebäude nicht gefunden."); var before = await db.CurationTasks.CountAsync(ct); await DiscoverTasksAsync(ct); return await db.CurationTasks.CountAsync(ct) - before; }
+    public async Task<int> EvaluateMeteringPointAsync(Guid id, CancellationToken ct)
+    { if (!await scope.CanReadMeter(id, ct)) throw new CurationNotFoundException("Zählpunkt nicht gefunden."); var before = await db.CurationTasks.CountAsync(ct); await DiscoverTasksAsync(ct); return await db.CurationTasks.CountAsync(ct) - before; }
+
+    private Task<List<CuratedFieldValue>> CurrentFields(string type, Guid id, CancellationToken ct) =>
+        db.CuratedFieldValues.AsNoTracking().Where(x => x.EntityType == type &&
+            x.EntityId == id && x.ValidToUtc == null).ToListAsync(ct);
+    private Task<bool> IsVisible(CurationTask task, CancellationToken ct) =>
+        task.EntityType == "Building" ? scope.CanReadBuilding(task.EntityId, ct) :
+        task.EntityType == "MeteringPoint" ? scope.CanReadMeter(task.EntityId, ct) :
+        Task.FromResult(currentUser.IsEnsetEmployee);
+    private static string? Value(IEnumerable<CuratedFieldValue> fields, string name, string? fallback = null) =>
+        fields.FirstOrDefault(x => x.FieldName == name)?.NormalizedValue ?? fallback;
+    private static CurationReadiness BuildReadiness(Guid id, string type,
+        IReadOnlyList<CuratedFieldValue> fields, IEnumerable<(string Name, string? Value)> required)
+    {
+        var items = required.Select(x =>
+        {
+            var curated = fields.FirstOrDefault(f => f.FieldName == x.Name);
+            var satisfied = !string.IsNullOrWhiteSpace(x.Value);
+            return new FieldReadiness(x.Name,
+                curated?.MaturityLevel ?? (satisfied ? DataMaturityLevel.Silver : DataMaturityLevel.Bronze),
+                true, satisfied && curated?.MaturityLevel == DataMaturityLevel.Gold,
+                satisfied ? $"{x.Name} ist noch nicht fachlich als Gold bestätigt." : $"{x.Name} fehlt.",
+                x.Value, curated?.Source);
+        }).ToList();
+        var percent = items.Count == 0 ? 0 : items.Count(x => x.Satisfied) * 100 / items.Count;
+        var maturity = items.All(x => x.Satisfied) ? DataMaturityLevel.Gold :
+            items.All(x => x.Value is not null) ? DataMaturityLevel.Silver : DataMaturityLevel.Bronze;
+        return new CurationReadiness(id, maturity, percent, maturity == DataMaturityLevel.Gold,
+            items, items.Where(x => !x.Satisfied).Select(x => x.Explanation).ToList());
+    }
+    private async Task<int> CountIncompleteMeters(CancellationToken ct)
+    {
+        var meterIds = await scope.ApplyMeterScope(db.Meters).Select(x => x.Id).ToListAsync(ct);
+        var count = 0;
+        foreach (var id in meterIds)
+            if ((await GetMeteringPointProfileAsync(id, ct)) is { CompletenessPercentage: < 100 }) count++;
+        return count;
+    }
+
     private static void Add(List<CurationTask> tasks, HashSet<string> keys,
         string entityType, Guid entityId, string display, string field,
         string? original, string suggested, int confidence, string reason)
@@ -194,7 +388,18 @@ public sealed class EfCurationService(
             EntityType = entityType, EntityId = entityId,
             EntityDisplayName = display, FieldName = field,
             OriginalValue = original, SuggestedValue = suggested,
-            ConfidencePercent = confidence, Reasoning = reason
+            SuggestedNormalizedValue = suggested.Trim(),
+            ConfidencePercent = confidence, Reasoning = reason,
+            RuleId = field switch
+            {
+                "PrimaryUseType" => "BUILDING_USAGE_FROM_NAME",
+                "BuildingCategory" => "BUILDING_TYPE_FROM_NAME",
+                "Medium" => "METER_ENERGY_CARRIER_FROM_MEASUREMENT",
+                "CustomerId" => "BUILDING_CUSTOMER_FROM_EXTERNAL_ID",
+                "BuildingId" => "ENERGY_SYSTEM_BUILDING_FROM_EXTERNAL_ID",
+                _ => "ENSET_DETERMINISTIC_RULE"
+            },
+            RuleVersion = "1.0"
         });
     }
 
@@ -238,7 +443,9 @@ public sealed class EfCurationService(
     private static CurationTaskSummary Map(CurationTask x) =>
         new(x.Id, x.EntityType, x.EntityId, x.EntityDisplayName, x.FieldName,
             x.OriginalValue, x.SuggestedValue, x.ConfidencePercent, x.Reasoning,
-            x.Status, x.CuratedValue, x.Source);
+            x.Status, x.CuratedValue, x.Source, x.RuleId, x.RuleVersion,
+            x.Status is CurationTaskStatus.Accepted or CurationTaskStatus.Customized
+                ? DataMaturityLevel.Gold : DataMaturityLevel.Bronze);
 
     private static CurationTaskDetail MapDetail(CurationTask x) =>
         new(Map(x), x.Decisions.OrderByDescending(d => d.DecidedAtUtc)

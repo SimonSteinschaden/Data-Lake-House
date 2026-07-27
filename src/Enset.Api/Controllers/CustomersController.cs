@@ -21,15 +21,16 @@ public sealed class CustomersController : ControllerBase
     [ProducesResponseType(typeof(PagedResult<CustomerSummaryDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<CustomerSummaryDto>>> List(
         [FromQuery] CustomerListQuery query, CancellationToken cancellationToken) =>
-        Ok(await _queries.Handle(new GetCustomersQuery(query.Page, query.PageSize, query.Search), cancellationToken));
+        Ok(await _queries.Handle(new GetCustomersQuery(query.Page, query.PageSize, query.Search, query.IncludeDeleted), cancellationToken));
 
     [HttpGet("{customerId:guid}")]
     [ProducesResponseType(typeof(CustomerDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CustomerDetailDto>> Get(Guid customerId,
+        [FromQuery] bool includeDeleted,
         CancellationToken cancellationToken)
     {
-        var customer = await _queries.Handle(new GetCustomerByIdQuery(customerId), cancellationToken);
+        var customer = await _queries.Handle(new GetCustomerByIdQuery(customerId, includeDeleted), cancellationToken);
         return customer is null
             ? Problem(title: "Customer not found", statusCode: StatusCodes.Status404NotFound)
             : Ok(customer);

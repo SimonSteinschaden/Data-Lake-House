@@ -23,6 +23,8 @@ public enum CurationSource
     System
 }
 
+public enum BenchmarkState { Existing, Improved, Planned, Target, Unknown }
+
 public sealed class CurationTask
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -32,7 +34,10 @@ public sealed class CurationTask
     public string FieldName { get; set; } = string.Empty;
     public string? OriginalValue { get; set; }
     public string SuggestedValue { get; set; } = string.Empty;
+    public string SuggestedNormalizedValue { get; set; } = string.Empty;
     public int ConfidencePercent { get; set; }
+    public string RuleId { get; set; } = string.Empty;
+    public string RuleVersion { get; set; } = "1.0";
     public string Reasoning { get; set; } = string.Empty;
     public CurationTaskStatus Status { get; set; } = CurationTaskStatus.Open;
     public string? CuratedValue { get; set; }
@@ -42,6 +47,29 @@ public sealed class CurationTask
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public uint RowVersion { get; set; }
     public ICollection<CurationDecision> Decisions { get; set; } = new List<CurationDecision>();
+}
+
+public sealed class CuratedFieldValue
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string EntityType { get; set; } = string.Empty;
+    public Guid EntityId { get; set; }
+    public string FieldName { get; set; } = string.Empty;
+    public string? OriginalValue { get; set; }
+    public string CuratedValue { get; set; } = string.Empty;
+    public string NormalizedValue { get; set; } = string.Empty;
+    public CurationSource Source { get; set; }
+    public DataMaturityLevel MaturityLevel { get; set; }
+    public int ConfidencePercent { get; set; }
+    public string? RuleId { get; set; }
+    public string? RuleVersion { get; set; }
+    public bool Confirmed { get; set; }
+    public Guid ConfirmedByUserId { get; set; }
+    public DateTime ConfirmedAtUtc { get; set; }
+    public DateTime ValidFromUtc { get; set; }
+    public DateTime? ValidToUtc { get; set; }
+    public Guid? ImportId { get; set; }
+    public uint RowVersion { get; set; }
 }
 
 public sealed class CurationDecision

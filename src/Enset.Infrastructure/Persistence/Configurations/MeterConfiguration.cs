@@ -29,6 +29,9 @@ public class MeterConfiguration : IEntityTypeConfiguration<Meter>
         builder.Property(x => x.ExternalIdentifier)
             .HasMaxLength(256);
 
+        builder.Property(x => x.AnnualValue).HasPrecision(18, 6);
+        builder.Property(x => x.AnnualValueOrigin).HasMaxLength(32);
+
         builder.Property(x => x.Manufacturer)
             .HasMaxLength(128);
 

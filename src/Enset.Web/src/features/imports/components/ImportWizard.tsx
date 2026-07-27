@@ -142,6 +142,7 @@ export function ImportWizard({
               }
               issueCount={issueCount}
               importId={analysisResult.importId}
+              profile={analysisResult}
               onContinue={onShowResolutions}
               onBack={onBackToUpload}
             />

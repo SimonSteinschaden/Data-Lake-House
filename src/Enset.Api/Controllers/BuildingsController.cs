@@ -20,15 +20,17 @@ public sealed class BuildingsController : ControllerBase
     [ProducesResponseType(typeof(PagedResult<BuildingSummaryDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<BuildingSummaryDto>>> List(
         [FromQuery] BuildingListQuery query, CancellationToken cancellationToken) =>
-        Ok(await _queries.Handle(new GetBuildingsQuery(query.Page, query.PageSize, query.Search), cancellationToken));
+        Ok(await _queries.Handle(new GetBuildingsQuery(query.Page, query.PageSize, query.Search,
+            query.CustomerId, query.IncludeDeleted), cancellationToken));
 
     [HttpGet("{buildingId:guid}")]
     [ProducesResponseType(typeof(BuildingDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<BuildingDetailDto>> Get(Guid buildingId,
+        [FromQuery] bool includeDeleted,
         CancellationToken cancellationToken)
     {
-        var building = await _queries.Handle(new GetBuildingByIdQuery(buildingId), cancellationToken);
+        var building = await _queries.Handle(new GetBuildingByIdQuery(buildingId, includeDeleted), cancellationToken);
         return building is null
             ? Problem(title: "Building not found", statusCode: StatusCodes.Status404NotFound)
             : Ok(building);

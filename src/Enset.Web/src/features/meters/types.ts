@@ -13,6 +13,7 @@ export interface MeterListQuery {
   customerId?: string;
   buildingId?: string;
   isActive?: boolean;
+  includeDeleted?: boolean;
   page?: number;
   pageSize?: number;
   sortBy?: string;
@@ -32,16 +33,22 @@ export interface MeterSummary {
   id: string;
   meterNumber: string;
   name: string;
+  medium: string;
   unit: string;
-  quantity: string;
   direction: string;
-  type: string;
-  isActive: boolean;
   buildingId: string | null;
+  buildingNumber: string | null;
   buildingName: string | null;
+  customerNumber: string | null;
+  customerName: string | null;
+  annualValue: number | null;
+  annualValueOrigin: string | null;
   readingCount: number;
   firstReadingAt: string | null;
   lastReadingAt: string | null;
+  dataMaturity: "Bronze" | "Silver" | "Gold";
+  goldReadinessPercent: number;
+  isDeleted: boolean;
 }
 
 export interface MeterDetail extends MeterSummary, EntityMetadata {
@@ -54,12 +61,22 @@ export interface MeterDetail extends MeterSummary, EntityMetadata {
   latestReadingAt: string | null;
   latestValue: number | null;
   latestQuality: string | null;
+  buildingNumber: string | null;
+  customerNumber: string | null;
+  customerName: string | null;
+  annualValue: number | null;
+  annualValueOrigin: string | null;
+  intervalSeconds: number | null;
+  isActive: boolean;
+  quantity: string;
+  type: string;
 }
 
 export interface MeterWriteModel {
   meterNumber: string; name: string; buildingId: string; medium: string;
   quantity: string; unit: string; direction: string; type: string;
-  energySystemId: string | null; rowVersion: number;
+  energySystemId: string | null; rowVersion: number; description: string | null;
+  externalIdentifier: string | null; annualValue: number | null;
 }
 
 export interface RawMeterReading {

@@ -5,6 +5,8 @@ using Enset.Domain.Customers;
 using Enset.Domain.Buildings;
 using Enset.Domain.Energy;
 using Enset.Domain.Data;
+using Enset.Domain.Curation;
+using Enset.Domain.Geography;
 using Enset.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +21,8 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
             throw new CrudConflictException("Ein Kunde mit dieser Kundennummer existiert bereits.");
         var entity = new Customer { CustomerNumber = m.CustomerNumber.Trim(), Name = m.Name.Trim(),
             LegalName = Trim(m.LegalName), Email = Trim(m.Email), Phone = Trim(m.Phone),
+            ContactPerson = Trim(m.ContactPerson), Street = Trim(m.Street),
+            HouseNumber = Trim(m.HouseNumber), PostalCode = Trim(m.PostalCode), City = Trim(m.City),
             CountryCode = string.IsNullOrWhiteSpace(m.CountryCode) ? "AT" : m.CountryCode.Trim().ToUpperInvariant(),
             Type = Parse<CustomerType>(m.Type, nameof(m.Type)) };
         db.Customers.Add(entity);
@@ -35,6 +39,8 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
             throw new CrudConflictException("Ein Kunde mit dieser Kundennummer existiert bereits.");
         e.CustomerNumber = m.CustomerNumber.Trim(); e.Name = m.Name.Trim(); e.LegalName = Trim(m.LegalName);
         e.Email = Trim(m.Email); e.Phone = Trim(m.Phone); e.CountryCode = m.CountryCode.Trim().ToUpperInvariant();
+        e.ContactPerson = Trim(m.ContactPerson); e.Street = Trim(m.Street);
+        e.HouseNumber = Trim(m.HouseNumber); e.PostalCode = Trim(m.PostalCode); e.City = Trim(m.City);
         e.Type = Parse<CustomerType>(m.Type, nameof(m.Type)); Manual(e);
         await Save(ct); return Result(e);
     }
@@ -61,37 +67,60 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
         var e = new Building { BuildingNumber = m.BuildingNumber.Trim(), Name = m.Name.Trim(),
             ExternalIdentifier = Trim(m.ExternalIdentifier) };
         db.Buildings.Add(e);
-        if (m.GrossFloorAreaM2.HasValue || m.YearOfConstruction.HasValue ||
-            m.Latitude.HasValue || m.Longitude.HasValue)
+        if (HasBuildingVersionData(m))
+        {
+            var address = await BuildAddress(m, ct);
             e.Versions.Add(new BuildingVersion { VersionNumber = 1, ValidFrom = DateTime.UtcNow,
                 GrossFloorAreaM2 = m.GrossFloorAreaM2, YearOfConstruction = m.YearOfConstruction,
                 Latitude = m.Latitude, Longitude = m.Longitude,
+                BuildingCategory = ParseOptional(m.BuildingCategory, BuildingCategory.Other, nameof(m.BuildingCategory)),
+                PrimaryUseType = ParseOptional(m.PrimaryUseType, PrimaryUseType.Mixed, nameof(m.PrimaryUseType)),
+                HeatedFloorAreaM2 = m.HeatedFloorAreaM2,
+                YearOfLastMajorRenovation = m.YearOfLastMajorRenovation, Address = address,
                 ChangeReason = "Manuelle Anlage" });
+        }
         if (m.CustomerId.HasValue) db.CustomerBuildingAssignments.Add(new CustomerBuildingAssignment {
             CustomerId = m.CustomerId.Value, Building = e, ValidFrom = DateTime.UtcNow, IsPrimary = true });
-        await Save(ct); return Result(e);
+        await Save(ct);
+        await SetBenchmarkState(e.Id, m.BenchmarkState, ct);
+        return Result(e);
     }
     public async Task<EntityMutationResult> UpdateBuildingAsync(Guid id, BuildingWriteModel m, CancellationToken ct)
     {
         Required((nameof(m.BuildingNumber), m.BuildingNumber), (nameof(m.Name), m.Name));
-        var e = await Buildings().SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Gebäude");
+        var e = await Buildings().Include(x => x.CustomerAssignments)
+            .SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Gebäude");
         Concurrency(e, m.RowVersion);
         if (await db.Buildings.AnyAsync(x => x.Id != id && x.BuildingNumber == m.BuildingNumber.Trim(), ct))
             throw new CrudConflictException("Ein Gebäude mit dieser Gebäudenummer existiert bereits.");
+        if (m.CustomerId.HasValue && !await Customers().AnyAsync(x => x.Id == m.CustomerId, ct))
+            throw Invalid(nameof(m.CustomerId), "Der angegebene Kunde existiert nicht.");
         e.BuildingNumber = m.BuildingNumber.Trim(); e.Name = m.Name.Trim();
         e.ExternalIdentifier = Trim(m.ExternalIdentifier); Manual(e);
-        if (m.GrossFloorAreaM2.HasValue || m.YearOfConstruction.HasValue ||
-            m.Latitude.HasValue || m.Longitude.HasValue)
+        var assignment = e.CustomerAssignments.FirstOrDefault(x => x.ValidTo == null && x.IsPrimary);
+        if (assignment?.CustomerId != m.CustomerId)
         {
-            var nextVersion = await db.BuildingVersions.Where(x => x.BuildingId == id)
-                .MaxAsync(x => (int?)x.VersionNumber, ct) ?? 0;
-            db.BuildingVersions.Add(new BuildingVersion { BuildingId = id,
-                VersionNumber = nextVersion + 1, ValidFrom = DateTime.UtcNow,
-                GrossFloorAreaM2 = m.GrossFloorAreaM2, YearOfConstruction = m.YearOfConstruction,
-                Latitude = m.Latitude, Longitude = m.Longitude,
-                ChangeReason = "Manuelle Änderung" });
+            if (assignment is not null) assignment.ValidTo = DateTime.UtcNow;
+            if (m.CustomerId.HasValue)
+                db.CustomerBuildingAssignments.Add(new CustomerBuildingAssignment {
+                    CustomerId = m.CustomerId.Value, BuildingId = id,
+                    ValidFrom = DateTime.UtcNow, IsPrimary = true });
         }
-        await Save(ct); return Result(e);
+        var previous = await db.BuildingVersions.AsNoTracking().Where(x => x.BuildingId == id)
+            .OrderByDescending(x => x.VersionNumber).FirstOrDefaultAsync(ct);
+        var address = await BuildAddress(m, ct);
+        db.BuildingVersions.Add(new BuildingVersion { BuildingId = id,
+            VersionNumber = (previous?.VersionNumber ?? 0) + 1, ValidFrom = DateTime.UtcNow,
+            GrossFloorAreaM2 = m.GrossFloorAreaM2, YearOfConstruction = m.YearOfConstruction,
+            Latitude = previous?.Latitude, Longitude = previous?.Longitude,
+            BuildingCategory = ParseOptional(m.BuildingCategory, BuildingCategory.Other, nameof(m.BuildingCategory)),
+            PrimaryUseType = ParseOptional(m.PrimaryUseType, PrimaryUseType.Mixed, nameof(m.PrimaryUseType)),
+            HeatedFloorAreaM2 = m.HeatedFloorAreaM2,
+            YearOfLastMajorRenovation = m.YearOfLastMajorRenovation, Address = address,
+            ChangeReason = "Manuelle Änderung" });
+        await Save(ct);
+        await SetBenchmarkState(e.Id, m.BenchmarkState, ct);
+        return Result(e);
     }
     public async Task<EntityMutationResult> DeleteBuildingAsync(Guid id, uint v, CancellationToken ct)
     {
@@ -118,7 +147,9 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
         var e = new Meter { MeterNumber = m.MeterNumber.Trim(), Name = m.Name.Trim(), BuildingId = m.BuildingId,
             EnergySystemId = m.EnergySystemId, Medium = Parse<MeterMedium>(m.Medium, nameof(m.Medium)),
             Quantity = Parse<MeterQuantity>(m.Quantity, nameof(m.Quantity)), Unit = Parse<MeterUnit>(m.Unit, nameof(m.Unit)),
-            Direction = Parse<MeterDirection>(m.Direction, nameof(m.Direction)), Type = Parse<MeterType>(m.Type, nameof(m.Type)) };
+            Direction = Parse<MeterDirection>(m.Direction, nameof(m.Direction)), Type = Parse<MeterType>(m.Type, nameof(m.Type)),
+            Description = Trim(m.Description), ExternalIdentifier = Trim(m.ExternalIdentifier),
+            AnnualValue = m.AnnualValue, AnnualValueOrigin = m.AnnualValue.HasValue ? "Manual" : null };
         db.Meters.Add(e); await Save(ct); return Result(e);
     }
     public async Task<EntityMutationResult> UpdateMeterAsync(Guid id, MeterWriteModel m, CancellationToken ct)
@@ -133,7 +164,10 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
         e.Name = m.Name.Trim(); e.BuildingId = m.BuildingId; e.EnergySystemId = m.EnergySystemId;
         e.Medium = Parse<MeterMedium>(m.Medium, nameof(m.Medium)); e.Quantity = Parse<MeterQuantity>(m.Quantity, nameof(m.Quantity));
         e.Unit = Parse<MeterUnit>(m.Unit, nameof(m.Unit)); e.Direction = Parse<MeterDirection>(m.Direction, nameof(m.Direction));
-        e.Type = Parse<MeterType>(m.Type, nameof(m.Type)); Manual(e); await Save(ct); return Result(e);
+        e.Type = Parse<MeterType>(m.Type, nameof(m.Type)); e.Description = Trim(m.Description);
+        e.ExternalIdentifier = Trim(m.ExternalIdentifier); e.AnnualValue = m.AnnualValue;
+        e.AnnualValueOrigin = m.AnnualValue.HasValue ? "Manual" : null;
+        Manual(e); await Save(ct); return Result(e);
     }
     public async Task<EntityMutationResult> DeleteMeterAsync(Guid id, uint v, CancellationToken ct)
     {
@@ -295,9 +329,60 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
       if (errors.Count != 0) throw new CrudValidationException(errors); }
     private static T Parse<T>(string value, string field) where T : struct, Enum =>
         Enum.TryParse<T>(value, true, out var parsed) ? parsed : throw Invalid(field, "Der angegebene Wert ist ungültig.");
+    private static T ParseOptional<T>(string? value, T fallback, string field) where T : struct, Enum =>
+        string.IsNullOrWhiteSpace(value) ? fallback : Parse<T>(value, field);
     private static CrudValidationException Invalid(string field, string message) => new(new Dictionary<string, string[]> { [field] = [message] });
     private static CrudNotFoundException Missing(string label) => new($"{label} wurde nicht gefunden.");
     private static string? Trim(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private static bool HasBuildingVersionData(BuildingWriteModel m) =>
+        m.GrossFloorAreaM2.HasValue || m.YearOfConstruction.HasValue ||
+        m.HeatedFloorAreaM2.HasValue || m.YearOfLastMajorRenovation.HasValue ||
+        !string.IsNullOrWhiteSpace(m.BuildingCategory) || !string.IsNullOrWhiteSpace(m.PrimaryUseType) ||
+        !string.IsNullOrWhiteSpace(m.PostalCode) || !string.IsNullOrWhiteSpace(m.City) ||
+        !string.IsNullOrWhiteSpace(m.Street) || !string.IsNullOrWhiteSpace(m.HouseNumber);
+    private async Task<Address?> BuildAddress(BuildingWriteModel m, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(m.PostalCode) && string.IsNullOrWhiteSpace(m.City) &&
+            string.IsNullOrWhiteSpace(m.Street) && string.IsNullOrWhiteSpace(m.HouseNumber))
+            return null;
+        var country = await db.Countries.SingleOrDefaultAsync(x => x.IsoCode2 == "AT", ct)
+            ?? throw Invalid(nameof(m.PostalCode), "Das Referenzland AT ist nicht eingerichtet.");
+        PostalCodeArea? area = null;
+        if (!string.IsNullOrWhiteSpace(m.PostalCode))
+        {
+            var code = m.PostalCode.Trim();
+            area = await db.PostalCodeAreas.SingleOrDefaultAsync(
+                x => x.CountryId == country.Id && x.Code == code, ct);
+            if (area is null)
+            {
+                area = new PostalCodeArea { CountryId = country.Id, Code = code, Name = Trim(m.City) };
+                db.PostalCodeAreas.Add(area);
+            }
+            else if (!string.IsNullOrWhiteSpace(m.City) && string.IsNullOrWhiteSpace(area.Name))
+                area.Name = m.City.Trim();
+        }
+        return new Address { CountryId = country.Id, PostalCodeArea = area,
+            Street = Trim(m.Street), HouseNumber = Trim(m.HouseNumber) };
+    }
+    private async Task SetBenchmarkState(Guid buildingId, string? value, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+        var state = Parse<BenchmarkState>(value, nameof(BuildingWriteModel.BenchmarkState));
+        var now = DateTime.UtcNow;
+        var current = await db.CuratedFieldValues.Where(x => x.EntityType == "Building" &&
+            x.EntityId == buildingId && x.FieldName == "BenchmarkState" && x.ValidToUtc == null)
+            .ToListAsync(ct);
+        if (current.Count == 1 && current[0].NormalizedValue == state.ToString()) return;
+        foreach (var old in current) old.ValidToUtc = now;
+        db.CuratedFieldValues.Add(new CuratedFieldValue { EntityType = "Building",
+            EntityId = buildingId, FieldName = "BenchmarkState",
+            OriginalValue = current.FirstOrDefault()?.CuratedValue,
+            CuratedValue = state.ToString(), NormalizedValue = state.ToString(),
+            Source = CurationSource.User, MaturityLevel = DataMaturityLevel.Silver,
+            ConfidencePercent = 100, Confirmed = false, ConfirmedByUserId = Guid.Empty,
+            ConfirmedAtUtc = now, ValidFromUtc = now });
+        await Save(ct);
+    }
     private void Concurrency(BaseEntity e, uint version)
     {
         if (version == 0) throw new CrudConflictException("Ein Concurrency-Token ist erforderlich.");

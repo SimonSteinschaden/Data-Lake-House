@@ -1,27 +1,30 @@
 namespace Enset.Application.ReadModel;
 
 public sealed record CustomerSummaryDto(Guid Id, string CustomerNumber, string Name,
-    string Type, bool IsActive, int BuildingCount);
+    string? PostalCode, string? City, string? Phone, string? Email,
+    bool IsActive, bool IsDeleted, int BuildingCount);
 
 public sealed record CustomerBuildingDto(Guid Id, string BuildingNumber, string Name,
-    string Role, bool IsPrimary);
+    string Role, bool IsPrimary, string? UsageType, int MeterCount, string DataMaturity);
 
 public sealed record CustomerDetailDto(Guid Id, string CustomerNumber, string Name,
-    string? LegalName, string Type, string? Email, string? Phone, string? Website,
+    string? LegalName, string Type, string? Email, string? Phone, string? ContactPerson, string? Website,
     string? Street, string? HouseNumber, string? PostalCode, string? City,
     string CountryCode, bool IsActive, IReadOnlyList<CustomerBuildingDto> Buildings,
     string DataOrigin, DateTime CreatedAtUtc, Guid? CreatedByUserId,
-    DateTime? UpdatedAtUtc, Guid? UpdatedByUserId, bool IsDeleted, uint RowVersion);
+    DateTime? UpdatedAtUtc, Guid? UpdatedByUserId, bool IsDeleted, uint RowVersion,
+    int MeterCount, int EnergySystemCount);
 
 public sealed record BuildingSummaryDto(Guid Id, string BuildingNumber, string Name,
-    string? ExternalIdentifier, bool IsActive, int MeterCount,
-    DateTime? FirstReadingAt, DateTime? LastReadingAt);
+    string? BuildingCategory, string? PrimaryUseType, string? CustomerNumber,
+    string? CustomerName, int MeterCount, string BenchmarkState,
+    string DataMaturity, int GoldReadinessPercent, bool IsDeleted);
 
 public sealed record BuildingCustomerDto(Guid CustomerId, string CustomerNumber,
     string CustomerName, string Role, bool IsPrimary);
 
 public sealed record BuildingMeterDto(Guid Id, string MeterNumber, string Name,
-    string Unit, string Quantity, bool IsActive);
+    string Medium, string Direction, string Unit, string DataMaturity, bool IsActive);
 
 public sealed record BuildingDetailDto(Guid Id, string BuildingNumber, string Name,
     string? ExternalIdentifier, bool IsActive, int MeterCount,
@@ -30,12 +33,17 @@ public sealed record BuildingDetailDto(Guid Id, string BuildingNumber, string Na
     IReadOnlyList<BuildingMeterDto> Meters, string DataOrigin, DateTime CreatedAtUtc,
     Guid? CreatedByUserId, DateTime? UpdatedAtUtc, Guid? UpdatedByUserId,
     bool IsDeleted, uint RowVersion, decimal? GrossFloorAreaM2,
-    int? YearOfConstruction, decimal? Latitude, decimal? Longitude);
+    int? YearOfConstruction, decimal? Latitude, decimal? Longitude,
+    string? BuildingCategory, string? PrimaryUseType, decimal? HeatedFloorAreaM2,
+    int? YearOfLastMajorRenovation, string BenchmarkState, string? PostalCode,
+    string? City, string? Street, string? HouseNumber);
 
 public sealed record MeterSummaryDto(Guid Id, string MeterNumber, string Name,
-    string Unit, string Quantity, string Direction, string Type, bool IsActive,
-    Guid? BuildingId, string? BuildingName, long ReadingCount,
-    DateTime? FirstReadingAt, DateTime? LastReadingAt);
+    string Medium, string Unit, string Direction, Guid? BuildingId, string? BuildingNumber,
+    string? BuildingName, string? CustomerNumber, string? CustomerName,
+    decimal? AnnualValue, string? AnnualValueOrigin, long ReadingCount,
+    DateTime? FirstReadingAt, DateTime? LastReadingAt, string DataMaturity,
+    int GoldReadinessPercent, bool IsDeleted);
 
 public sealed record MeterDetailDto(Guid Id, string MeterNumber, string Name,
     string? Description, string? ExternalIdentifier, string Medium, string Quantity,
@@ -44,7 +52,9 @@ public sealed record MeterDetailDto(Guid Id, string MeterNumber, string Name,
     long ReadingCount, DateTime? FirstReadingAt, DateTime? LastReadingAt,
     DateTime? LatestReadingAt, decimal? LatestValue, string? LatestQuality,
     string DataOrigin, DateTime CreatedAtUtc, Guid? CreatedByUserId,
-    DateTime? UpdatedAtUtc, Guid? UpdatedByUserId, bool IsDeleted, uint RowVersion);
+    DateTime? UpdatedAtUtc, Guid? UpdatedByUserId, bool IsDeleted, uint RowVersion,
+    string? BuildingNumber, string? CustomerNumber, string? CustomerName,
+    decimal? AnnualValue, string? AnnualValueOrigin, int? IntervalSeconds);
 
 public sealed record RawMeterReadingDto(DateTime Timestamp, decimal Value,
     string Quality, int? IntervalSeconds);

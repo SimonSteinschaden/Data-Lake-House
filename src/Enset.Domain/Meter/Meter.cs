@@ -14,6 +14,10 @@ public class Meter : BaseEntity
 
     public string? ExternalIdentifier { get; set; }
 
+    public decimal? AnnualValue { get; set; }
+
+    public string? AnnualValueOrigin { get; set; }
+
     public MeterMedium Medium { get; set; }
 
     public MeterQuantity Quantity { get; set; }

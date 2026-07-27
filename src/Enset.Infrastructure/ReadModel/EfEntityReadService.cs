@@ -1,6 +1,7 @@
 using Enset.Application.Authorization;
 using Enset.Application.ReadModel;
 using Enset.Domain.Energy;
+using Enset.Domain.Curation;
 using Enset.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +24,11 @@ public sealed class EfEntityReadService : IEntityReadService
     {
         var (page, size) = Page(request.Page, request.PageSize);
         var now = DateTime.UtcNow;
-        var query = _scope.ApplyCustomerScope(_db.Customers.AsNoTracking());
+        var source = request.IncludeDeleted
+            ? _db.Customers.IgnoreQueryFilters().AsNoTracking()
+            : _db.Customers.AsNoTracking();
+        var query = _scope.ApplyCustomerScope(source);
+        if (!request.IncludeDeleted) query = query.Where(x => !x.IsDeleted);
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim();
@@ -39,28 +44,40 @@ public sealed class EfEntityReadService : IEntityReadService
             : Order(query, request.SortDirection, x => x.Name);
         var items = await ordered.ThenBy(x => x.Id).Skip((page - 1) * size).Take(size)
             .Select(x => new CustomerSummaryDto(x.Id, x.CustomerNumber, x.Name,
-                x.Type.ToString(), x.IsActive, x.BuildingAssignments.Count(a =>
+                x.PostalCode, x.City, x.Phone, x.Email, x.IsActive, x.IsDeleted,
+                x.BuildingAssignments.Count(a =>
                     a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now))))
             .ToListAsync(ct);
         return new(items, page, size, total);
     }
 
-    public async Task<CustomerDetailDto?> GetCustomerAsync(Guid id,
+    public async Task<CustomerDetailDto?> GetCustomerAsync(Guid id, bool includeDeleted = false,
         CancellationToken ct = default)
     {
         var now = DateTime.UtcNow;
-        return await _scope.ApplyCustomerScope(_db.Customers.AsNoTracking())
+        var source = includeDeleted ? _db.Customers.IgnoreQueryFilters().AsNoTracking() : _db.Customers.AsNoTracking();
+        return await _scope.ApplyCustomerScope(source)
             .Where(x => x.Id == id)
             .Select(x => new CustomerDetailDto(x.Id, x.CustomerNumber, x.Name,
-                x.LegalName, x.Type.ToString(), x.Email, x.Phone, x.Website,
+                x.LegalName, x.Type.ToString(), x.Email, x.Phone, x.ContactPerson, x.Website,
                 x.Street, x.HouseNumber, x.PostalCode, x.City, x.CountryCode,
                 x.IsActive, x.BuildingAssignments
                     .Where(a => a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now))
                     .OrderBy(a => a.Building.Name)
                     .Select(a => new CustomerBuildingDto(a.BuildingId,
                         a.Building.BuildingNumber, a.Building.Name, a.Role.ToString(),
-                        a.IsPrimary)).ToList(), x.DataOrigin.ToString(), x.CreatedAt,
-                x.CreatedByUserId, x.UpdatedAt, x.UpdatedByUserId, x.IsDeleted, x.RowVersion))
+                        a.IsPrimary,
+                        a.Building.Versions.OrderByDescending(v => v.VersionNumber)
+                            .Select(v => v.PrimaryUseType.ToString()).FirstOrDefault(),
+                        a.Building.Meters.Count,
+                        _db.CuratedFieldValues.Any(v => v.EntityType == "Building" &&
+                            v.EntityId == a.BuildingId && v.ValidToUtc == null &&
+                            v.MaturityLevel == DataMaturityLevel.Gold) ? "Gold" :
+                        a.Building.Versions.Any() ? "Silver" : "Bronze")).ToList(),
+                x.DataOrigin.ToString(), x.CreatedAt,
+                x.CreatedByUserId, x.UpdatedAt, x.UpdatedByUserId, x.IsDeleted, x.RowVersion,
+                x.BuildingAssignments.SelectMany(a => a.Building.Meters).Count(),
+                x.BuildingAssignments.SelectMany(a => a.Building.EnergySystemAssignments).Count()))
             .SingleOrDefaultAsync(ct);
     }
 
@@ -69,7 +86,11 @@ public sealed class EfEntityReadService : IEntityReadService
     {
         var (page, size) = Page(request.Page, request.PageSize);
         var now = DateTime.UtcNow;
-        var query = _scope.ApplyBuildingScope(_db.Buildings.AsNoTracking());
+        var source = request.IncludeDeleted
+            ? _db.Buildings.IgnoreQueryFilters().AsNoTracking()
+            : _db.Buildings.AsNoTracking();
+        var query = _scope.ApplyBuildingScope(source);
+        if (!request.IncludeDeleted) query = query.Where(x => !x.IsDeleted);
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim();
@@ -89,19 +110,53 @@ public sealed class EfEntityReadService : IEntityReadService
             : Order(query, request.SortDirection, x => x.Name);
         var items = await ordered.ThenBy(x => x.Id).Skip((page - 1) * size).Take(size)
             .Select(x => new BuildingSummaryDto(x.Id, x.BuildingNumber, x.Name,
-                x.ExternalIdentifier, x.IsActive, x.Meters.Count,
-                x.Meters.SelectMany(m => m.Readings).Min(r => (DateTime?)r.Timestamp),
-                x.Meters.SelectMany(m => m.Readings).Max(r => (DateTime?)r.Timestamp)))
+                x.Versions.OrderByDescending(v => v.VersionNumber)
+                    .Select(v => v.BuildingCategory.ToString()).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber)
+                    .Select(v => v.PrimaryUseType.ToString()).FirstOrDefault(),
+                x.CustomerAssignments.Where(a => a.ValidFrom <= now &&
+                    (a.ValidTo == null || a.ValidTo > now))
+                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.CustomerNumber).FirstOrDefault(),
+                x.CustomerAssignments.Where(a => a.ValidFrom <= now &&
+                    (a.ValidTo == null || a.ValidTo > now))
+                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.Name).FirstOrDefault(),
+                x.Meters.Count,
+                _db.CuratedFieldValues.Where(v => v.EntityType == "Building" &&
+                    v.EntityId == x.Id && v.ValidToUtc == null && v.FieldName == "BenchmarkState")
+                    .Select(v => v.NormalizedValue).FirstOrDefault() ?? "Unknown",
+                _db.CuratedFieldValues.Count(v => v.EntityType == "Building" &&
+                    v.EntityId == x.Id && v.ValidToUtc == null &&
+                    v.MaturityLevel == DataMaturityLevel.Gold &&
+                    (v.FieldName == "CustomerId" || v.FieldName == "UsageType" ||
+                     v.FieldName == "HeatedAreaSquareMeters" || v.FieldName == "PostalCode" ||
+                     v.FieldName == "BenchmarkState")) == 5 ? "Gold" :
+                x.CustomerAssignments.Any(a => a.ValidFrom <= now &&
+                    (a.ValidTo == null || a.ValidTo > now)) &&
+                x.Versions.Any(v => v.HeatedFloorAreaM2 != null &&
+                    v.Address != null && v.Address.PostalCodeArea != null) &&
+                _db.CuratedFieldValues.Any(v => v.EntityType == "Building" &&
+                    v.EntityId == x.Id && v.ValidToUtc == null &&
+                    v.FieldName == "BenchmarkState") ? "Silver" : "Bronze",
+                _db.CuratedFieldValues.Count(v => v.EntityType == "Building" &&
+                    v.EntityId == x.Id && v.ValidToUtc == null &&
+                    v.MaturityLevel == DataMaturityLevel.Gold &&
+                    (v.FieldName == "CustomerId" || v.FieldName == "UsageType" ||
+                     v.FieldName == "HeatedAreaSquareMeters" || v.FieldName == "PostalCode" ||
+                     v.FieldName == "BenchmarkState")) * 20,
+                x.IsDeleted))
             .ToListAsync(ct);
         return new(items, page, size, total);
     }
 
-    public async Task<BuildingDetailDto?> GetBuildingAsync(Guid id,
+    public async Task<BuildingDetailDto?> GetBuildingAsync(Guid id, bool includeDeleted = false,
         CancellationToken ct = default)
     {
         var allowedCustomers = _scope.ApplyCustomerScope(_db.Customers).Select(x => x.Id);
         var now = DateTime.UtcNow;
-        return await _scope.ApplyBuildingScope(_db.Buildings.AsNoTracking())
+        var source = includeDeleted
+            ? _db.Buildings.IgnoreQueryFilters().AsNoTracking()
+            : _db.Buildings.AsNoTracking();
+        return await _scope.ApplyBuildingScope(source)
             .Where(x => x.Id == id)
             .Select(x => new BuildingDetailDto(x.Id, x.BuildingNumber, x.Name,
                 x.ExternalIdentifier, x.IsActive, x.Meters.Count,
@@ -115,13 +170,32 @@ public sealed class EfEntityReadService : IEntityReadService
                         a.IsPrimary)).ToList(),
                 x.Meters.OrderBy(m => m.MeterNumber)
                     .Select(m => new BuildingMeterDto(m.Id, m.MeterNumber, m.Name,
-                        m.Unit.ToString(), m.Quantity.ToString(), m.IsActive)).ToList(),
+                        m.Medium.ToString(), m.Direction.ToString(), m.Unit.ToString(),
+                        _db.CuratedFieldValues.Any(v => v.EntityType == "MeteringPoint" &&
+                            v.EntityId == m.Id && v.ValidToUtc == null &&
+                            v.MaturityLevel == DataMaturityLevel.Gold) ? "Gold" :
+                        m.Readings.Any() ? "Silver" : "Bronze", m.IsActive)).ToList(),
                 x.DataOrigin.ToString(), x.CreatedAt, x.CreatedByUserId, x.UpdatedAt,
                 x.UpdatedByUserId, x.IsDeleted, x.RowVersion,
                 x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.GrossFloorAreaM2).FirstOrDefault(),
                 x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.YearOfConstruction).FirstOrDefault(),
                 x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.Latitude).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.Longitude).FirstOrDefault()))
+                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.Longitude).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.BuildingCategory.ToString()).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.PrimaryUseType.ToString()).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.HeatedFloorAreaM2).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.YearOfLastMajorRenovation).FirstOrDefault(),
+                _db.CuratedFieldValues.Where(v => v.EntityType == "Building" && v.EntityId == x.Id &&
+                    v.ValidToUtc == null && v.FieldName == "BenchmarkState")
+                    .Select(v => v.NormalizedValue).FirstOrDefault() ?? "Unknown",
+                x.Versions.OrderByDescending(v => v.VersionNumber)
+                    .Select(v => v.Address!.PostalCodeArea!.Code).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber)
+                    .Select(v => v.Address!.PostalCodeArea!.Name).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber)
+                    .Select(v => v.Address!.Street).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber)
+                    .Select(v => v.Address!.HouseNumber).FirstOrDefault()))
             .SingleOrDefaultAsync(ct);
     }
 
@@ -130,7 +204,11 @@ public sealed class EfEntityReadService : IEntityReadService
     {
         var (page, size) = Page(request.Page, request.PageSize);
         var now = DateTime.UtcNow;
-        var query = _scope.ApplyMeterScope(_db.Meters.AsNoTracking());
+        var source = request.IncludeDeleted
+            ? _db.Meters.IgnoreQueryFilters().AsNoTracking()
+            : _db.Meters.AsNoTracking();
+        var query = _scope.ApplyMeterScope(source);
+        if (!request.IncludeDeleted) query = query.Where(x => !x.IsDeleted);
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim();
@@ -152,19 +230,47 @@ public sealed class EfEntityReadService : IEntityReadService
             : Order(query, request.SortDirection, x => x.MeterNumber);
         var items = await ordered.ThenBy(x => x.Id).Skip((page - 1) * size).Take(size)
             .Select(x => new MeterSummaryDto(x.Id, x.MeterNumber, x.Name,
-                x.Unit.ToString(), x.Quantity.ToString(), x.Direction.ToString(),
-                x.Type.ToString(), x.IsActive, x.BuildingId,
-                x.Building == null ? null : x.Building.Name, x.Readings.LongCount(),
+                x.Medium.ToString(), x.Unit.ToString(), x.Direction.ToString(), x.BuildingId,
+                x.Building == null ? null : x.Building.BuildingNumber,
+                x.Building == null ? null : x.Building.Name,
+                x.Building == null ? null : x.Building.CustomerAssignments
+                    .Where(a => a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now))
+                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.CustomerNumber).FirstOrDefault(),
+                x.Building == null ? null : x.Building.CustomerAssignments
+                    .Where(a => a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now))
+                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.Name).FirstOrDefault(),
+                x.AnnualValue ?? (x.Quantity == MeterQuantity.Energy &&
+                    x.Readings.Max(r => (DateTime?)r.Timestamp) -
+                    x.Readings.Min(r => (DateTime?)r.Timestamp) >= TimeSpan.FromDays(364)
+                    ? x.Readings.Where(r => r.ReadingType == MeterReadingType.IntervalValue)
+                        .Sum(r => (decimal?)r.Value) : null),
+                x.AnnualValue != null ? x.AnnualValueOrigin :
+                    x.Quantity == MeterQuantity.Energy &&
+                    x.Readings.Max(r => (DateTime?)r.Timestamp) -
+                    x.Readings.Min(r => (DateTime?)r.Timestamp) >= TimeSpan.FromDays(364)
+                        ? "CalculatedFromReadings" : null,
+                x.Readings.LongCount(),
                 x.Readings.Min(r => (DateTime?)r.Timestamp),
-                x.Readings.Max(r => (DateTime?)r.Timestamp)))
+                x.Readings.Max(r => (DateTime?)r.Timestamp),
+                _db.CuratedFieldValues.Any(v => v.EntityType == "MeteringPoint" &&
+                    v.EntityId == x.Id && v.ValidToUtc == null &&
+                    v.MaturityLevel == DataMaturityLevel.Gold) ? "Gold" :
+                x.Readings.Any() ? "Silver" : "Bronze",
+                _db.CuratedFieldValues.Count(v => v.EntityType == "MeteringPoint" &&
+                    v.EntityId == x.Id && v.ValidToUtc == null &&
+                    v.MaturityLevel == DataMaturityLevel.Gold) * 100 / 9,
+                x.IsDeleted))
             .ToListAsync(ct);
         return new(items, page, size, total);
     }
 
-    public async Task<MeterDetailDto?> GetMeterAsync(Guid id,
+    public async Task<MeterDetailDto?> GetMeterAsync(Guid id, bool includeDeleted = false,
         CancellationToken ct = default)
     {
-        return await _scope.ApplyMeterScope(_db.Meters.AsNoTracking())
+        var source = includeDeleted
+            ? _db.Meters.IgnoreQueryFilters().AsNoTracking()
+            : _db.Meters.AsNoTracking();
+        return await _scope.ApplyMeterScope(source)
             .Where(x => x.Id == id)
             .Select(x => new MeterDetailDto(x.Id, x.MeterNumber, x.Name,
                 x.Description, x.ExternalIdentifier, x.Medium.ToString(),
@@ -180,7 +286,27 @@ public sealed class EfEntityReadService : IEntityReadService
                 x.Readings.OrderByDescending(r => r.Timestamp)
                     .Select(r => r.QualityFlag.ToString()).FirstOrDefault(),
                 x.DataOrigin.ToString(), x.CreatedAt, x.CreatedByUserId, x.UpdatedAt,
-                x.UpdatedByUserId, x.IsDeleted, x.RowVersion))
+                x.UpdatedByUserId, x.IsDeleted, x.RowVersion,
+                x.Building == null ? null : x.Building.BuildingNumber,
+                x.Building == null ? null : x.Building.CustomerAssignments
+                    .Where(a => a.ValidFrom <= DateTime.UtcNow && (a.ValidTo == null || a.ValidTo > DateTime.UtcNow))
+                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.CustomerNumber).FirstOrDefault(),
+                x.Building == null ? null : x.Building.CustomerAssignments
+                    .Where(a => a.ValidFrom <= DateTime.UtcNow && (a.ValidTo == null || a.ValidTo > DateTime.UtcNow))
+                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.Name).FirstOrDefault(),
+                x.AnnualValue ?? (x.Quantity == MeterQuantity.Energy &&
+                    x.Readings.Max(r => (DateTime?)r.Timestamp) -
+                    x.Readings.Min(r => (DateTime?)r.Timestamp) >= TimeSpan.FromDays(364)
+                    ? x.Readings.Where(r => r.ReadingType == MeterReadingType.IntervalValue)
+                        .Sum(r => (decimal?)r.Value) : null),
+                x.AnnualValue != null ? x.AnnualValueOrigin :
+                    x.Quantity == MeterQuantity.Energy &&
+                    x.Readings.Max(r => (DateTime?)r.Timestamp) -
+                    x.Readings.Min(r => (DateTime?)r.Timestamp) >= TimeSpan.FromDays(364)
+                        ? "CalculatedFromReadings" : null,
+                x.Readings.Where(r => r.IntervalSeconds != null)
+                    .GroupBy(r => r.IntervalSeconds).OrderByDescending(g => g.Count())
+                    .Select(g => g.Key).FirstOrDefault()))
             .SingleOrDefaultAsync(ct);
     }
 

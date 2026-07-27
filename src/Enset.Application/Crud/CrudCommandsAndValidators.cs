@@ -22,12 +22,13 @@ public sealed record CreateMeterReadingCommand(MeterReadingWriteModel Model);
 public sealed record UpdateMeterReadingCommand(Guid Id, MeterReadingWriteModel Model);
 public sealed record DeleteMeterReadingCommand(Guid Id, uint RowVersion, string? Reason);
 
-public sealed record GetCustomerByIdQuery(Guid Id);
-public sealed record GetCustomersQuery(int Page, int PageSize, string? Search);
-public sealed record GetBuildingByIdQuery(Guid Id);
-public sealed record GetBuildingsQuery(int Page, int PageSize, string? Search);
-public sealed record GetMeteringPointByIdQuery(Guid Id);
-public sealed record GetMeteringPointsQuery(int Page, int PageSize, string? Search);
+public sealed record GetCustomerByIdQuery(Guid Id, bool IncludeDeleted = false);
+public sealed record GetCustomersQuery(int Page, int PageSize, string? Search, bool IncludeDeleted = false);
+public sealed record GetBuildingByIdQuery(Guid Id, bool IncludeDeleted = false);
+public sealed record GetBuildingsQuery(int Page, int PageSize, string? Search, Guid? CustomerId = null,
+    bool IncludeDeleted = false);
+public sealed record GetMeteringPointByIdQuery(Guid Id, bool IncludeDeleted = false);
+public sealed record GetMeteringPointsQuery(int Page, int PageSize, string? Search, bool IncludeDeleted = false);
 public sealed record GetEnergySystemByIdQuery(Guid Id, bool IncludeDeleted = false);
 public sealed record GetEnergySystemsQuery(int Page, int PageSize, string? Search, bool IncludeDeleted = false);
 public sealed record GetMeterReadingByIdQuery(Guid Id, bool IncludeDeleted = false);
@@ -41,6 +42,14 @@ public sealed class CustomerWriteModelValidator : AbstractValidator<CustomerWrit
         RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
         RuleFor(x => x.CustomerNumber).NotEmpty().MaximumLength(64);
         RuleFor(x => x.CountryCode).NotEmpty().Length(2);
+        RuleFor(x => x.Email).EmailAddress().MaximumLength(256)
+            .When(x => !string.IsNullOrWhiteSpace(x.Email));
+        RuleFor(x => x.Phone).MaximumLength(64);
+        RuleFor(x => x.ContactPerson).MaximumLength(256);
+        RuleFor(x => x.Street).MaximumLength(256);
+        RuleFor(x => x.HouseNumber).MaximumLength(32);
+        RuleFor(x => x.PostalCode).MaximumLength(32);
+        RuleFor(x => x.City).MaximumLength(128);
     }
 }
 public sealed class BuildingWriteModelValidator : AbstractValidator<BuildingWriteModel>
@@ -51,7 +60,15 @@ public sealed class BuildingWriteModelValidator : AbstractValidator<BuildingWrit
         RuleFor(x => x.BuildingNumber).NotEmpty().MaximumLength(64);
         RuleFor(x => x.CustomerId).NotEmpty();
         RuleFor(x => x.GrossFloorAreaM2).GreaterThanOrEqualTo(0).When(x => x.GrossFloorAreaM2.HasValue);
+        RuleFor(x => x.HeatedFloorAreaM2).GreaterThanOrEqualTo(0).When(x => x.HeatedFloorAreaM2.HasValue);
         RuleFor(x => x.YearOfConstruction).InclusiveBetween(1700, DateTime.UtcNow.Year + 1).When(x => x.YearOfConstruction.HasValue);
+        RuleFor(x => x.YearOfLastMajorRenovation).InclusiveBetween(1700, DateTime.UtcNow.Year + 1)
+            .When(x => x.YearOfLastMajorRenovation.HasValue);
+        RuleFor(x => x.ExternalIdentifier).MaximumLength(128);
+        RuleFor(x => x.PostalCode).MaximumLength(32);
+        RuleFor(x => x.City).MaximumLength(128);
+        RuleFor(x => x.Street).MaximumLength(256);
+        RuleFor(x => x.HouseNumber).MaximumLength(32);
         RuleFor(x => x.Latitude).InclusiveBetween(-90, 90).When(x => x.Latitude.HasValue);
         RuleFor(x => x.Longitude).InclusiveBetween(-180, 180).When(x => x.Longitude.HasValue);
     }
@@ -66,6 +83,9 @@ public sealed class MeterWriteModelValidator : AbstractValidator<MeterWriteModel
         RuleFor(x => x.Unit).NotEmpty();
         RuleFor(x => x.Medium).NotEmpty();
         RuleFor(x => x.Quantity).NotEmpty();
+        RuleFor(x => x.Description).MaximumLength(1000);
+        RuleFor(x => x.ExternalIdentifier).MaximumLength(256);
+        RuleFor(x => x.AnnualValue).GreaterThanOrEqualTo(0).When(x => x.AnnualValue.HasValue);
     }
 }
 public sealed class EnergySystemWriteModelValidator : AbstractValidator<EnergySystemWriteModel>

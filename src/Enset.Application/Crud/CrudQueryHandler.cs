@@ -5,17 +5,19 @@ namespace Enset.Application.Crud;
 public sealed class CrudQueryHandler(IEntityReadService reads, IEntityCrudService crud)
 {
     public Task<PagedResult<CustomerSummaryDto>> Handle(GetCustomersQuery q, CancellationToken ct) =>
-        reads.GetCustomersAsync(new(q.Search, Page: q.Page, PageSize: q.PageSize), ct);
+        reads.GetCustomersAsync(new(q.Search, Page: q.Page, PageSize: q.PageSize, IncludeDeleted: q.IncludeDeleted), ct);
     public Task<CustomerDetailDto?> Handle(GetCustomerByIdQuery q, CancellationToken ct) =>
-        reads.GetCustomerAsync(q.Id, ct);
+        reads.GetCustomerAsync(q.Id, q.IncludeDeleted, ct);
     public Task<PagedResult<BuildingSummaryDto>> Handle(GetBuildingsQuery q, CancellationToken ct) =>
-        reads.GetBuildingsAsync(new(q.Search, Page: q.Page, PageSize: q.PageSize), ct);
+        reads.GetBuildingsAsync(new(q.Search, CustomerId: q.CustomerId, Page: q.Page,
+            PageSize: q.PageSize, IncludeDeleted: q.IncludeDeleted), ct);
     public Task<BuildingDetailDto?> Handle(GetBuildingByIdQuery q, CancellationToken ct) =>
-        reads.GetBuildingAsync(q.Id, ct);
+        reads.GetBuildingAsync(q.Id, q.IncludeDeleted, ct);
     public Task<PagedResult<MeterSummaryDto>> Handle(GetMeteringPointsQuery q, CancellationToken ct) =>
-        reads.GetMetersAsync(new(q.Search, Page: q.Page, PageSize: q.PageSize), ct);
+        reads.GetMetersAsync(new(q.Search, Page: q.Page, PageSize: q.PageSize,
+            IncludeDeleted: q.IncludeDeleted), ct);
     public Task<MeterDetailDto?> Handle(GetMeteringPointByIdQuery q, CancellationToken ct) =>
-        reads.GetMeterAsync(q.Id, ct);
+        reads.GetMeterAsync(q.Id, q.IncludeDeleted, ct);
     public Task<PagedResult<EnergySystemDto>> Handle(GetEnergySystemsQuery q, CancellationToken ct) =>
         crud.GetEnergySystemsAsync(new(q.Page, q.PageSize, q.Search, q.IncludeDeleted), ct);
     public Task<EnergySystemDto?> Handle(GetEnergySystemByIdQuery q, CancellationToken ct) =>

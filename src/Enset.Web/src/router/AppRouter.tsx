@@ -114,7 +114,8 @@ export function AppRouter() {
             path="data-quality/warnings"
             element={<DataQualityWarningsPage />}
           />
-          <Route path="curation" element={<CurationCenterPage />} />
+          <Route path="data-curation" element={<CurationCenterPage />} />
+          <Route path="curation" element={<Navigate to="/tools/data-curation" replace />} />
           <Route
             path="assignments"
             element={

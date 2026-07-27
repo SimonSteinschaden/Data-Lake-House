@@ -382,6 +382,91 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.ToTable("EntityAuditHistory", (string)null);
                 });
 
+            modelBuilder.Entity("Enset.Domain.Curation.CuratedFieldValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ConfidencePercent")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Confirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ConfirmedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ConfirmedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CuratedValue")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("ImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MaturityLevel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("NormalizedValue")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("OriginalValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("RuleId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RuleVersion")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("ValidFromUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidToUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType", "EntityId", "FieldName", "ValidToUtc");
+
+                    b.ToTable("CuratedFieldValues", (string)null);
+                });
+
             modelBuilder.Entity("Enset.Domain.Curation.CurationDecision", b =>
                 {
                     b.Property<Guid>("Id")
@@ -489,6 +574,16 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
+                    b.Property<string>("RuleId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RuleVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -498,6 +593,11 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SuggestedNormalizedValue")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<string>("SuggestedValue")
                         .IsRequired()
@@ -525,6 +625,10 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Property<string>("CompanyRegistrationNumber")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ContactPerson")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("CountryCode")
                         .IsRequired()
@@ -1304,6 +1408,14 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<decimal?>("AnnualValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
+                    b.Property<string>("AnnualValueOrigin")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<Guid?>("BuildingId")
                         .HasColumnType("uuid");
 
@@ -1884,6 +1996,127 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("States", (string)null);
+                });
+
+            modelBuilder.Entity("Enset.Domain.GoldProfiles.GoldProfileEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("GoldProfileVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NewStatus")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PreviousStatus")
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SnapshotHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoldProfileVersionId");
+
+                    b.ToTable("GoldProfileEvents", (string)null);
+                });
+
+            modelBuilder.Entity("Enset.Domain.GoldProfiles.GoldProfileVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ProfileType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReleaseReason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReleaseStatus")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("SnapshotHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("SourceCurationRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("ValidFromUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidToUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReleaseStatus");
+
+                    b.HasIndex("SnapshotHash");
+
+                    b.HasIndex("EntityType", "EntityId", "IsCurrent");
+
+                    b.HasIndex("EntityType", "EntityId", "VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("GoldProfileVersions", (string)null);
                 });
 
             modelBuilder.Entity("Enset.Domain.Projects.Project", b =>
@@ -2596,6 +2829,17 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Navigation("Country");
                 });
 
+            modelBuilder.Entity("Enset.Domain.GoldProfiles.GoldProfileEvent", b =>
+                {
+                    b.HasOne("Enset.Domain.GoldProfiles.GoldProfileVersion", "Version")
+                        .WithMany("Events")
+                        .HasForeignKey("GoldProfileVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Version");
+                });
+
             modelBuilder.Entity("Enset.Domain.Projects.Project", b =>
                 {
                     b.HasOne("Enset.Domain.Customers.Customer", "Customer")
@@ -2791,6 +3035,11 @@ namespace Enset.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Enset.Domain.Geography.State", b =>
                 {
                     b.Navigation("Districts");
+                });
+
+            modelBuilder.Entity("Enset.Domain.GoldProfiles.GoldProfileVersion", b =>
+                {
+                    b.Navigation("Events");
                 });
 
             modelBuilder.Entity("Enset.Domain.Projects.Project", b =>

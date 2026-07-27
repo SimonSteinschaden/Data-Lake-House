@@ -16,6 +16,7 @@ const listQueryString = (query: MeterListQuery): string => {
   if (query.customerId?.trim()) parameters.set("customerId", query.customerId.trim());
   if (query.buildingId?.trim()) parameters.set("buildingId", query.buildingId.trim());
   if (query.isActive !== undefined) parameters.set("isActive", String(query.isActive));
+  if (query.includeDeleted) parameters.set("includeDeleted", "true");
   parameters.set("page", String(query.page ?? 1));
   parameters.set("pageSize", String(query.pageSize ?? 50));
   parameters.set("sortBy", query.sortBy ?? "meterNumber");
@@ -48,7 +49,7 @@ export const meterService = {
   },
 
   get(meterId: string, signal?: AbortSignal): Promise<MeterDetail> {
-    return apiGet<MeterDetail>(`/api/v1/meters/${requireMeterId(meterId)}`, { signal });
+    return apiGet<MeterDetail>(`/api/v1/meters/${requireMeterId(meterId)}?includeDeleted=true`, { signal });
   },
 
   getReadings(meterId: string, query: MeterReadingQuery = {}, signal?: AbortSignal): Promise<MeterReadings> {

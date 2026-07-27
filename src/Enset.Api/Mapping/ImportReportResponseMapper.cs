@@ -51,10 +51,22 @@ public static class ImportReportResponseMapper
             .ThenByDescending(issue => issue.RequiresUserDecision)
             .Take(IssueResponseLimit)
             .ToList();
+        var validReadings = report.MeterReadings
+            .Where(x => !x.HasError && x.Timestamp.HasValue && x.Value.HasValue).ToList();
+        var timestamps = validReadings.Select(x => x.Timestamp!.Value).Distinct().Order().ToList();
+        var intervals = timestamps.Zip(timestamps.Skip(1), (a, b) => (int)(b - a).TotalSeconds)
+            .Where(x => x > 0).GroupBy(x => x).OrderByDescending(x => x.Count()).ToList();
+        var interval = intervals.FirstOrDefault()?.Key;
+        var expected = timestamps.Count > 1 && interval.HasValue
+            ? (int)((timestamps[^1] - timestamps[0]).TotalSeconds / interval.Value) + 1 : timestamps.Count;
+        var duplicates = validReadings.GroupBy(x => new { x.MeterId, x.MeterNumber, x.Timestamp })
+            .Sum(x => Math.Max(0, x.Count() - 1));
 
         return new ImportReportResponse
         {
             ImportId = report.ImportId,
+            AssignedMeterId = report.AssignedMeterId,
+            DefaultMeterNumber = report.DefaultMeterNumber,
             Status = report.Status,
             SourceFile = report.SourceFile is null
                 ? null
@@ -172,6 +184,14 @@ public static class ImportReportResponseMapper
             BuildingCount = report.BuildingCount,
             MeterCount = report.MeterCount,
             MeterReadingCount = report.MeterReadingCount,
+            MeasurementPeriodStart = timestamps.Count == 0 ? null : timestamps[0],
+            MeasurementPeriodEnd = timestamps.Count == 0 ? null : timestamps[^1],
+            IntervalSeconds = interval,
+            ValidReadingCount = validReadings.Count,
+            InvalidReadingCount = report.MeterReadings.Count - validReadings.Count,
+            ExpectedIntervalCount = expected,
+            MissingIntervalCount = Math.Max(0, expected - timestamps.Count),
+            DuplicateReadingCount = duplicates,
             IssueCount = report.IssueCount,
             ReturnedIssueCount = visibleIssues.Count,
             HasMoreIssues = groupRepresentatives.Count > visibleIssues.Count,

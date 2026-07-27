@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { PageHeader } from "../../layouts/PageHeader";
 import { importService } from "../../services/importService";
 import type { ImportAnalysisResult } from "./types/ImportAnalysisResult";
@@ -34,6 +35,10 @@ function createInitialState(selectedFile: File | null = null): WizardState {
 }
 
 export function ImportFeature() {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const targetMeterId = params.get("meterId") ?? undefined;
+  const targetMeterNumber = params.get("meterNumber") ?? undefined;
   const [state, setState] = useState<WizardState>(createInitialState);
 
   function handleFileSelected(file: File | null) {
@@ -55,6 +60,8 @@ export function ImportFeature() {
         state.selectedFile,
         state.sourceType,
         state.medium,
+        targetMeterId,
+        targetMeterNumber,
       );
       setState(current => ({
         ...current,
@@ -256,6 +263,7 @@ export function ImportFeature() {
         isCommitting: false,
         currentStep: "completed",
       }));
+      if (targetMeterId) navigate(`/meters/${targetMeterId}`, { replace: true });
     } catch (error: unknown) {
       let report = state.analysisResult;
       let refreshFailure: string | null = null;
@@ -304,6 +312,12 @@ export function ImportFeature() {
           title="Datenimport"
           description="Excel- oder CSV-Daten analysieren, erkannte Konflikte prüfen und den Import kontrolliert freigeben."
       />
+      {targetMeterId && <div className="detail-section">
+        <strong>Vorausgewählter Zählpunkt:</strong>{" "}
+        {targetMeterNumber ?? "Unbekannte Zählpunktnummer"}. Die Zuordnung wird im
+        Importreport gespeichert und erst mit Ihrer Commit-Bestätigung übernommen.{" "}
+        <Link to={`/meters/${targetMeterId}`}>Zurück zum Zählpunkt</Link>
+      </div>}
 
       <ImportWizard
         currentStep={state.currentStep}

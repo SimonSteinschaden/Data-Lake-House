@@ -6,7 +6,8 @@ public sealed record CustomerListQuery(
     int Page = 1,
     int PageSize = 50,
     string SortBy = "name",
-    string SortDirection = "asc");
+    string SortDirection = "asc",
+    bool IncludeDeleted = false);
 
 public sealed record BuildingListQuery(
     string? Search = null,
@@ -15,7 +16,8 @@ public sealed record BuildingListQuery(
     int Page = 1,
     int PageSize = 50,
     string SortBy = "name",
-    string SortDirection = "asc");
+    string SortDirection = "asc",
+    bool IncludeDeleted = false);
 
 public sealed record MeterListQuery(
     string? Search = null,
@@ -25,7 +27,8 @@ public sealed record MeterListQuery(
     int Page = 1,
     int PageSize = 50,
     string SortBy = "meterNumber",
-    string SortDirection = "asc");
+    string SortDirection = "asc",
+    bool IncludeDeleted = false);
 
 public enum MeterReadingAggregation
 {

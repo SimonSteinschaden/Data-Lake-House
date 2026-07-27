@@ -10,4 +10,5 @@ public sealed class AnalyzeImportRequest
         nameof(ImportSourceType.CRM_Excel);
     public ImportMedium? Medium { get; set; }
     public string? DefaultMeterNumber { get; set; }
+    public Guid? TargetMeteringPointId { get; set; }
 }

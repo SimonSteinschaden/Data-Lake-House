@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Enset.Api.Authorization;
 using Enset.Application.Imports.Resolution;
 using Enset.Application.Imports.Enums;
+using Enset.Application.Imports.Mapping;
 
 namespace Enset.Api.Controllers;
 
@@ -38,6 +39,7 @@ public sealed class ImportsController : ControllerBase
     private readonly ILogger<ImportsController> _logger;
     private readonly IWebHostEnvironment _environment;
     private readonly ICurrentUserContext _currentUser;
+    private readonly IDataAccessScope _accessScope;
 
     public ImportsController(
         IImportAnalysisService analysisService,
@@ -46,7 +48,8 @@ public sealed class ImportsController : ControllerBase
         IImportCommitService commitService,
         ILogger<ImportsController> logger,
         IWebHostEnvironment environment,
-        ICurrentUserContext currentUser)
+        ICurrentUserContext currentUser,
+        IDataAccessScope accessScope)
     {
         _analysisService = analysisService;
         _reports = reports;
@@ -55,6 +58,7 @@ public sealed class ImportsController : ControllerBase
         _logger = logger;
         _environment = environment;
         _currentUser = currentUser;
+        _accessScope = accessScope;
     }
 
     [HttpPost("analyze")]
@@ -107,6 +111,9 @@ public sealed class ImportsController : ControllerBase
 
         try
         {
+            if (request.TargetMeteringPointId.HasValue &&
+                !await _accessScope.CanWriteMeter(request.TargetMeteringPointId.Value, cancellationToken))
+                return Forbid();
             await using var source = request.ImportFile.OpenReadStream();
             var report = await _analysisService.AnalyzeAsync(
                 source,
@@ -117,6 +124,25 @@ public sealed class ImportsController : ControllerBase
                 sourceType,
                 request.Medium,
                 request.DefaultMeterNumber);
+
+            if (request.TargetMeteringPointId.HasValue)
+            {
+                report.AssignedMeterId = request.TargetMeteringPointId.Value;
+                report.DefaultMeterNumber = string.IsNullOrWhiteSpace(request.DefaultMeterNumber)
+                    ? report.DefaultMeterNumber : request.DefaultMeterNumber.Trim();
+                if (report.CsvMapping is not null)
+                    report.MeterReadings = CsvMeterReadingMappingService.Map(
+                        report.CsvMapping, report.DefaultMeterNumber, report.AssignedMeterId)
+                        .Select(MeterReadingExcelRowMapper.ToDto).ToList();
+                report.AuditTrail.Add(new()
+                {
+                    Timestamp = DateTime.UtcNow,
+                    UserId = _currentUser.UserId.Value.ToString(),
+                    Action = "TargetMeteringPointSelected",
+                    Details = $"MeteringPointId={report.AssignedMeterId}"
+                });
+                await _reports.SaveAsync(report, cancellationToken);
+            }
 
             return Ok(report.ToResponse());
         }

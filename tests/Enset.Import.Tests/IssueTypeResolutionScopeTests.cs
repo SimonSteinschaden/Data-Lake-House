@@ -11,7 +11,7 @@ namespace Enset.Import.Tests;
 public sealed class IssueTypeResolutionScopeTests
 {
     [Fact]
-    public void EnsetWorkbookIssueTypeScopeResolvesAllMissingCustomers()
+    public void CRM_ExcelIssueTypeScopeResolvesAllMissingCustomers()
     {
         var first = Issue(
             ImportIssueType.MissingCustomer,
@@ -280,7 +280,7 @@ public sealed class IssueTypeResolutionScopeTests
     {
         var report = new ImportReport
         {
-            SourceType = ImportSourceType.EnsetWorkbook
+            SourceType = ImportSourceType.CRM_Excel
         };
         report.Issues.AddRange(issues);
         report.RecalculateCommitReadiness();

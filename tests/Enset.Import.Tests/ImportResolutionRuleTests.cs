@@ -190,7 +190,7 @@ public sealed class ImportResolutionRuleTests
     {
         var report = new ImportReport
         {
-            SourceType = ImportSourceType.EnsetWorkbook
+            SourceType = ImportSourceType.CRM_Excel
         };
         report.Issues.AddRange(issues);
         report.RecalculateCommitReadiness();

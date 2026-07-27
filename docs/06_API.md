@@ -91,9 +91,11 @@ Die API serialisiert ausschließlich Contracts/DTOs. Fachliche Fehler werden als
 
 `POST /api/v1/imports/analyze` bleibt `multipart/form-data` und akzeptiert
 zusätzlich zu `ImportFile` die Felder `SourceType` und `Medium`.
-`SourceType` ist `EnsetWorkbook` (Standardwert, rückwärtskompatibel) oder
-`Landesenergiebuchhaltung`. Für `Landesenergiebuchhaltung` ist `Medium` mit
-`Electricity` oder `Heat` verpflichtend.
+`SourceType` ist `CRM_Excel` (Standardwert), `Csv` oder
+`Landesenergiebuchhaltung`. `CRM_Excel` und `Landesenergiebuchhaltung`
+akzeptieren `.xlsx`/`.xlsm`; `Csv` akzeptiert `.csv`. Für
+`Landesenergiebuchhaltung` ist `Medium` mit `Electricity` oder `Heat`
+verpflichtend.
 
 `POST /api/v1/imports/{importId}/resolutions` wendet alle Entscheidungen als
 Batch an, ruft anschließend zentral
@@ -119,3 +121,91 @@ strukturierte Regel auf ein Issue oder alle passenden Issues des aktuellen
 Imports an. Die Antwort enthält `matchedIssueCount`, `resolvedIssueCount`,
 `remainingBlockingIssueCount`, `status` und den aktualisierten Report.
 Wiederholungen mit derselben `ruleId` sind idempotent.
+
+# Portfolio-Energieanalytics
+
+## Implementierte Management-Data-Products
+
+Die Management-Analytics stehen als getrennte read-only Data Products bereit:
+
+- `GET /api/v1/analytics/portfolio-summary`
+- `GET /api/v1/analytics/regional-building-distribution`
+- `GET /api/v1/analytics/portfolio-load-profile`
+- `GET /api/v1/analytics/monthly-electricity-consumption`
+- `GET /api/v1/analytics/metering-coverage`
+- `GET /api/v1/analytics/data-quality`
+- `GET /api/v1/analytics/energy-portfolio`
+- `GET /api/v1/analytics/warnings`
+- `GET /api/v1/analytics/consumption-by-location`
+- `GET /api/v1/analytics/consumption-by-usage-type`
+- `GET /api/v1/analytics/top-energy-systems`
+- `GET /api/v1/analytics/consumption-by-carrier`
+
+Ein Endpunkt liefert genau ein fachliches Produkt. Alle Berechnungen und
+Einheitennormalisierungen erfolgen serverseitig.
+
+Das Management Dashboard verwendet eine serverseitige, portfolioweite
+Aggregation. Die bestehende Abfrage von Messwerten eines einzelnen Zählers
+reicht dafür nicht aus; der Web-Client bildet die Auswertung nicht durch
+Einzelabfragen je Zähler nach. Wenn ein Data Product keine fachlich kompatiblen
+Daten enthält, zeigt das Dashboard einen transparenten Leerzustand.
+
+## GET `/api/v1/analytics/portfolio-load-profile`
+
+Geplante Query-Parameter:
+
+- `year` (verpflichtend)
+- `resolution`: `QuarterHour`, `Hour`, `Day`, `Week` oder `Month`
+- optional `region`, `postalCode`, `customerId`, `buildingId`, `meterId`
+- `medium=Electricity`
+
+Die Antwort liefert eine nach Zeitstempel aggregierte Serie sowie die
+tatsächliche Messgröße und Einheit:
+
+```json
+{
+  "year": 2026,
+  "resolution": "Hour",
+  "medium": "Electricity",
+  "quantity": "Power",
+  "unit": "kW",
+  "points": [
+    {
+      "timestamp": "2026-01-01T00:00:00Z",
+      "value": 184.2
+    }
+  ]
+}
+```
+
+Der Server darf nur dimensions- und einheitenkompatible Messwerte summieren.
+Intervallenergie in `kWh` darf nur bei bekannter Intervalllänge fachlich
+korrekt in Leistung umgerechnet werden. Fehlt diese Information, muss die
+Antwort die Messgröße `Energy` und deren reale Einheit ausweisen oder die
+angeforderte Lastprofilaggregation fachlich ablehnen. Jahres- oder
+Monatssummen dürfen nicht zu einem künstlichen Lastgang verteilt werden.
+
+## GET `/api/v1/analytics/monthly-electricity-consumption`
+
+Die Filter entsprechen dem Lastprofil-Endpunkt. Für die Jahresansicht liefert
+der Endpunkt zwölf serverseitig aggregierte Monatswerte:
+
+```json
+{
+  "year": 2026,
+  "medium": "Electricity",
+  "quantity": "Energy",
+  "unit": "kWh",
+  "points": [
+    {
+      "month": 1,
+      "value": 42850.7
+    }
+  ]
+}
+```
+
+Beide Endpunkte müssen außerdem die angewendeten Filter und den berücksichtigten
+Datenumfang nachvollziehbar machen. Leere Datenbestände werden als erfolgreiche
+Antwort mit leerer `points`-Liste geliefert, nicht durch synthetische Werte
+ersetzt.

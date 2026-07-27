@@ -1,6 +1,12 @@
 import type { ChangeEvent } from "react";
+import { Card } from "../../../components/ui/Card";
+import { Button } from "../../../components/ui/Button";
 
-type ImportSourceType = "EnsetWorkbook" | "Landesenergiebuchhaltung";
+type ImportSourceType =
+  | "CRM_Excel"
+  | "Csv"
+  | "Landesenergiebuchhaltung";
+
 type ImportMedium = "Electricity" | "Heat";
 
 interface UploadStepProps {
@@ -26,139 +32,166 @@ export function UploadStep({
   isAnalyzing,
   error,
 }: UploadStepProps) {
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
     const file = event.target.files?.[0] ?? null;
     onFileSelected(file);
   }
 
+  const requiresMedium =
+    sourceType === "Landesenergiebuchhaltung";
+
+  const canAnalyze =
+    selectedFile !== null &&
+    !isAnalyzing &&
+    (!requiresMedium || medium !== null);
+
   return (
-    <section className="import-wizard__upload">
-      <div>
-        <h3>Importdatei wählen</h3>
-
-        <p className="import-wizard__hint">
-          Die Datei wird zunächst ausschließlich analysiert. Es werden noch
-          keine Daten übernommen.
-        </p>
-      </div>
-
-      <div className="import-wizard__file-selection">
-        <label
-          className="import-wizard__file-button"
-          htmlFor="import-file"
-          aria-disabled={isAnalyzing}
+    <Card
+      title="Importdatei auswählen"
+      description="Die Datei wird zunächst ausschließlich analysiert. Es werden noch keine Daten übernommen."
+      footer={
+        <Button
+          type="button"
+          variant="primary"
+          loading={isAnalyzing}
+          disabled={!canAnalyze}
+          onClick={onAnalyze}
         >
-          Datei auswählen
-        </label>
+          Analyse starten
+        </Button>
+      }
+    >
+      <div className="import-wizard__upload">
+        <div className="import-wizard__file-selection">
+          <label
+            className="import-wizard__file-button"
+            htmlFor="import-file"
+            aria-disabled={isAnalyzing}
+          >
+            Datei auswählen
+          </label>
 
-        <input
-          id="import-file"
-          name="import-file"
-          className="import-wizard__file-input"
-          type="file"
-          accept=".xlsx,.xlsm,.csv,text/csv"
-          onChange={handleFileChange}
-          disabled={isAnalyzing}
-        />
-
-        {selectedFile ? (
-          <dl className="import-wizard__file-summary">
-            <div>
-              <dt>Dateiname</dt>
-              <dd>{selectedFile.name}</dd>
-            </div>
-
-            <div>
-              <dt>Dateityp</dt>
-              <dd>{getFileType(selectedFile)}</dd>
-            </div>
-
-            <div>
-              <dt>Dateigröße</dt>
-              <dd>{formatFileSize(selectedFile.size)}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="import-wizard__hint">
-            Unterstützte Formate: .xlsx, .xlsm und .csv
-          </p>
-        )}
-      </div>
-
-      <fieldset disabled={isAnalyzing}>
-        <legend>Importquelle</legend>
-
-        <label>
           <input
-            type="radio"
-            name="sourceType"
-            checked={sourceType === "EnsetWorkbook"}
-            onChange={() => onSourceTypeChanged("EnsetWorkbook")}
+            id="import-file"
+            name="import-file"
+            className="import-wizard__file-input"
+            type="file"
+            accept=".xlsx,.xlsm,.csv,text/csv"
+            onChange={handleFileChange}
+            disabled={isAnalyzing}
           />
-          ENSET Workbook
-        </label>
 
-        <label>
-          <input
-            type="radio"
-            name="sourceType"
-            checked={sourceType === "Landesenergiebuchhaltung"}
-            onChange={() =>
-              onSourceTypeChanged("Landesenergiebuchhaltung")
-            }
-          />
-          Landesenergiebuchhaltung
-        </label>
-      </fieldset>
+          {selectedFile ? (
+            <dl className="import-wizard__file-summary">
+              <div>
+                <dt>Dateiname</dt>
+                <dd>{selectedFile.name}</dd>
+              </div>
 
-      {sourceType === "Landesenergiebuchhaltung" && (
+              <div>
+                <dt>Dateityp</dt>
+                <dd>{getFileType(selectedFile)}</dd>
+              </div>
+
+              <div>
+                <dt>Dateigröße</dt>
+                <dd>{formatFileSize(selectedFile.size)}</dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="import-wizard__hint">
+              Unterstützte Formate: .xlsx, .xlsm und .csv
+            </p>
+          )}
+        </div>
+
         <fieldset disabled={isAnalyzing}>
-          <legend>Medium</legend>
+          <legend>Importquelle</legend>
 
           <label>
             <input
               type="radio"
-              name="medium"
-              checked={medium === "Electricity"}
-              onChange={() => onMediumChanged("Electricity")}
+              name="sourceType"
+              checked={sourceType === "CRM_Excel"}
+              onChange={() =>
+                onSourceTypeChanged("CRM_Excel")
+              }
             />
-            Strom
+            CRM Excel
           </label>
 
           <label>
             <input
               type="radio"
-              name="medium"
-              checked={medium === "Heat"}
-              onChange={() => onMediumChanged("Heat")}
+              name="sourceType"
+              checked={
+                sourceType ===
+                "Landesenergiebuchhaltung"
+              }
+              onChange={() =>
+                onSourceTypeChanged(
+                  "Landesenergiebuchhaltung",
+                )
+              }
             />
-            Wärme
+            Landesenergiebuchhaltung
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="sourceType"
+              checked={sourceType === "Csv"}
+              onChange={() =>
+                onSourceTypeChanged("Csv")
+              }
+            />
+            CSV-Lastprofil
           </label>
         </fieldset>
-      )}
 
-      {error && (
-        <div className="import-wizard__error" role="alert">
-          {error}
-        </div>
-      )}
+        {requiresMedium && (
+          <fieldset disabled={isAnalyzing}>
+            <legend>Medium</legend>
 
-      <div className="import-wizard__actions">
-        <button
-          type="button"
-          className="import-wizard__primary-action"
-          disabled={
-            !selectedFile ||
-            isAnalyzing ||
-            (sourceType === "Landesenergiebuchhaltung" && !medium)
-          }
-          onClick={onAnalyze}
-          aria-busy={isAnalyzing}
-        >
-          {isAnalyzing ? "Analyse läuft …" : "Analyse starten"}
-        </button>
+            <label>
+              <input
+                type="radio"
+                name="medium"
+                checked={medium === "Electricity"}
+                onChange={() =>
+                  onMediumChanged("Electricity")
+                }
+              />
+              Strom
+            </label>
+
+            <label>
+              <input
+                type="radio"
+                name="medium"
+                checked={medium === "Heat"}
+                onChange={() =>
+                  onMediumChanged("Heat")
+                }
+              />
+              Wärme
+            </label>
+          </fieldset>
+        )}
+
+        {error && (
+          <div
+            className="import-wizard__error"
+            role="alert"
+          >
+            {error}
+          </div>
+        )}
       </div>
-    </section>
+    </Card>
   );
 }
 

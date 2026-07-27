@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Enset.Application.Imports.Enums;
 using Microsoft.AspNetCore.Diagnostics;
 using Enset.Api.Authorization;
 using Enset.Application.Authorization;
@@ -21,6 +22,8 @@ public static class ApiServiceCollectionExtensions
             .AddControllers()
             .AddJsonOptions(options =>
             {
+                options.JsonSerializerOptions.Converters.Add(
+                    new ImportSourceTypeJsonConverter());
                 options.JsonSerializerOptions.Converters.Add(
                     new JsonStringEnumConverter());
             });

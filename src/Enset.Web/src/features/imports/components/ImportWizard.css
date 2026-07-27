@@ -5,41 +5,13 @@
   background: #ffffff;
 }
 
-.import-wizard__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.import-wizard__header h2 {
-  margin: 0.25rem 0 0;
-  font-size: 1.25rem;
-}
-
-.import-wizard__eyebrow {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.import-wizard__status {
-  padding: 0.375rem 0.625rem;
-  border-radius: 999px;
-  background: #eef3f1;
-  color: #24493e;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
+/* ==========================================================================
+   WizardStepper
+   ========================================================================== */
 
 .import-wizard__steps {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -57,6 +29,7 @@
 .import-wizard__step-marker {
   width: 0.625rem;
   height: 0.625rem;
+  flex: 0 0 auto;
   border: 2px solid currentColor;
   border-radius: 50%;
 }
@@ -74,40 +47,177 @@
   color: #4f766a;
 }
 
+/* ==========================================================================
+   Allgemeiner Inhalt
+   ========================================================================== */
+
 .import-wizard__content {
   padding: 1.5rem;
 }
 
+.import-wizard__hint {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.import-wizard__error {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid #f0a8a8;
+  border-radius: 0.5rem;
+  background: #fff4f4;
+  color: #9f1d1d;
+}
+
+/* ==========================================================================
+   UploadStep
+   ========================================================================== */
+
 .import-wizard__upload {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: stretch;
+  gap: 1.25rem;
 }
 
-.import-wizard__file-label {
-  font-weight: 700;
+.import-wizard__file-selection {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.import-wizard__file-button {
+  width: fit-content;
+  min-height: 2.5rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #334155;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.import-wizard__file-button:hover {
+  background: #f8fafc;
+}
+
+.import-wizard__file-button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.import-wizard__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
 }
 
 .import-wizard__file-summary {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
   padding: 0.875rem 1rem;
   border: 1px solid #dbe2e8;
   border-radius: 0.5rem;
   background: #f8fafc;
 }
 
-.import-wizard__file-summary span,
-.import-wizard__hint {
-  color: #64748b;
-  font-size: 0.875rem;
+.import-wizard__file-summary > div {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: 1rem;
 }
 
-.import-wizard__hint {
+.import-wizard__file-summary dt {
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.import-wizard__file-summary dd {
+  margin: 0;
+  color: #1e293b;
+  overflow-wrap: anywhere;
+}
+
+.import-wizard__upload fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  width: 100%;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #dbe2e8;
+  border-radius: 0.5rem;
+}
+
+.import-wizard__upload legend {
+  padding: 0 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.import-wizard__upload fieldset label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   AnalysisStep
+   ========================================================================== */
+
+.import-wizard__analysis {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.import-wizard__statistics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+}
+
+.import-wizard__analysis-details {
   margin: 0;
 }
+
+.import-wizard__analysis-details > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.import-wizard__analysis-details dt {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.import-wizard__analysis-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.import-wizard__technical-details {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.import-wizard__technical-details code {
+  display: block;
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+/* ==========================================================================
+   Bestehende Styles für noch nicht migrierte Schritte
+   ========================================================================== */
 
 .import-wizard__primary-action {
   min-height: 2.75rem;
@@ -147,31 +257,27 @@
   line-height: 1.5;
 }
 
-@media (max-width: 48rem) {
-  .import-wizard__header {
-    flex-direction: column;
-  }
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
 
+@media (max-width: 64rem) {
   .import-wizard__steps {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-.import-wizard__error {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border: 1px solid #f0a8a8;
-  border-radius: 0.5rem;
-  background: #fff4f4;
-  color: #9f1d1d;
-}
+@media (max-width: 48rem) {
+  .import-wizard__steps {
+    grid-template-columns: 1fr;
+  }
 
-.import-wizard__technical-details {
-  color: #64748b;
-  font-size: 0.8rem;
-}
+  .import-wizard__content {
+    padding: 1rem;
+  }
 
-.import-wizard__technical-details code {
-  display: block;
-  margin-top: 0.5rem;
+  .import-wizard__file-summary > div {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
 }

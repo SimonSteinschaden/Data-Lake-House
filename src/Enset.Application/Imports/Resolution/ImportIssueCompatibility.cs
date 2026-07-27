@@ -31,7 +31,7 @@ public static class ImportIssueCompatibility
 
         var field = Normalize(issue.FieldName);
         var options = ResolutionOptionsSignature(issue);
-        if (sourceType == ImportSourceType.EnsetWorkbook &&
+        if (sourceType == ImportSourceType.CRM_Excel &&
             IsMissingWorkbookId(issue.Type))
             return Join(issue.Type);
         if (sourceType == ImportSourceType.Landesenergiebuchhaltung &&
@@ -96,7 +96,7 @@ public static class ImportIssueCompatibility
 
         var field = Normalize(issue.FieldName);
         var options = ResolutionOptionsSignature(issue);
-        if (sourceType == ImportSourceType.EnsetWorkbook &&
+        if (sourceType == ImportSourceType.CRM_Excel &&
             IsMissingWorkbookId(issue.Type))
             return Join(issue.Type);
         if (sourceType == ImportSourceType.Landesenergiebuchhaltung &&

@@ -1,5 +1,6 @@
 import { Outlet } from "react-router";
 import { MainNavigation } from "../components/navigation/MainNavigation";
+import { PageBreadcrumbs } from "../components/navigation/PageBreadcrumbs";
 import "./MainLayout.css";
 
 export function MainLayout() {
@@ -7,7 +8,10 @@ export function MainLayout() {
     <div className="main-layout">
       <header className="main-layout__header">
         <div className="main-layout__brand">
-          <span className="main-layout__brand-name">ENSET</span>
+          <span className="main-layout__brand-name">
+            ENSET
+          </span>
+
           <span className="main-layout__brand-product">
             Data Platform
           </span>
@@ -25,6 +29,8 @@ export function MainLayout() {
       </aside>
 
       <main className="main-layout__content">
+        <PageBreadcrumbs />
+
         <Outlet />
       </main>
     </div>

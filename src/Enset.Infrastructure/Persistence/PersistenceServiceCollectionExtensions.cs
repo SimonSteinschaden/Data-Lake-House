@@ -8,6 +8,8 @@ using Enset.Application.Authorization;
 using Enset.Infrastructure.Authorization;
 using Enset.Application.ReadModel;
 using Enset.Infrastructure.ReadModel;
+using Enset.Application.Analytics;
+using Enset.Infrastructure.Analytics;
 
 namespace Enset.Infrastructure.Persistence;
 
@@ -47,6 +49,8 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<ICurrentUserResolver, EfCurrentUserResolver>();
         services.AddScoped<IDataAccessScope, EfDataAccessScope>();
         services.AddScoped<IEntityReadService, EfEntityReadService>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IAnalyticsDataProductService, EfAnalyticsDataProductService>();
 
         return services;
     }

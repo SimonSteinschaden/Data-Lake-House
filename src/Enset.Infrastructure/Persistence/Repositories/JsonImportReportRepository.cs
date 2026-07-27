@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Enset.Application.Imports.Abstractions;
+using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Reports;
 
 namespace Enset.Infrastructure.Imports.Persistence;
@@ -21,6 +22,7 @@ public sealed class JsonImportReportRepository : IImportReportRepository
             PropertyNameCaseInsensitive = true,
             WriteIndented = true
         };
+        _serializerOptions.Converters.Add(new ImportSourceTypeJsonConverter());
         _serializerOptions.Converters.Add(new JsonStringEnumConverter());
     }
 

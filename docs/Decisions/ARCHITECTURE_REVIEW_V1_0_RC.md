@@ -161,7 +161,7 @@ Die Architektur ist als **1.0 RC dokumentationsreif**, aber noch nicht als produ
 
 Die Landesenergiebuchhaltung ist als gekapselte Importquelle für das Segment
 Gemeinden ergänzt. Sie besitzt eigene Reader, Quell-DTOs, Mapper und
-Validatoren; der klassische ENSET-Workbook-Pfad wird nicht erweitert.
+Validatoren; der klassische CRM-Excel-Pfad wird nicht erweitert.
 
 Die Gebäudeidentität ist ausschließlich die externe Referenz
 `(GemID, GebID)`. Attribute wie Ort, Bezeichnung, Baujahr und Fläche sind keine
@@ -169,4 +169,3 @@ zulässigen Matchingkriterien. Quellennamensräume verhindern deshalb eine
 automatische Zusammenführung mit ENSET-Gebäuden. Details und die langfristige
 Migration von `Customer` zu `Organization` enthält
 [`../14_Landesenergiebuchhaltung_Import.md`](../14_Landesenergiebuchhaltung_Import.md).
-

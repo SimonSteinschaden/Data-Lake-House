@@ -2,7 +2,7 @@ namespace Enset.Application.Imports.Enums;
 
 public enum ImportSourceType
 {
-    EnsetWorkbook,
+    CRM_Excel = 0,
     Landesenergiebuchhaltung,
     Csv,
     Excel,

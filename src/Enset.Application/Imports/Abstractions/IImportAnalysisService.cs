@@ -11,7 +11,7 @@ public interface IImportAnalysisService
         string? contentType,
         string userId,
         CancellationToken cancellationToken = default,
-        ImportSourceType sourceType = ImportSourceType.EnsetWorkbook,
+        ImportSourceType sourceType = ImportSourceType.CRM_Excel,
         ImportMedium? medium = null,
         string? defaultMeterNumber = null);
 }

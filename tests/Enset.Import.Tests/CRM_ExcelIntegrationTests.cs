@@ -17,7 +17,7 @@ using Xunit;
 
 namespace Enset.Import.Tests;
 
-public sealed class EnsetWorkbookIntegrationTests
+public sealed class CRM_ExcelIntegrationTests
 {
     [Fact]
     public void MapReferenceGroup_UpdatesAllCompatibleBuildingReferences()
@@ -27,7 +27,7 @@ public sealed class EnsetWorkbookIntegrationTests
         var other = MissingBuildingCustomerIssue(4, "CUSTOMER-2");
         var report = new ImportReport
         {
-            SourceType = ImportSourceType.EnsetWorkbook,
+            SourceType = ImportSourceType.CRM_Excel,
             Customers =
             [
                 new()
@@ -134,9 +134,9 @@ public sealed class EnsetWorkbookIntegrationTests
     }
 
     [Fact]
-    public async Task RealEnsetWorkbook_AnalyzeCommitAndReimport_IsRelationallyConsistent()
+    public async Task RealCRM_Excel_AnalyzeCommitAndReimport_IsRelationallyConsistent()
     {
-        var databaseName = $"enset-workbook-{Guid.NewGuid():N}";
+        var databaseName = $"crm-excel-{Guid.NewGuid():N}";
         var options = new DbContextOptionsBuilder<EnsetDbContext>()
             .UseInMemoryDatabase(databaseName)
             .ConfigureWarnings(warnings =>
@@ -148,7 +148,7 @@ public sealed class EnsetWorkbookIntegrationTests
 
         var firstReport = await AnalyzeWorkbookAsync(
             "ENSET_Testimport_MVP.xlsx");
-        Assert.Equal(ImportSourceType.EnsetWorkbook, firstReport.SourceType);
+        Assert.Equal(ImportSourceType.CRM_Excel, firstReport.SourceType);
         Assert.Equal(ImportStatus.ReadyToCommit, firstReport.Status);
         Assert.Equal(1, firstReport.CustomerCount);
         Assert.Equal(1, firstReport.BuildingCount);

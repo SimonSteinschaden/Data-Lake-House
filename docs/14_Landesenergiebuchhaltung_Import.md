@@ -1,7 +1,7 @@
 # Importquelle Landesenergiebuchhaltung
 
 Die Landesenergiebuchhaltung (LEB) ist eine eigenständige Importquelle für
-kommunale Gebäude. Der bestehende ENSET-Workbook-Import bleibt davon fachlich
+kommunale Gebäude. Der bestehende CRM-Excel-Import bleibt davon fachlich
 und technisch getrennt.
 
 ## Importfluss
@@ -9,7 +9,7 @@ und technisch getrennt.
 ```text
 Upload (SourceType + Medium + Datei)
   -> ImportAnalysisService
-     -> ENSET Workbook: bestehender Reader / Mapper / Validator
+     -> CRM Excel: bestehender Reader / Mapper / Validator
      -> LEB: LebWorkbookReader
              -> LebWorkbookDto / LebRowDto
              -> LebWorkbookMapper
@@ -21,7 +21,7 @@ Upload (SourceType + Medium + Datei)
   -> gemeinsamer WriteGate / Writer
 ```
 
-`ImportSourceType` unterscheidet `EnsetWorkbook` und
+`ImportSourceType` unterscheidet `CRM_Excel` und
 `Landesenergiebuchhaltung`. Für LEB ist `ImportMedium` (`Electricity` oder
 `Heat`) verpflichtend. Das Medium wird ausdrücklich vom Benutzer gewählt und
 nicht aus den Quelldaten abgeleitet.

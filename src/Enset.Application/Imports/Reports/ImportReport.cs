@@ -18,7 +18,7 @@ public class ImportReport
 
     public ImportStatus Status { get; set; } = ImportStatus.Pending;
 
-    public ImportSourceType SourceType { get; set; } = ImportSourceType.EnsetWorkbook;
+    public ImportSourceType SourceType { get; set; } = ImportSourceType.CRM_Excel;
 
     public string? DefaultMeterNumber { get; set; }
     public Guid? AssignedMeterId { get; set; }

@@ -169,7 +169,7 @@ public sealed class ScalableGroupResolutionTests
             [],
             meters,
             [],
-            ImportSourceType.EnsetWorkbook);
+            ImportSourceType.CRM_Excel);
 
         Assert.DoesNotContain(
             report.Issues,

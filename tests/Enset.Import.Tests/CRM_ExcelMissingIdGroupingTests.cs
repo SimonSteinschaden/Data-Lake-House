@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Enset.Import.Tests;
 
-public sealed class EnsetWorkbookMissingIdGroupingTests
+public sealed class CRM_ExcelMissingIdGroupingTests
 {
     [Theory]
     [InlineData(ImportIssueType.MissingCustomer, 10)]
@@ -143,7 +143,7 @@ public sealed class EnsetWorkbookMissingIdGroupingTests
     {
         var report = new ImportReport
         {
-            SourceType = ImportSourceType.EnsetWorkbook
+            SourceType = ImportSourceType.CRM_Excel
         };
         report.Issues.AddRange(issues);
         report.RecalculateCommitReadiness();

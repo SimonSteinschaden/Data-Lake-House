@@ -39,7 +39,7 @@ public sealed class ExcelWorkbookReader : IExcelReader, IExcelWorkbookReader
 
             return new ImportWorkbook
             {
-                SourceType = ImportSourceType.EnsetWorkbook,
+                SourceType = ImportSourceType.CRM_Excel,
                 Customers = ReadCustomers(workbook),
                 Buildings = ReadBuildings(workbook),
                 Meters = hasMeters ? ReadMeters(workbook) : [],

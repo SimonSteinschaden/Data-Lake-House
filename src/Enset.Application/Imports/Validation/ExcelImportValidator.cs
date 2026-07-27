@@ -26,7 +26,7 @@ public class ExcelImportValidator : IImportValidator
         };
 
         if (sourceType is ImportSourceType.Excel or
-            ImportSourceType.EnsetWorkbook)
+            ImportSourceType.CRM_Excel)
         {
             ValidateCustomers(customers, report.Issues);
             ValidateBuildings(buildings, report.Issues);
@@ -113,7 +113,7 @@ public class ExcelImportValidator : IImportValidator
             if ((sourceType != ImportSourceType.Csv &&
                  string.IsNullOrWhiteSpace(reading.MeterNumber)) ||
                 ((sourceType is ImportSourceType.Excel or
-                    ImportSourceType.EnsetWorkbook) &&
+                    ImportSourceType.CRM_Excel) &&
                  !string.IsNullOrWhiteSpace(reading.MeterNumber) &&
                  !meterNumbers.Contains(reading.MeterNumber.Trim())))
             {

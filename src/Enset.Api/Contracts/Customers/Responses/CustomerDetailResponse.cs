@@ -1,31 +1,34 @@
+using Enset.Api.Contracts.Common.Responses;
+using Enset.Domain.Customers;
 
-/*
-Identität
+namespace Enset.Api.Contracts.Customers.Responses;
 
-Name
-CustomerNumber
+public sealed record CustomerDetailResponse(
+    Guid Id,
 
-Kontaktdaten
+    string CustomerNumber,
+    string Name,
+    string? LegalName,
 
-Adresse
-PLZ
-Ort
-Land
+    CustomerType Type,
 
-Zusätzliche Informationen
+    string? CompanyRegistrationNumber,
+    string? VatIdentificationNumber,
 
-Ansprechpartner
-E-Mail
-Telefon
-Notizen
+    string? Email,
+    string? Phone,
+    string? Website,
 
-Objektinformationen
+    string? Street,
+    string? HouseNumber,
+    string? PostalCode,
+    string? City,
+    string CountryCode,
 
-Anzahl Gebäude
-Anzahl Zähler
+    bool IsActive,
 
-Metadaten
+    ObjectMetadataResponse Metadata,
+    ValidationMetadataResponse Validation,
 
-Metadata
-Validation
- */
+    IReadOnlyList<SampleReferenceResponse> SampleReferences
+);

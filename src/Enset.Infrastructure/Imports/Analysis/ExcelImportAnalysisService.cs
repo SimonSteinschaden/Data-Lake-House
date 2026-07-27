@@ -44,7 +44,7 @@ public sealed class ExcelImportAnalysisService : IImportAnalysisService
         string? contentType,
         string userId,
         CancellationToken cancellationToken = default,
-        ImportSourceType sourceType = ImportSourceType.EnsetWorkbook,
+        ImportSourceType sourceType = ImportSourceType.CRM_Excel,
         ImportMedium? medium = null,
         string? defaultMeterNumber = null)
     {
@@ -141,8 +141,26 @@ public sealed class ExcelImportAnalysisService : IImportAnalysisService
         ImportMedium? medium,
         string? defaultMeterNumber)
     {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        if (sourceType == ImportSourceType.CRM_Excel &&
+            extension is not ".xlsx" and not ".xlsm")
+        {
+            throw new InvalidImportFileException(
+                "CRM_Excel supports only .xlsx and .xlsm workbooks.");
+        }
+
+        if (sourceType == ImportSourceType.Csv && extension != ".csv")
+        {
+            throw new InvalidImportFileException(
+                "The CSV load-profile source requires a .csv file.");
+        }
+
         if (sourceType == ImportSourceType.Landesenergiebuchhaltung)
         {
+            if (extension is not ".xlsx" and not ".xlsm")
+                throw new InvalidImportFileException(
+                    "Die Landesenergiebuchhaltung benötigt eine .xlsx- oder .xlsm-Datei.");
+
             if (medium is null)
                 throw new InvalidImportFileException(
                     "Für die Landesenergiebuchhaltung muss das Medium ausgewählt werden.");
@@ -154,16 +172,16 @@ public sealed class ExcelImportAnalysisService : IImportAnalysisService
                 new LebImportValidator(sourceWorkbook));
         }
 
-        IImportReader reader = Path.GetExtension(fileName).ToLowerInvariant() switch
+        IImportReader reader = sourceType switch
         {
-            ".xlsx" or ".xlsm" => new ExcelImportReader(
+            ImportSourceType.CRM_Excel => new ExcelImportReader(
                 new ExcelWorkbookReader(_logger),
                 stagedPath),
-            ".csv" => new CsvImportReader(
+            ImportSourceType.Csv => new CsvImportReader(
                 stagedPath,
                 new CsvMeterReadingReader(defaultMeterNumber)),
-            var extension => throw new InvalidImportFileException(
-                $"File extension '{extension}' is not supported for import analysis.")
+            _ => throw new InvalidImportFileException(
+                $"Import source '{sourceType}' is not supported for this file.")
         };
         return (reader, new ExcelImportValidator());
     }

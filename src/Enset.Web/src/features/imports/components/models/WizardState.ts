@@ -10,7 +10,7 @@ export interface ResolutionDraft {
 export interface WizardState {
   currentStep: ImportWizardStep;
   selectedFile: File | null;
-  sourceType: "EnsetWorkbook" | "Landesenergiebuchhaltung";
+  sourceType: "CRM_Excel" | "Csv" | "Landesenergiebuchhaltung";
   medium: "Electricity" | "Heat" | null;
   importId: string | null;
   analysisResult: ImportAnalysisResult | null;

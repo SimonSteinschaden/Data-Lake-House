@@ -6,7 +6,8 @@ namespace Enset.Api.Contracts.Imports.Requests;
 public sealed class AnalyzeImportRequest
 {
     public IFormFile ImportFile { get; set; } = default!;
-    public ImportSourceType SourceType { get; set; } = ImportSourceType.EnsetWorkbook;
+    public string SourceType { get; set; } =
+        nameof(ImportSourceType.CRM_Excel);
     public ImportMedium? Medium { get; set; }
     public string? DefaultMeterNumber { get; set; }
 }

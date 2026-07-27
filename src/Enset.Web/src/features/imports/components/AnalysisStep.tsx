@@ -1,3 +1,7 @@
+import { Button } from "../../../components/ui/Button";
+import { Card } from "../../../components/ui/Card";
+import { StatCard } from "../../../components/ui/StatCard";
+
 interface AnalysisStepProps {
   fileName: string;
   customerCount: number;
@@ -22,69 +26,69 @@ export function AnalysisStep({
   onBack,
 }: AnalysisStepProps) {
   return (
-    <section className="import-wizard__analysis">
-      <div>
-        <h3>Analyse abgeschlossen</h3>
-        <p className="import-wizard__hint">
-          Die Importdatei wurde geprüft. Vor der Übernahme können die
-          erkannten Daten und Probleme kontrolliert werden.
-        </p>
+    <Card
+      title="Analyse abgeschlossen"
+      description="Die Importdatei wurde geprüft. Vor der Übernahme können die erkannten Daten und Probleme kontrolliert werden."
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onBack}
+          >
+            Zurück
+          </Button>
+
+          <Button
+            type="button"
+            variant="primary"
+            onClick={onContinue}
+          >
+            Issues prüfen
+          </Button>
+        </>
+      }
+    >
+      <div className="import-wizard__analysis">
+        <div className="import-wizard__statistics">
+          <StatCard
+            title="Kunden"
+            value={customerCount}
+          />
+
+          <StatCard
+            title="Gebäude"
+            value={buildingCount}
+          />
+
+          <StatCard
+            title="Zähler"
+            value={meterCount}
+          />
+
+          <StatCard
+            title="Messwerte"
+            value={meterReadingCount}
+          />
+
+          <StatCard
+            title="Issues"
+            value={issueCount}
+          />
+        </div>
+
+        <dl className="import-wizard__analysis-details">
+          <div>
+            <dt>Datei</dt>
+            <dd>{fileName}</dd>
+          </div>
+        </dl>
+
+        <details className="import-wizard__technical-details">
+          <summary>Technische Details</summary>
+          <code>ImportId: {importId}</code>
+        </details>
       </div>
-
-      <dl className="import-wizard__summary-grid">
-        <div className="import-wizard__summary-card">
-          <dt>Datei</dt>
-          <dd>{fileName}</dd>
-        </div>
-
-        <div className="import-wizard__summary-card">
-          <dt>Kunden</dt>
-          <dd>{customerCount}</dd>
-        </div>
-
-        <div className="import-wizard__summary-card">
-          <dt>Gebäude</dt>
-          <dd>{buildingCount}</dd>
-        </div>
-
-        <div className="import-wizard__summary-card">
-          <dt>Issues</dt>
-          <dd>{issueCount}</dd>
-        </div>
-
-        <div className="import-wizard__summary-card">
-          <dt>Zähler</dt>
-          <dd>{meterCount}</dd>
-        </div>
-
-        <div className="import-wizard__summary-card">
-          <dt>Messwerte</dt>
-          <dd>{meterReadingCount}</dd>
-        </div>
-      </dl>
-
-      <details className="import-wizard__technical-details">
-        <summary>Technische Details</summary>
-        <code>ImportId: {importId}</code>
-      </details>
-
-      <div className="import-wizard__actions">
-        <button
-          type="button"
-          className="import-wizard__secondary-action"
-          onClick={onBack}
-        >
-          Zurück
-        </button>
-
-        <button
-          type="button"
-          className="import-wizard__primary-action"
-          onClick={onContinue}
-        >
-          Issues prüfen
-        </button>
-      </div>
-    </section>
+    </Card>
   );
 }

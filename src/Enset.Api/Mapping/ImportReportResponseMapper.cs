@@ -41,7 +41,7 @@ public static class ImportReportResponseMapper
             .Select(group => group.First())
             .Where(issue =>
                 report.SourceType !=
-                    Enset.Application.Imports.Enums.ImportSourceType.EnsetWorkbook ||
+                    Enset.Application.Imports.Enums.ImportSourceType.CRM_Excel ||
                 !issue.IsResolved ||
                 !IsReferenceIssue(issue.Type))
             .ToList();

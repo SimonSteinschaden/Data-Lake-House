@@ -10,6 +10,7 @@ using Enset.Application.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Enset.Api.Authorization;
 using Enset.Application.Imports.Resolution;
+using Enset.Application.Imports.Enums;
 
 namespace Enset.Api.Controllers;
 
@@ -80,6 +81,17 @@ public sealed class ImportsController : ControllerBase
                 "Only .xlsx, .xlsm and .csv files are supported.");
         }
 
+        if (!TryParseInteractiveSourceType(
+                request.SourceType,
+                out var sourceType))
+        {
+            return ApiProblems.InvalidImportRequest(
+                this,
+                $"Unknown import source type '{request.SourceType}'. " +
+                "Allowed values are CRM_Excel, Csv and " +
+                "Landesenergiebuchhaltung.");
+        }
+
         if (!_currentUser.UserId.HasValue)
         {
             return ApiProblems.InvalidImportRequest(
@@ -102,7 +114,7 @@ public sealed class ImportsController : ControllerBase
                 request.ImportFile.ContentType,
                 _currentUser.UserId.Value.ToString(),
                 cancellationToken,
-                request.SourceType,
+                sourceType,
                 request.Medium,
                 request.DefaultMeterNumber);
 
@@ -119,6 +131,25 @@ public sealed class ImportsController : ControllerBase
                 exception.Message,
                 _environment.IsDevelopment() ? exception.ToString() : null);
         }
+    }
+
+    private static bool TryParseInteractiveSourceType(
+        string? value,
+        out ImportSourceType sourceType)
+    {
+        if (Enum.TryParse(
+                value?.Trim(),
+                ignoreCase: true,
+                out sourceType) &&
+            sourceType is ImportSourceType.CRM_Excel or
+                ImportSourceType.Csv or
+                ImportSourceType.Landesenergiebuchhaltung)
+        {
+            return true;
+        }
+
+        sourceType = default;
+        return false;
     }
 
     [HttpGet("{importId:guid}")]

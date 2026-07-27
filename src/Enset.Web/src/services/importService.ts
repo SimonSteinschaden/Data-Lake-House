@@ -139,7 +139,7 @@ const mapReport = (report: ImportReportResponse): ImportAnalysisResult => ({
 export const importService = {
   async analyzeImport(
     file: File,
-    sourceType: "EnsetWorkbook" | "Landesenergiebuchhaltung",
+    sourceType: "CRM_Excel" | "Csv" | "Landesenergiebuchhaltung",
     medium: "Electricity" | "Heat" | null,
     signal?: AbortSignal,
   ): Promise<ImportAnalysisResult> {

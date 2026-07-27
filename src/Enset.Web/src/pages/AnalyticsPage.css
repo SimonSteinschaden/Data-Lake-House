@@ -1,0 +1,108 @@
+.object-analysis,
+.object-analysis__workspace {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.object-analysis__filters {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(8rem, 1fr));
+  gap: 1rem;
+}
+
+.object-analysis__filters label {
+  display: grid;
+  gap: 0.4rem;
+  color: #526271;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.object-analysis__filters select {
+  width: 100%;
+  min-width: 0;
+  height: 2.65rem;
+  padding: 0 0.7rem;
+  border: 1px solid #cbd5db;
+  border-radius: 0.125rem;
+  color: #273642;
+  background: #fff;
+}
+
+.object-analysis__empty {
+  display: grid;
+  min-height: 18rem;
+  place-content: center;
+  justify-items: center;
+  padding: 2rem;
+  border: 1px dashed #b9c6cc;
+  border-radius: 0.125rem;
+  color: #65747f;
+  text-align: center;
+  background: #fafcfc;
+}
+
+.object-analysis__empty strong {
+  color: #354852;
+}
+
+.object-analysis__empty p {
+  max-width: 34rem;
+  margin: 0.5rem 0 0;
+}
+
+.object-analysis__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border-top: 1px solid #cbd5da;
+  border-left: 1px solid #cbd5da;
+}
+
+.object-analysis__stats .stat-card {
+  margin: -1px 0 0 -1px;
+}
+
+.object-analysis__panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.object-analysis__panel-placeholder {
+  display: grid;
+  min-height: 15rem;
+  place-content: center;
+  justify-items: center;
+  gap: 0.4rem;
+  border: 1px dashed #c4d0d5;
+  border-radius: 0.125rem;
+  color: #65747f;
+  background: #fafcfc;
+}
+
+.object-analysis__panel-placeholder span {
+  font-weight: 650;
+}
+
+.object-analysis__panel-placeholder small {
+  color: #87939a;
+}
+
+@media (max-width: 72rem) {
+  .object-analysis__filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .object-analysis__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 48rem) {
+  .object-analysis__filters,
+  .object-analysis__stats,
+  .object-analysis__panels {
+    grid-template-columns: 1fr;
+  }
+}

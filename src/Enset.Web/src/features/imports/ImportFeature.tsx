@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader } from "../../layouts/PageHeader";
 import { importService } from "../../services/importService";
 import type { ImportAnalysisResult } from "./types/ImportAnalysisResult";
 import { ImportWizard } from "./components/ImportWizard";
@@ -11,10 +12,13 @@ import type {
 import "./ImportFeature.css";
 
 function createInitialState(selectedFile: File | null = null): WizardState {
+  const sourceType = selectedFile?.name.toLowerCase().endsWith(".csv")
+    ? "Csv"
+    : "CRM_Excel";
   return {
     currentStep: "upload",
     selectedFile,
-    sourceType: "EnsetWorkbook",
+    sourceType,
     medium: null,
     importId: null,
     analysisResult: null,
@@ -296,15 +300,10 @@ export function ImportFeature() {
 
   return (
     <div className="import-feature">
-      <header className="import-feature__header">
-        <div>
-          <h1>Datenimport</h1>
-          <p>
-            Excel- oder CSV-Daten analysieren, erkannte Konflikte prüfen und den
-            Import kontrolliert freigeben.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+          title="Datenimport"
+          description="Excel- oder CSV-Daten analysieren, erkannte Konflikte prüfen und den Import kontrolliert freigeben."
+      />
 
       <ImportWizard
         currentStep={state.currentStep}
@@ -325,7 +324,10 @@ export function ImportFeature() {
           setState(current => ({
             ...current,
             sourceType,
-            medium: sourceType === "EnsetWorkbook" ? null : current.medium,
+            medium:
+              sourceType === "Landesenergiebuchhaltung"
+                ? current.medium
+                : null,
             analysisError: null,
           }))
         }

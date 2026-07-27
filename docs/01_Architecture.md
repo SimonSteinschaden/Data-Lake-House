@@ -2,6 +2,24 @@
 
 Dieses Dokument beschreibt ausschließlich die aktuell implementierte Architektur. Zielvorgaben bleiben in `Decisions/ARCHITECTURE_REVIEW_V1_0.md` verbindlich.
 
+## Analytics als Data-Product-Schicht
+
+Die fachliche Leserichtung für Auswertungen ist:
+
+```text
+Quellsysteme
+  → Import
+  → kanonisches Data Lake House
+  → Analytics Application Port
+  → serverseitig berechnete Data Products
+  → Dashboard, Objektanalyse, Reports, Business Modules und APIs
+```
+
+Konsumenten greifen nicht direkt auf interne Tabellen oder Repositorys zu.
+Management-Produkte sind als getrennte, fachlich benannte API-Ressourcen
+modelliert. Details, Berechnungsregeln und offene Annahmen stehen in
+`15_Analytics_Data_Products.md`.
+
 ## Projekt- und Abhängigkeitsstruktur
 
 ```text

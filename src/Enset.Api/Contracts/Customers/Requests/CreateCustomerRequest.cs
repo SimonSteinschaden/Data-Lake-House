@@ -1,15 +1,23 @@
-/*
-CustomerNumber
-Name
+using Enset.Domain.Customers;
 
-Street
-ZipCode
-City
-Country
+namespace Enset.Api.Contracts.Customers.Requests;
 
-Email
-Phone
-ContactPerson
+public sealed record CreateCustomerRequest(
+    string CustomerNumber,
+    string Name,
+    string? LegalName,
+    CustomerType Type,
 
-Notes
-*/
+    string? CompanyRegistrationNumber,
+    string? VatIdentificationNumber,
+
+    string? Email,
+    string? Phone,
+    string? Website,
+
+    string? Street,
+    string? HouseNumber,
+    string? PostalCode,
+    string? City,
+    string CountryCode
+);

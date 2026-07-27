@@ -26,9 +26,22 @@ export interface BuildingMeter {
   isActive: boolean;
 }
 
-export interface BuildingDetail extends BuildingSummary {
+import type { EntityMetadata } from "../crud/types";
+
+export interface BuildingDetail extends BuildingSummary, EntityMetadata {
+  grossFloorAreaM2: number | null;
+  yearOfConstruction: number | null;
+  latitude: number | null;
+  longitude: number | null;
   customers: BuildingCustomer[];
   meters: BuildingMeter[];
+}
+
+export interface BuildingWriteModel {
+  buildingNumber: string; name: string; externalIdentifier: string | null;
+  customerId: string | null; grossFloorAreaM2: number | null;
+  yearOfConstruction: number | null; latitude: number | null;
+  longitude: number | null; rowVersion: number;
 }
 
 export interface BuildingListQuery {

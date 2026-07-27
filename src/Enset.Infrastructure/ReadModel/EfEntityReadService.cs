@@ -59,7 +59,8 @@ public sealed class EfEntityReadService : IEntityReadService
                     .OrderBy(a => a.Building.Name)
                     .Select(a => new CustomerBuildingDto(a.BuildingId,
                         a.Building.BuildingNumber, a.Building.Name, a.Role.ToString(),
-                        a.IsPrimary)).ToList()))
+                        a.IsPrimary)).ToList(), x.DataOrigin.ToString(), x.CreatedAt,
+                x.CreatedByUserId, x.UpdatedAt, x.UpdatedByUserId, x.IsDeleted, x.RowVersion))
             .SingleOrDefaultAsync(ct);
     }
 
@@ -114,7 +115,13 @@ public sealed class EfEntityReadService : IEntityReadService
                         a.IsPrimary)).ToList(),
                 x.Meters.OrderBy(m => m.MeterNumber)
                     .Select(m => new BuildingMeterDto(m.Id, m.MeterNumber, m.Name,
-                        m.Unit.ToString(), m.Quantity.ToString(), m.IsActive)).ToList()))
+                        m.Unit.ToString(), m.Quantity.ToString(), m.IsActive)).ToList(),
+                x.DataOrigin.ToString(), x.CreatedAt, x.CreatedByUserId, x.UpdatedAt,
+                x.UpdatedByUserId, x.IsDeleted, x.RowVersion,
+                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.GrossFloorAreaM2).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.YearOfConstruction).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.Latitude).FirstOrDefault(),
+                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.Longitude).FirstOrDefault()))
             .SingleOrDefaultAsync(ct);
     }
 
@@ -171,7 +178,9 @@ public sealed class EfEntityReadService : IEntityReadService
                 x.Readings.OrderByDescending(r => r.Timestamp)
                     .Select(r => (decimal?)r.Value).FirstOrDefault(),
                 x.Readings.OrderByDescending(r => r.Timestamp)
-                    .Select(r => r.QualityFlag.ToString()).FirstOrDefault()))
+                    .Select(r => r.QualityFlag.ToString()).FirstOrDefault(),
+                x.DataOrigin.ToString(), x.CreatedAt, x.CreatedByUserId, x.UpdatedAt,
+                x.UpdatedByUserId, x.IsDeleted, x.RowVersion))
             .SingleOrDefaultAsync(ct);
     }
 

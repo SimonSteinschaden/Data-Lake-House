@@ -113,7 +113,24 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)");
 
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DataOrigin")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Imported");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("ExternalIdentifier")
                         .HasMaxLength(256)
@@ -121,6 +138,19 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("LastImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LastModifiedSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Import");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -130,15 +160,31 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
 
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BuildingNumber")
                         .IsUnique();
 
+                    b.HasIndex("DataOrigin");
+
+                    b.HasIndex("IsDeleted");
+
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("UpdatedAt");
 
                     b.ToTable("Buildings", (string)null);
                 });
@@ -213,6 +259,14 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsTemporaryBuilding")
                         .HasColumnType("boolean");
 
+                    b.Property<decimal?>("Latitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("numeric(9,6)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasPrecision(9, 6)
+                        .HasColumnType("numeric(9,6)");
+
                     b.Property<decimal?>("NetFloorAreaM2")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -270,6 +324,194 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.ToTable("BuildingVersions", (string)null);
                 });
 
+            modelBuilder.Entity("Enset.Domain.Common.EntityAuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ChangeType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("ChangedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ChangedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("FieldName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("ImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NewValue")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("OldValue")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("EntityType", "EntityId", "ChangedAtUtc");
+
+                    b.ToTable("EntityAuditHistory", (string)null);
+                });
+
+            modelBuilder.Entity("Enset.Domain.Curation.CurationDecision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ConfidencePercent")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("CurationTaskId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("DecidedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("NewValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("OriginalValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SuggestedValue")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurationTaskId", "DecidedAtUtc");
+
+                    b.ToTable("CurationDecisions", (string)null);
+                });
+
+            modelBuilder.Entity("Enset.Domain.Curation.CurationTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ConfidencePercent")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CuratedValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTime?>("DecidedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DecidedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("OriginalValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Reasoning")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SuggestedValue")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType", "EntityId", "FieldName")
+                        .IsUnique();
+
+                    b.ToTable("CurationTasks", (string)null);
+                });
+
             modelBuilder.Entity("Enset.Domain.Customers.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -290,12 +532,29 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(2)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("CustomerNumber")
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("DataOrigin")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Imported");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -307,6 +566,19 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("LastImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LastModifiedSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Import");
 
                     b.Property<string>("LegalName")
                         .HasMaxLength(256)
@@ -325,6 +597,12 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<string>("Street")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -335,7 +613,11 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("VatIdentificationNumber")
                         .HasMaxLength(64)
@@ -349,6 +631,12 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CustomerNumber")
                         .IsUnique();
+
+                    b.HasIndex("DataOrigin");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("UpdatedAt");
 
                     b.ToTable("Customers", (string)null);
                 });
@@ -814,8 +1102,31 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("AddressId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime?>("CommissionedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DataOrigin")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Imported");
+
+                    b.Property<DateTime?>("DecommissionedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("EnergySystemNumber")
                         .IsRequired()
@@ -829,10 +1140,33 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("LastImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LastModifiedSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Import");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<decimal?>("RatedPowerKw")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("numeric(18,3)");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -840,14 +1174,24 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AddressId");
 
+                    b.HasIndex("DataOrigin");
+
                     b.HasIndex("EnergySystemNumber")
                         .IsUnique();
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("UpdatedAt");
 
                     b.ToTable("EnergySystems", (string)null);
                 });
@@ -971,10 +1315,27 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DataOrigin")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Imported");
 
                     b.Property<DateTime?>("DecommissionedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
@@ -994,6 +1355,19 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("LastImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LastModifiedSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Import");
 
                     b.Property<string>("Manufacturer")
                         .HasMaxLength(128)
@@ -1023,6 +1397,12 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<string>("SerialNumber")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
@@ -1038,30 +1418,74 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BuildingId");
 
+                    b.HasIndex("DataOrigin");
+
                     b.HasIndex("EnergySystemId");
+
+                    b.HasIndex("IsDeleted");
 
                     b.HasIndex("MeterNumber")
                         .IsUnique();
+
+                    b.HasIndex("UpdatedAt");
 
                     b.ToTable("Meters", (string)null);
                 });
 
             modelBuilder.Entity("Enset.Domain.Energy.MeterReading", b =>
                 {
-                    b.Property<Guid>("MeterId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAtUtc");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DataOrigin")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Imported");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<int?>("IntervalSeconds")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("LastImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LastModifiedSource")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("Import");
+
+                    b.Property<Guid>("MeterId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("QualityFlag")
                         .IsRequired()
@@ -1073,17 +1497,37 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.Property<Guid?>("SourceImportJobId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("SourceRawReadingId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAtUtc");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<decimal>("Value")
                         .HasPrecision(20, 6)
                         .HasColumnType("numeric(20,6)");
 
-                    b.HasKey("MeterId", "Timestamp");
+                    b.HasKey("Id");
+
+                    b.HasIndex("DataOrigin");
+
+                    b.HasIndex("IsDeleted");
 
                     b.HasIndex("SourceImportJobId");
 
@@ -1091,7 +1535,10 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Timestamp");
 
-                    b.HasIndex("MeterId", "Timestamp");
+                    b.HasIndex("UpdatedAt");
+
+                    b.HasIndex("MeterId", "Timestamp")
+                        .IsUnique();
 
                     b.ToTable("MeterReadings", (string)null);
                 });
@@ -1802,6 +2249,17 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Navigation("Building");
                 });
 
+            modelBuilder.Entity("Enset.Domain.Curation.CurationDecision", b =>
+                {
+                    b.HasOne("Enset.Domain.Curation.CurationTask", "Task")
+                        .WithMany("Decisions")
+                        .HasForeignKey("CurationTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Task");
+                });
+
             modelBuilder.Entity("Enset.Domain.Customers.CustomerBuildingAssignment", b =>
                 {
                     b.HasOne("Enset.Domain.Buildings.Building", "Building")
@@ -2231,6 +2689,11 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Navigation("Meters");
 
                     b.Navigation("Versions");
+                });
+
+            modelBuilder.Entity("Enset.Domain.Curation.CurationTask", b =>
+                {
+                    b.Navigation("Decisions");
                 });
 
             modelBuilder.Entity("Enset.Domain.Customers.Customer", b =>

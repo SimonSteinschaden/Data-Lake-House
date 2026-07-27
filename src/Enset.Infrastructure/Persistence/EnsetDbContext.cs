@@ -10,6 +10,9 @@ using Enset.Domain.Geography;
 using Enset.Domain.DataProducts;
 using Enset.Domain.Projects;
 using Enset.Domain.Users;
+using Enset.Domain.Common;
+using Enset.Domain.Curation;
+using Enset.Application.Authorization;
 
 using Enset.Infrastructure.Imports.Persistence.Entities;
 
@@ -17,9 +20,13 @@ namespace Enset.Infrastructure.Persistence;
 
 public class EnsetDbContext : DbContext
 {
-    public EnsetDbContext(DbContextOptions<EnsetDbContext> options)
+    private readonly ICurrentUserContext? _currentUser;
+
+    public EnsetDbContext(DbContextOptions<EnsetDbContext> options,
+        ICurrentUserContext? currentUser = null)
         : base(options)
     {
+        _currentUser = currentUser;
     }
 
     public DbSet<Customer> Customers => Set<Customer>();
@@ -84,6 +91,9 @@ public class EnsetDbContext : DbContext
 
     public DbSet<ImportAuditEntryEntity> ImportAuditEntries
         => Set<ImportAuditEntryEntity>();
+    public DbSet<EntityAuditEntry> EntityAuditEntries => Set<EntityAuditEntry>();
+    public DbSet<CurationTask> CurationTasks => Set<CurationTask>();
+    public DbSet<CurationDecision> CurationDecisions => Set<CurationDecision>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -91,5 +101,131 @@ public class EnsetDbContext : DbContext
 
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(EnsetDbContext).Assembly);
+
+        var crudEntityTypes = new HashSet<Type>
+        {
+            typeof(Customer), typeof(Building), typeof(Meter),
+            typeof(EnergySystem), typeof(MeterReading)
+        };
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+                     .Where(x => crudEntityTypes.Contains(x.ClrType)))
+        {
+            var entity = modelBuilder.Entity(entityType.ClrType);
+            entity.HasQueryFilter(BuildSoftDeleteFilter(entityType.ClrType));
+            entity.Property(nameof(BaseEntity.CreatedAt)).HasColumnName("CreatedAtUtc");
+            entity.Property(nameof(BaseEntity.UpdatedAt)).HasColumnName("UpdatedAtUtc");
+            entity.Property(nameof(BaseEntity.DataOrigin)).HasConversion<string>().HasMaxLength(32)
+                .HasDefaultValue(DataOrigin.Imported);
+            entity.Property(nameof(BaseEntity.LastModifiedSource)).HasConversion<string>().HasMaxLength(32)
+                .HasDefaultValue(LastModifiedSource.Import);
+            entity.Property(nameof(BaseEntity.RowVersion)).IsRowVersion().HasColumnName("xmin");
+            entity.HasIndex(nameof(BaseEntity.IsDeleted));
+            entity.HasIndex(nameof(BaseEntity.UpdatedAt));
+            entity.HasIndex(nameof(BaseEntity.DataOrigin));
+        }
+        var milestoneProperties = new[]
+        {
+            nameof(BaseEntity.CreatedByUserId), nameof(BaseEntity.UpdatedByUserId),
+            nameof(BaseEntity.DeletedAtUtc), nameof(BaseEntity.DeletedByUserId),
+            nameof(BaseEntity.IsDeleted), nameof(BaseEntity.DataOrigin),
+            nameof(BaseEntity.LastImportId), nameof(BaseEntity.LastModifiedSource),
+            nameof(BaseEntity.RowVersion)
+        };
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+                     .Where(x => typeof(BaseEntity).IsAssignableFrom(x.ClrType) &&
+                                 !crudEntityTypes.Contains(x.ClrType)))
+        {
+            var entity = modelBuilder.Entity(entityType.ClrType);
+            foreach (var property in milestoneProperties)
+                entity.Ignore(property);
+        }
     }
+
+    private static System.Linq.Expressions.LambdaExpression BuildSoftDeleteFilter(Type type)
+    {
+        var parameter = System.Linq.Expressions.Expression.Parameter(type, "entity");
+        var property = System.Linq.Expressions.Expression.Property(parameter, nameof(BaseEntity.IsDeleted));
+        return System.Linq.Expressions.Expression.Lambda(
+            System.Linq.Expressions.Expression.Not(property), parameter);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        ApplyChangeTracking();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        ApplyChangeTracking();
+        return base.SaveChanges();
+    }
+
+    private void ApplyChangeTracking()
+    {
+        ChangeTracker.DetectChanges();
+        var now = DateTime.UtcNow;
+        var userId = _currentUser?.UserId ?? Guid.Empty;
+        var auditEntries = new List<EntityAuditEntry>();
+
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>()
+                     .Where(x => x.State is EntityState.Added or EntityState.Modified)
+                     .ToList())
+        {
+            var entity = entry.Entity;
+            EntityChangeType changeType;
+            if (entry.State == EntityState.Added)
+            {
+                entity.CreatedAt = now;
+                entity.CreatedByUserId = userId;
+                changeType = EntityChangeType.Created;
+            }
+            else
+            {
+                entity.UpdatedAt = now;
+                entity.UpdatedByUserId = userId;
+                if (entity.LastModifiedSource == LastModifiedSource.User &&
+                    entity.DataOrigin == DataOrigin.Imported)
+                    entity.DataOrigin = DataOrigin.ImportedAndModified;
+
+                var wasDeleted = entry.Property(nameof(BaseEntity.IsDeleted)).OriginalValue as bool? ?? false;
+                if (!wasDeleted && entity.IsDeleted)
+                    entity.DeletedByUserId = userId;
+                changeType = !wasDeleted && entity.IsDeleted
+                    ? EntityChangeType.SoftDeleted
+                    : wasDeleted && !entity.IsDeleted
+                        ? EntityChangeType.Restored
+                        : EntityChangeType.Updated;
+            }
+
+            var changed = entry.State == EntityState.Added
+                ? entry.Properties.Where(x => !x.Metadata.IsShadowProperty())
+                : entry.Properties.Where(x => x.IsModified);
+            foreach (var property in changed)
+            {
+                auditEntries.Add(new EntityAuditEntry
+                {
+                    EntityType = entity.GetType().Name,
+                    EntityId = entity.Id,
+                    ChangedAtUtc = now,
+                    ChangedByUserId = userId,
+                    ChangeType = changeType,
+                    FieldName = property.Metadata.Name,
+                    OldValue = entry.State == EntityState.Added ? null : Format(property.OriginalValue),
+                    NewValue = Format(property.CurrentValue),
+                    Source = entity.LastModifiedSource,
+                    ImportId = entity.LastImportId
+                });
+            }
+        }
+
+        EntityAuditEntries.AddRange(auditEntries);
+    }
+
+    private static string? Format(object? value) => value switch
+    {
+        null => null,
+        DateTime date => date.ToUniversalTime().ToString("O"),
+        _ => Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture)
+    };
 }

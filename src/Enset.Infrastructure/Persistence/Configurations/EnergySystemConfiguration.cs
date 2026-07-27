@@ -17,6 +17,7 @@ public class EnergySystemConfiguration : IEntityTypeConfiguration<EnergySystem>
         builder.Property(x => x.Name).HasMaxLength(256).IsRequired();
         builder.Property(x => x.ExternalIdentifier).HasMaxLength(256);
         builder.Property(x => x.Type).HasConversion<string>().HasMaxLength(64);
+        builder.Property(x => x.RatedPowerKw).HasPrecision(18, 3);
 
         builder.HasIndex(x => x.EnergySystemNumber).IsUnique();
 

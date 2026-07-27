@@ -13,6 +13,7 @@ import { DataQualityWarningsPage } from "../pages/DataQualityWarningsPage";
 import { BuildingEnergyPage } from "../pages/BuildingEnergyPage";
 import { MetersPage } from "../pages/MetersPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
+import { CurationCenterPage } from "../pages/CurationCenterPage";
 
 export function AppRouter() {
   return (
@@ -113,6 +114,7 @@ export function AppRouter() {
             path="data-quality/warnings"
             element={<DataQualityWarningsPage />}
           />
+          <Route path="curation" element={<CurationCenterPage />} />
           <Route
             path="assignments"
             element={

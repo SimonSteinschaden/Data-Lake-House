@@ -1,10 +1,12 @@
-import { apiGet } from "../api";
+import { apiDelete, apiGet, apiPost, apiPut } from "../api";
 import type {
   CustomerDetail,
   CustomerListQuery,
   CustomerSummary,
+  CustomerWriteModel,
   PagedResult,
 } from "../features/customers/types";
+import type { EntityMutationResult } from "../features/crud/types";
 
 const createQueryString = (query: CustomerListQuery): string => {
   const parameters = new URLSearchParams();
@@ -47,5 +49,17 @@ export const customerService = {
     return apiGet<CustomerDetail>(
       `/api/v1/customers/${encodeURIComponent(customerId)}`, { signal },
     );
+  },
+  create(model: CustomerWriteModel) {
+    return apiPost<EntityMutationResult, CustomerWriteModel>("/api/v1/customers", model);
+  },
+  update(id: string, model: CustomerWriteModel) {
+    return apiPut<EntityMutationResult, CustomerWriteModel>(`/api/v1/customers/${encodeURIComponent(id)}`, model);
+  },
+  remove(id: string, rowVersion: number) {
+    return apiDelete<EntityMutationResult>(`/api/v1/customers/${encodeURIComponent(id)}?rowVersion=${rowVersion}`);
+  },
+  restore(id: string, rowVersion: number) {
+    return apiPost<EntityMutationResult>(`/api/v1/customers/${encodeURIComponent(id)}/restore?rowVersion=${rowVersion}`);
   },
 };

@@ -14,6 +14,9 @@ public class EnergySystem : BaseEntity
     public string? ExternalIdentifier { get; set; }
 
     public bool IsActive { get; set; } = true;
+    public decimal? RatedPowerKw { get; set; }
+    public DateTime? CommissionedAt { get; set; }
+    public DateTime? DecommissionedAt { get; set; }
 
     public Guid? AddressId { get; set; }
 

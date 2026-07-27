@@ -10,6 +10,10 @@ using Enset.Application.ReadModel;
 using Enset.Infrastructure.ReadModel;
 using Enset.Application.Analytics;
 using Enset.Infrastructure.Analytics;
+using Enset.Application.Crud;
+using Enset.Infrastructure.Crud;
+using Enset.Application.Curation;
+using Enset.Infrastructure.Curation;
 
 namespace Enset.Infrastructure.Persistence;
 
@@ -51,6 +55,8 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IEntityReadService, EfEntityReadService>();
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IAnalyticsDataProductService, EfAnalyticsDataProductService>();
+        services.AddScoped<IEntityCrudService, EfEntityCrudService>();
+        services.AddScoped<ICurationService, EfCurationService>();
 
         return services;
     }

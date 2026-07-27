@@ -1,9 +1,11 @@
-import { apiGet } from "../api";
+import { apiDelete, apiGet, apiPost, apiPut } from "../api";
 import type {
   BuildingDetail,
   BuildingListQuery,
   BuildingSummary,
+  BuildingWriteModel,
 } from "../features/buildings/types";
+import type { EntityMutationResult } from "../features/crud/types";
 import type { PagedResult } from "../types/paging";
 
 const queryString = (query: BuildingListQuery): string => {
@@ -32,5 +34,17 @@ export const buildingService = {
     return apiGet<BuildingDetail>(
       `/api/v1/buildings/${encodeURIComponent(buildingId)}`, { signal },
     );
+  },
+  create(model: BuildingWriteModel) {
+    return apiPost<EntityMutationResult, BuildingWriteModel>("/api/v1/buildings", model);
+  },
+  update(id: string, model: BuildingWriteModel) {
+    return apiPut<EntityMutationResult, BuildingWriteModel>(`/api/v1/buildings/${encodeURIComponent(id)}`, model);
+  },
+  remove(id: string, rowVersion: number) {
+    return apiDelete<EntityMutationResult>(`/api/v1/buildings/${encodeURIComponent(id)}?rowVersion=${rowVersion}`);
+  },
+  restore(id: string, rowVersion: number) {
+    return apiPost<EntityMutationResult>(`/api/v1/buildings/${encodeURIComponent(id)}/restore?rowVersion=${rowVersion}`);
   },
 };

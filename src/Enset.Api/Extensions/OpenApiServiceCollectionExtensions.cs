@@ -11,6 +11,9 @@ public static class OpenApiServiceCollectionExtensions
 
         services.AddSwaggerGen(options =>
         {
+            var xml = Path.Combine(AppContext.BaseDirectory, "Enset.Api.xml");
+            if (File.Exists(xml))
+                options.IncludeXmlComments(xml);
             options.SwaggerDoc(
                 "v1",
                 new OpenApiInfo

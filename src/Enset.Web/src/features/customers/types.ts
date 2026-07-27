@@ -17,7 +17,9 @@ export interface CustomerBuilding {
   isPrimary: boolean;
 }
 
-export interface CustomerDetail {
+import type { EntityMetadata } from "../crud/types";
+
+export interface CustomerDetail extends EntityMetadata {
   id: string;
   customerNumber: string;
   name: string;
@@ -42,4 +44,15 @@ export interface CustomerListQuery {
   pageSize?: number;
   sortBy?: string;
   sortDirection?: "asc" | "desc";
+}
+
+export interface CustomerWriteModel {
+  customerNumber: string;
+  name: string;
+  type: string;
+  legalName: string | null;
+  email: string | null;
+  phone: string | null;
+  countryCode: string;
+  rowVersion: number;
 }

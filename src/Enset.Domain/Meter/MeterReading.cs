@@ -2,7 +2,7 @@ using Enset.Domain.Data;
 
 namespace Enset.Domain.Energy;
 
-public class MeterReading
+public class MeterReading : Enset.Domain.Common.BaseEntity
 {
     public Guid MeterId { get; set; }
 

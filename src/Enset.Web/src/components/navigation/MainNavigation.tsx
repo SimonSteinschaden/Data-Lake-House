@@ -96,6 +96,10 @@ const navigationGroups: NavigationGroup[] = [
         label: "Datenqualität",
       },
       {
+        path: "/tools/curation",
+        label: "Datenkurationscenter",
+      },
+      {
         path: "/tools/assignments",
         label: "Zuordnungen",
       },

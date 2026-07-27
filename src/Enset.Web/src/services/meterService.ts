@@ -1,11 +1,13 @@
-import { apiGet } from "../api";
+import { apiDelete, apiGet, apiPost, apiPut } from "../api";
 import type {
   MeterDetail,
   MeterListQuery,
   MeterReadingQuery,
   MeterReadings,
   MeterSummary,
+  MeterWriteModel,
 } from "../features/meters/types";
+import type { EntityMutationResult } from "../features/crud/types";
 import type { PagedResult } from "../types/paging";
 
 const listQueryString = (query: MeterListQuery): string => {
@@ -53,5 +55,17 @@ export const meterService = {
     return apiGet<MeterReadings>(
       `/api/v1/meters/${requireMeterId(meterId)}/readings?${readingsQueryString(query)}`, { signal },
     );
+  },
+  create(model: MeterWriteModel) {
+    return apiPost<EntityMutationResult, MeterWriteModel>("/api/v1/metering-points", model);
+  },
+  update(id: string, model: MeterWriteModel) {
+    return apiPut<EntityMutationResult, MeterWriteModel>(`/api/v1/metering-points/${encodeURIComponent(id)}`, model);
+  },
+  remove(id: string, rowVersion: number) {
+    return apiDelete<EntityMutationResult>(`/api/v1/metering-points/${encodeURIComponent(id)}?rowVersion=${rowVersion}`);
+  },
+  restore(id: string, rowVersion: number) {
+    return apiPost<EntityMutationResult>(`/api/v1/metering-points/${encodeURIComponent(id)}/restore?rowVersion=${rowVersion}`);
   },
 };

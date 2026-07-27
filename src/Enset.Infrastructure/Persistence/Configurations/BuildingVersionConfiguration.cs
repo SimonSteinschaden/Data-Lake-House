@@ -77,5 +77,7 @@ public class BuildingVersionConfiguration
 
         builder.Property(x => x.BuildingVolumeM3)
             .HasPrecision(18, 2);
+        builder.Property(x => x.Latitude).HasPrecision(9, 6);
+        builder.Property(x => x.Longitude).HasPrecision(9, 6);
     }
 }

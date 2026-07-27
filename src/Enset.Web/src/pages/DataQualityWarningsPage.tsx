@@ -44,27 +44,24 @@ export function DataQualityWarningsPage() {
   const currentPage = Number(searchParams.get("page") ?? "1") || 1;
   const pageSize = Number(searchParams.get("pageSize") ?? "50") || 50;
   const [data, setData] = useState<ManagementWarningDetails>();
-  const [loading, setLoading] = useState(true);
+  const [loadedRequest, setLoadedRequest] = useState("");
+  const requestKey = `${currentPage}:${pageSize}:${severity ?? ""}`;
+  const loading = loadedRequest !== requestKey;
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
 
     analyticsService
       .warningsDetails(currentPage, pageSize, severity, controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) {
           setData(result);
-        }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setLoading(false);
+          setLoadedRequest(requestKey);
         }
       });
 
     return () => controller.abort();
-  }, [currentPage, pageSize, severity]);
+  }, [currentPage, pageSize, severity, requestKey]);
 
   const warnings = data?.warnings ?? [];
   const totalPages = data

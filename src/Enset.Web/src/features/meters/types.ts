@@ -1,4 +1,5 @@
 import type { PagedResult } from "../../types/paging";
+import type { EntityMetadata } from "../crud/types";
 
 export type MeterReadingAggregation =
   | "Raw"
@@ -43,7 +44,7 @@ export interface MeterSummary {
   lastReadingAt: string | null;
 }
 
-export interface MeterDetail extends MeterSummary {
+export interface MeterDetail extends MeterSummary, EntityMetadata {
   description: string | null;
   externalIdentifier: string | null;
   medium: string;
@@ -53,6 +54,12 @@ export interface MeterDetail extends MeterSummary {
   latestReadingAt: string | null;
   latestValue: number | null;
   latestQuality: string | null;
+}
+
+export interface MeterWriteModel {
+  meterNumber: string; name: string; buildingId: string; medium: string;
+  quantity: string; unit: string; direction: string; type: string;
+  energySystemId: string | null; rowVersion: number;
 }
 
 export interface RawMeterReading {

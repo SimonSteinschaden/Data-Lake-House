@@ -1,0 +1,352 @@
+using Enset.Application.Crud;
+using Enset.Application.Authorization;
+using Enset.Domain.Common;
+using Enset.Domain.Customers;
+using Enset.Domain.Buildings;
+using Enset.Domain.Energy;
+using Enset.Domain.Data;
+using Enset.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace Enset.Infrastructure.Crud;
+
+public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? scope = null) : IEntityCrudService
+{
+    public async Task<EntityMutationResult> CreateCustomerAsync(CustomerWriteModel m, CancellationToken ct)
+    {
+        Required((nameof(m.CustomerNumber), m.CustomerNumber), (nameof(m.Name), m.Name));
+        if (await db.Customers.AnyAsync(x => x.CustomerNumber == m.CustomerNumber.Trim(), ct))
+            throw new CrudConflictException("Ein Kunde mit dieser Kundennummer existiert bereits.");
+        var entity = new Customer { CustomerNumber = m.CustomerNumber.Trim(), Name = m.Name.Trim(),
+            LegalName = Trim(m.LegalName), Email = Trim(m.Email), Phone = Trim(m.Phone),
+            CountryCode = string.IsNullOrWhiteSpace(m.CountryCode) ? "AT" : m.CountryCode.Trim().ToUpperInvariant(),
+            Type = Parse<CustomerType>(m.Type, nameof(m.Type)) };
+        db.Customers.Add(entity);
+        await Save(ct);
+        return Result(entity);
+    }
+
+    public async Task<EntityMutationResult> UpdateCustomerAsync(Guid id, CustomerWriteModel m, CancellationToken ct)
+    {
+        Required((nameof(m.CustomerNumber), m.CustomerNumber), (nameof(m.Name), m.Name));
+        var e = await Customers().SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Kunde");
+        Concurrency(e, m.RowVersion);
+        if (await db.Customers.AnyAsync(x => x.Id != id && x.CustomerNumber == m.CustomerNumber.Trim(), ct))
+            throw new CrudConflictException("Ein Kunde mit dieser Kundennummer existiert bereits.");
+        e.CustomerNumber = m.CustomerNumber.Trim(); e.Name = m.Name.Trim(); e.LegalName = Trim(m.LegalName);
+        e.Email = Trim(m.Email); e.Phone = Trim(m.Phone); e.CountryCode = m.CountryCode.Trim().ToUpperInvariant();
+        e.Type = Parse<CustomerType>(m.Type, nameof(m.Type)); Manual(e);
+        await Save(ct); return Result(e);
+    }
+
+    public async Task<EntityMutationResult> DeleteCustomerAsync(Guid id, uint version, CancellationToken ct)
+    {
+        var e = await Customers().Include(x => x.BuildingAssignments).SingleOrDefaultAsync(x => x.Id == id, ct)
+            ?? throw Missing("Kunde");
+        Concurrency(e, version);
+        if (e.BuildingAssignments.Any())
+            throw new CrudConflictException($"Der Kunde „{e.Name}“ ist Gebäuden zugeordnet und kann nicht gelöscht werden.");
+        Delete(e); await Save(ct); return Result(e);
+    }
+    public Task<EntityMutationResult> RestoreCustomerAsync(Guid id, uint v, CancellationToken ct) =>
+        Restore(Customers(true), id, v, "Kunde", ct);
+
+    public async Task<EntityMutationResult> CreateBuildingAsync(BuildingWriteModel m, CancellationToken ct)
+    {
+        Required((nameof(m.BuildingNumber), m.BuildingNumber), (nameof(m.Name), m.Name));
+        if (await db.Buildings.AnyAsync(x => x.BuildingNumber == m.BuildingNumber.Trim(), ct))
+            throw new CrudConflictException("Ein Gebäude mit dieser Gebäudenummer existiert bereits.");
+        if (m.CustomerId.HasValue && !await Customers().AnyAsync(x => x.Id == m.CustomerId, ct))
+            throw Invalid(nameof(m.CustomerId), "Der angegebene Kunde existiert nicht.");
+        var e = new Building { BuildingNumber = m.BuildingNumber.Trim(), Name = m.Name.Trim(),
+            ExternalIdentifier = Trim(m.ExternalIdentifier) };
+        db.Buildings.Add(e);
+        if (m.GrossFloorAreaM2.HasValue || m.YearOfConstruction.HasValue ||
+            m.Latitude.HasValue || m.Longitude.HasValue)
+            e.Versions.Add(new BuildingVersion { VersionNumber = 1, ValidFrom = DateTime.UtcNow,
+                GrossFloorAreaM2 = m.GrossFloorAreaM2, YearOfConstruction = m.YearOfConstruction,
+                Latitude = m.Latitude, Longitude = m.Longitude,
+                ChangeReason = "Manuelle Anlage" });
+        if (m.CustomerId.HasValue) db.CustomerBuildingAssignments.Add(new CustomerBuildingAssignment {
+            CustomerId = m.CustomerId.Value, Building = e, ValidFrom = DateTime.UtcNow, IsPrimary = true });
+        await Save(ct); return Result(e);
+    }
+    public async Task<EntityMutationResult> UpdateBuildingAsync(Guid id, BuildingWriteModel m, CancellationToken ct)
+    {
+        Required((nameof(m.BuildingNumber), m.BuildingNumber), (nameof(m.Name), m.Name));
+        var e = await Buildings().SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Gebäude");
+        Concurrency(e, m.RowVersion);
+        if (await db.Buildings.AnyAsync(x => x.Id != id && x.BuildingNumber == m.BuildingNumber.Trim(), ct))
+            throw new CrudConflictException("Ein Gebäude mit dieser Gebäudenummer existiert bereits.");
+        e.BuildingNumber = m.BuildingNumber.Trim(); e.Name = m.Name.Trim();
+        e.ExternalIdentifier = Trim(m.ExternalIdentifier); Manual(e);
+        if (m.GrossFloorAreaM2.HasValue || m.YearOfConstruction.HasValue ||
+            m.Latitude.HasValue || m.Longitude.HasValue)
+        {
+            var nextVersion = await db.BuildingVersions.Where(x => x.BuildingId == id)
+                .MaxAsync(x => (int?)x.VersionNumber, ct) ?? 0;
+            db.BuildingVersions.Add(new BuildingVersion { BuildingId = id,
+                VersionNumber = nextVersion + 1, ValidFrom = DateTime.UtcNow,
+                GrossFloorAreaM2 = m.GrossFloorAreaM2, YearOfConstruction = m.YearOfConstruction,
+                Latitude = m.Latitude, Longitude = m.Longitude,
+                ChangeReason = "Manuelle Änderung" });
+        }
+        await Save(ct); return Result(e);
+    }
+    public async Task<EntityMutationResult> DeleteBuildingAsync(Guid id, uint v, CancellationToken ct)
+    {
+        var e = await Buildings().Include(x => x.Meters).Include(x => x.EnergySystemAssignments)
+            .SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Gebäude");
+        Concurrency(e, v);
+        if (e.Meters.Count != 0 || e.EnergySystemAssignments.Count != 0)
+            throw new CrudConflictException($"Das Gebäude „{e.Name}“ ist mit {e.Meters.Count} Zählpunkten und {e.EnergySystemAssignments.Count} Anlagen verknüpft.");
+        Delete(e); await Save(ct); return Result(e);
+    }
+    public Task<EntityMutationResult> RestoreBuildingAsync(Guid id, uint v, CancellationToken ct) =>
+        Restore(Buildings(true), id, v, "Gebäude", ct);
+
+    public async Task<EntityMutationResult> CreateMeterAsync(MeterWriteModel m, CancellationToken ct)
+    {
+        Required((nameof(m.MeterNumber), m.MeterNumber), (nameof(m.Name), m.Name));
+        if (!await Buildings().AnyAsync(x => x.Id == m.BuildingId, ct))
+            throw Invalid(nameof(m.BuildingId), "Das angegebene Gebäude existiert nicht.");
+        if (await db.Meters.AnyAsync(x => x.MeterNumber == m.MeterNumber.Trim(), ct))
+            throw new CrudConflictException("Ein Zählpunkt mit dieser Kennung existiert bereits.");
+        if (m.EnergySystemId.HasValue && !await db.EnergySystems.AnyAsync(x => x.Id == m.EnergySystemId, ct))
+            throw Invalid(nameof(m.EnergySystemId), "Die angegebene Anlage existiert nicht.");
+        ValidateMeterConsistency(m);
+        var e = new Meter { MeterNumber = m.MeterNumber.Trim(), Name = m.Name.Trim(), BuildingId = m.BuildingId,
+            EnergySystemId = m.EnergySystemId, Medium = Parse<MeterMedium>(m.Medium, nameof(m.Medium)),
+            Quantity = Parse<MeterQuantity>(m.Quantity, nameof(m.Quantity)), Unit = Parse<MeterUnit>(m.Unit, nameof(m.Unit)),
+            Direction = Parse<MeterDirection>(m.Direction, nameof(m.Direction)), Type = Parse<MeterType>(m.Type, nameof(m.Type)) };
+        db.Meters.Add(e); await Save(ct); return Result(e);
+    }
+    public async Task<EntityMutationResult> UpdateMeterAsync(Guid id, MeterWriteModel m, CancellationToken ct)
+    {
+        var e = await Meters().SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Zählpunkt");
+        Concurrency(e, m.RowVersion);
+        if (e.BuildingId != m.BuildingId && await db.MeterReadings.AnyAsync(x => x.MeterId == id, ct))
+            throw new CrudConflictException("Die Gebäudezuordnung eines Zählpunkts mit Messwerten kann nicht geändert werden.");
+        if (!await Buildings().AnyAsync(x => x.Id == m.BuildingId, ct))
+            throw Invalid(nameof(m.BuildingId), "Das angegebene Gebäude existiert nicht.");
+        ValidateMeterConsistency(m);
+        e.Name = m.Name.Trim(); e.BuildingId = m.BuildingId; e.EnergySystemId = m.EnergySystemId;
+        e.Medium = Parse<MeterMedium>(m.Medium, nameof(m.Medium)); e.Quantity = Parse<MeterQuantity>(m.Quantity, nameof(m.Quantity));
+        e.Unit = Parse<MeterUnit>(m.Unit, nameof(m.Unit)); e.Direction = Parse<MeterDirection>(m.Direction, nameof(m.Direction));
+        e.Type = Parse<MeterType>(m.Type, nameof(m.Type)); Manual(e); await Save(ct); return Result(e);
+    }
+    public async Task<EntityMutationResult> DeleteMeterAsync(Guid id, uint v, CancellationToken ct)
+    {
+        var e = await Meters().SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Zählpunkt");
+        Concurrency(e, v);
+        if (await db.MeterReadings.AnyAsync(x => x.MeterId == id, ct))
+            throw new CrudConflictException("Der Zählpunkt besitzt Messwerte und kann nur fachlich deaktiviert werden.");
+        Delete(e); e.IsActive = false; await Save(ct); return Result(e);
+    }
+    public Task<EntityMutationResult> RestoreMeterAsync(Guid id, uint v, CancellationToken ct) =>
+        Restore(Meters(true), id, v, "Zählpunkt", ct);
+
+    public async Task<EntityMutationResult> CreateEnergySystemAsync(EnergySystemWriteModel m, CancellationToken ct)
+    {
+        Required((nameof(m.EnergySystemNumber), m.EnergySystemNumber), (nameof(m.Name), m.Name));
+        if (!await Buildings().AnyAsync(x => x.Id == m.BuildingId, ct))
+            throw Invalid(nameof(m.BuildingId), "Das angegebene Gebäude existiert nicht.");
+        if (await db.EnergySystems.AnyAsync(x => x.EnergySystemNumber == m.EnergySystemNumber.Trim(), ct))
+            throw new CrudConflictException("Eine Anlage mit dieser Nummer existiert bereits.");
+        var e = new EnergySystem { EnergySystemNumber = m.EnergySystemNumber.Trim(), Name = m.Name.Trim(),
+            Type = Parse<EnergySystemType>(m.Type, nameof(m.Type)), RatedPowerKw = m.RatedPowerKw,
+            CommissionedAt = m.CommissionedAt, DecommissionedAt = m.DecommissionedAt };
+        db.EnergySystems.Add(e); db.EnergySystemBuildingAssignments.Add(new EnergySystemBuildingAssignment
+            { EnergySystem = e, BuildingId = m.BuildingId, Role = EnergySystemBuildingRole.LocatedAt });
+        await Save(ct); return Result(e);
+    }
+    public async Task<EntityMutationResult> UpdateEnergySystemAsync(Guid id, EnergySystemWriteModel m, CancellationToken ct)
+    {
+        var e = await EnergySystems().Include(x => x.BuildingAssignments)
+            .SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Anlage");
+        Concurrency(e, m.RowVersion); Required((nameof(m.Name), m.Name));
+        if (!await Buildings().AnyAsync(x => x.Id == m.BuildingId, ct))
+            throw Invalid(nameof(m.BuildingId), "Das angegebene Gebäude existiert nicht.");
+        var assignment = e.BuildingAssignments.FirstOrDefault(x => x.ValidTo == null);
+        if (assignment is not null && assignment.BuildingId != m.BuildingId)
+        {
+            if (await db.Meters.AnyAsync(x => x.EnergySystemId == id, ct))
+                throw new CrudConflictException("Die Gebäudezuordnung einer Anlage mit Zählpunkten kann nicht geändert werden.");
+            assignment.ValidTo = DateTime.UtcNow;
+            db.EnergySystemBuildingAssignments.Add(new EnergySystemBuildingAssignment
+                { EnergySystemId = id, BuildingId = m.BuildingId, Role = EnergySystemBuildingRole.LocatedAt });
+        }
+        e.Name = m.Name.Trim(); e.Type = Parse<EnergySystemType>(m.Type, nameof(m.Type));
+        e.RatedPowerKw = m.RatedPowerKw; e.CommissionedAt = m.CommissionedAt;
+        e.DecommissionedAt = m.DecommissionedAt; Manual(e);
+        await Save(ct); return Result(e);
+    }
+    public async Task<EntityMutationResult> DeleteEnergySystemAsync(Guid id, uint v, CancellationToken ct)
+    {
+        var e = await EnergySystems().Include(x => x.Meters).SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Anlage");
+        Concurrency(e, v);
+        if (e.Meters.Count != 0) throw new CrudConflictException("Die Anlage ist Zählpunkten zugeordnet und kann nicht gelöscht werden.");
+        Delete(e); await Save(ct); return Result(e);
+    }
+    public Task<EntityMutationResult> RestoreEnergySystemAsync(Guid id, uint v, CancellationToken ct) =>
+        Restore(EnergySystems(true), id, v, "Anlage", ct);
+
+    public async Task<EntityMutationResult> CreateMeterReadingAsync(MeterReadingWriteModel m, CancellationToken ct)
+    {
+        var meter = await Meters().SingleOrDefaultAsync(x => x.Id == m.MeterId, ct) ?? throw Missing("Zählpunkt");
+        if (m.Timestamp == default) throw Invalid(nameof(m.Timestamp), "Ein Zeitstempel ist erforderlich.");
+        if (await db.MeterReadings.AnyAsync(x => x.MeterId == m.MeterId && x.Timestamp == m.Timestamp, ct))
+            throw new CrudConflictException("Für diesen Zählpunkt existiert bereits ein Messwert zum gleichen Zeitpunkt.");
+        var e = new MeterReading { MeterId = meter.Id, Timestamp = m.Timestamp.ToUniversalTime(), Value = m.Value,
+            ReadingType = Parse<MeterReadingType>(m.ReadingType, nameof(m.ReadingType)),
+            QualityFlag = Parse<DataQuality>(m.QualityFlag, nameof(m.QualityFlag)), IntervalSeconds = m.IntervalSeconds };
+        db.MeterReadings.Add(e); await Save(ct); return Result(e);
+    }
+    public async Task<EntityMutationResult> UpdateMeterReadingAsync(Guid id, MeterReadingWriteModel m, CancellationToken ct)
+    {
+        var e = await MeterReadings().SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Messwert");
+        Concurrency(e, m.RowVersion);
+        if (e.ReadingType != Parse<MeterReadingType>(m.ReadingType, nameof(m.ReadingType)))
+            throw new CrudConflictException("Der Messwerttyp kann nicht stillschweigend geändert werden.");
+        e.Value = m.Value; e.QualityFlag = Parse<DataQuality>(m.QualityFlag, nameof(m.QualityFlag)); Manual(e);
+        await Save(ct); return Result(e);
+    }
+    public async Task<EntityMutationResult> DeleteMeterReadingAsync(Guid id, uint v, string? reason, CancellationToken ct)
+    {
+        var e = await MeterReadings().SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Messwert");
+        Concurrency(e, v); Delete(e); await Save(ct); return Result(e);
+    }
+    public async Task<Enset.Application.ReadModel.PagedResult<EnergySystemDto>> GetEnergySystemsAsync(
+        EntityListQuery request, CancellationToken ct)
+    {
+        var query = EnergySystems(request.IncludeDeleted);
+        if (!string.IsNullOrWhiteSpace(request.Search))
+            query = query.Where(x => EF.Functions.ILike(x.Name, $"%{request.Search.Trim()}%") ||
+                                     EF.Functions.ILike(x.EnergySystemNumber, $"%{request.Search.Trim()}%"));
+        var total = await query.CountAsync(ct);
+        var page = Math.Max(1, request.Page); var size = Math.Clamp(request.PageSize, 1, 200);
+        var items = await query.OrderBy(x => x.Name).Skip((page - 1) * size).Take(size)
+            .Select(x => new EnergySystemDto(x.Id, x.EnergySystemNumber, x.Name, x.Type.ToString(),
+                x.BuildingAssignments.OrderBy(a => a.ValidFrom).Select(a => a.BuildingId).FirstOrDefault(),
+                x.RatedPowerKw, x.CommissionedAt, x.DecommissionedAt,
+                x.IsActive, x.DataOrigin.ToString(), x.CreatedAt, x.UpdatedAt, x.IsDeleted, x.RowVersion)).ToListAsync(ct);
+        return new(items, page, size, total);
+    }
+    public Task<EnergySystemDto?> GetEnergySystemAsync(Guid id, bool includeDeleted, CancellationToken ct)
+    {
+        var query = EnergySystems(includeDeleted);
+        return query.AsNoTracking().Where(x => x.Id == id).Select(x => new EnergySystemDto(x.Id,
+            x.EnergySystemNumber, x.Name, x.Type.ToString(),
+            x.BuildingAssignments.OrderBy(a => a.ValidFrom).Select(a => a.BuildingId).FirstOrDefault(),
+            x.RatedPowerKw, x.CommissionedAt, x.DecommissionedAt,
+            x.IsActive, x.DataOrigin.ToString(), x.CreatedAt, x.UpdatedAt, x.IsDeleted, x.RowVersion))
+            .SingleOrDefaultAsync(ct);
+    }
+    public async Task<Enset.Application.ReadModel.PagedResult<MeterReadingDto>> GetMeterReadingsAsync(
+        Guid? meterId, EntityListQuery request, CancellationToken ct)
+    {
+        var query = MeterReadings(request.IncludeDeleted);
+        if (meterId.HasValue) query = query.Where(x => x.MeterId == meterId);
+        var total = await query.CountAsync(ct);
+        var page = Math.Max(1, request.Page); var size = Math.Clamp(request.PageSize, 1, 200);
+        var items = await query.AsNoTracking().OrderByDescending(x => x.Timestamp)
+            .Skip((page - 1) * size).Take(size).Select(x => new MeterReadingDto(x.Id, x.MeterId,
+                x.Timestamp, x.Value, x.ReadingType.ToString(), x.QualityFlag.ToString(),
+                x.IntervalSeconds, x.DataOrigin.ToString(), x.IsDeleted, x.RowVersion)).ToListAsync(ct);
+        return new(items, page, size, total);
+    }
+    public Task<MeterReadingDto?> GetMeterReadingAsync(Guid id, bool includeDeleted, CancellationToken ct)
+    {
+        var query = MeterReadings(includeDeleted);
+        return query.AsNoTracking().Where(x => x.Id == id).Select(x => new MeterReadingDto(x.Id,
+            x.MeterId, x.Timestamp, x.Value, x.ReadingType.ToString(), x.QualityFlag.ToString(),
+            x.IntervalSeconds, x.DataOrigin.ToString(), x.IsDeleted, x.RowVersion)).SingleOrDefaultAsync(ct);
+    }
+    public async Task<IReadOnlyList<AuditHistoryItem>> GetAuditHistoryAsync(string type, Guid id, CancellationToken ct)
+    {
+        var visible = type switch
+        {
+            nameof(Customer) => await Customers(true).AnyAsync(x => x.Id == id, ct),
+            nameof(Building) => await Buildings(true).AnyAsync(x => x.Id == id, ct),
+            nameof(Meter) => await Meters(true).AnyAsync(x => x.Id == id, ct),
+            nameof(MeterReading) => await MeterReadings(true).AnyAsync(x => x.Id == id, ct),
+            nameof(EnergySystem) => await EnergySystems(true).AnyAsync(x => x.Id == id, ct),
+            _ => false
+        };
+        if (!visible) throw Missing("Entität");
+        return await db.EntityAuditEntries.AsNoTracking().Where(x => x.EntityType == type && x.EntityId == id)
+            .OrderBy(x => x.ChangedAtUtc).ThenBy(x => x.Id)
+            .Select(x => new AuditHistoryItem(x.ChangedAtUtc, x.ChangedByUserId, x.ChangeType.ToString(),
+                x.FieldName, x.OldValue, x.NewValue, x.Source.ToString(), x.ImportId, x.Reason))
+            .ToListAsync(ct);
+    }
+
+    private async Task Save(CancellationToken ct)
+    {
+        try { await db.SaveChangesAsync(ct); }
+        catch (DbUpdateConcurrencyException) { throw new CrudConflictException("Der Datensatz wurde zwischenzeitlich geändert. Laden Sie die aktuellen Daten neu."); }
+        catch (DbUpdateException) { throw new CrudConflictException("Die Änderung verletzt eine Eindeutigkeits- oder Abhängigkeitsregel."); }
+    }
+    private async Task<EntityMutationResult> Restore<T>(IQueryable<T> query, Guid id, uint v, string label, CancellationToken ct) where T : BaseEntity
+    { var e = await query.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing(label); Concurrency(e, v);
+      e.IsDeleted = false; e.DeletedAtUtc = null; e.DeletedByUserId = null; Manual(e); await Save(ct); return Result(e); }
+    private static void Required(params (string Field, string Value)[] values)
+    { var errors = values.Where(x => string.IsNullOrWhiteSpace(x.Value)).ToDictionary(x => x.Field, _ => new[] { "Dieses Feld ist erforderlich." });
+      if (errors.Count != 0) throw new CrudValidationException(errors); }
+    private static T Parse<T>(string value, string field) where T : struct, Enum =>
+        Enum.TryParse<T>(value, true, out var parsed) ? parsed : throw Invalid(field, "Der angegebene Wert ist ungültig.");
+    private static CrudValidationException Invalid(string field, string message) => new(new Dictionary<string, string[]> { [field] = [message] });
+    private static CrudNotFoundException Missing(string label) => new($"{label} wurde nicht gefunden.");
+    private static string? Trim(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private void Concurrency(BaseEntity e, uint version)
+    {
+        if (version == 0) throw new CrudConflictException("Ein Concurrency-Token ist erforderlich.");
+        db.Entry(e).Property(x => x.RowVersion).OriginalValue = version;
+    }
+    private static void Manual(BaseEntity e) => e.LastModifiedSource = LastModifiedSource.User;
+    private static void Delete(BaseEntity e) { e.IsDeleted = true; e.DeletedAtUtc = DateTime.UtcNow; Manual(e); }
+    private static void ValidateMeterConsistency(MeterWriteModel m)
+    {
+        var quantity = Parse<MeterQuantity>(m.Quantity, nameof(m.Quantity));
+        var unit = Parse<MeterUnit>(m.Unit, nameof(m.Unit));
+        var valid = quantity switch
+        {
+            MeterQuantity.Energy => unit is MeterUnit.Wh or MeterUnit.KWh or MeterUnit.MWh,
+            MeterQuantity.Power => unit is MeterUnit.W or MeterUnit.KW or MeterUnit.MW,
+            MeterQuantity.Volume => unit is MeterUnit.CubicMeter or MeterUnit.Liter,
+            MeterQuantity.Flow => unit is MeterUnit.CubicMeterPerHour or MeterUnit.LiterPerSecond,
+            MeterQuantity.Temperature => unit is MeterUnit.Celsius or MeterUnit.Kelvin,
+            _ => unit != MeterUnit.Unknown
+        };
+        if (!valid) throw Invalid(nameof(m.Unit), "Die Einheit ist für die gewählte Messgröße nicht zulässig.");
+    }
+    private static EntityMutationResult Result(BaseEntity e) => new(e.Id, e.RowVersion, e.DataOrigin.ToString(),
+        e.CreatedAt, e.CreatedByUserId, e.UpdatedAt, e.UpdatedByUserId, e.IsDeleted);
+    private IQueryable<Customer> Customers(bool deleted = false)
+    {
+        IQueryable<Customer> query = deleted ? db.Customers.IgnoreQueryFilters() : db.Customers;
+        return scope?.ApplyCustomerScope(query) ?? query;
+    }
+    private IQueryable<Building> Buildings(bool deleted = false)
+    {
+        IQueryable<Building> query = deleted ? db.Buildings.IgnoreQueryFilters() : db.Buildings;
+        return scope?.ApplyBuildingScope(query) ?? query;
+    }
+    private IQueryable<Meter> Meters(bool deleted = false)
+    {
+        IQueryable<Meter> query = deleted ? db.Meters.IgnoreQueryFilters() : db.Meters;
+        return scope?.ApplyMeterScope(query) ?? query;
+    }
+    private IQueryable<MeterReading> MeterReadings(bool deleted = false)
+    {
+        IQueryable<MeterReading> query = deleted ? db.MeterReadings.IgnoreQueryFilters() : db.MeterReadings;
+        return scope?.ApplyMeterReadingScope(query) ?? query;
+    }
+    private IQueryable<EnergySystem> EnergySystems(bool deleted = false)
+    {
+        IQueryable<EnergySystem> query = deleted ? db.EnergySystems.IgnoreQueryFilters() : db.EnergySystems;
+        if (scope is null) return query;
+        var buildings = scope.ApplyBuildingScope(db.Buildings).Select(x => x.Id);
+        return query.Where(x => x.BuildingAssignments.Any(a => buildings.Contains(a.BuildingId)));
+    }
+}

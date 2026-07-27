@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
+using FluentValidation;
+using Enset.Application.Crud;
+using Enset.Api.Errors;
 
 namespace Enset.Api.Extensions;
 
@@ -44,6 +47,10 @@ public static class ApiServiceCollectionExtensions
                 context.ProblemDetails.Extensions["exception"] = exception.ToString();
             };
         });
+        services.AddExceptionHandler<CrudExceptionHandler>();
+        services.AddValidatorsFromAssemblyContaining<CustomerWriteModelValidator>();
+        services.AddScoped<CrudCommandHandler>();
+        services.AddScoped<CrudQueryHandler>();
 
         services.AddScoped<CurrentUserContext>();
         services.AddScoped<ICurrentUserContext>(provider =>

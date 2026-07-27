@@ -11,11 +11,7 @@ public class MeterReadingConfiguration
     {
         builder.ToTable("MeterReadings");
 
-        builder.HasKey(x => new
-        {
-            x.MeterId,
-            x.Timestamp
-        });
+        builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Timestamp)
             .HasColumnType("timestamp with time zone");
@@ -51,6 +47,6 @@ public class MeterReadingConfiguration
         {
             x.MeterId,
             x.Timestamp
-        });
+        }).IsUnique();
     }
 }

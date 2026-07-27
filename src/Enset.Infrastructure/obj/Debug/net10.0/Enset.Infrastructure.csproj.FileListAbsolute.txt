@@ -325,3 +325,7 @@ C:\Users\rdpadmin\Desktop\Repositories\DataLakeBuild\Debug\net10.0\Enset.Infrast
 C:\Users\rdpadmin\Desktop\Repositories\DataLakeBuild\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
 C:\Users\rdpadmin\Desktop\Repositories\DataLakeBuild\Debug\net10.0\Enset.Infrastructure.dll
 C:\Users\rdpadmin\Desktop\Repositories\DataLakeBuild\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Infrastructure.pdb

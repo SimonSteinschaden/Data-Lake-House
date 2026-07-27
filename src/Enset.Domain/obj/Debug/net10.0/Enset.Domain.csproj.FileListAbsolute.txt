@@ -159,3 +159,6 @@ C:\Users\rdpadmin\AppData\Local\Temp\enset-analytics-tests-final2\Debug\net10.0\
 C:\Users\rdpadmin\Desktop\Repositories\DataLakeBuild\Debug\net10.0\Enset.Domain.deps.json
 C:\Users\rdpadmin\Desktop\Repositories\DataLakeBuild\Debug\net10.0\Enset.Domain.dll
 C:\Users\rdpadmin\Desktop\Repositories\DataLakeBuild\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Domain.deps.json
+C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Domain.pdb

@@ -63,3 +63,20 @@ Die Roadmap konkretisiert ausschließlich die noch offenen Arbeiten der verbindl
 # Architecture Freeze 1.0 RC
 
 Die verbindliche offene Arbeitsliste wurde nach [IMPLEMENTATION_ROADMAP_V1_0_RC.md](IMPLEMENTATION_ROADMAP_V1_0_RC.md) konsolidiert. Dieses Dokument bleibt als historische Langfrist-Roadmap erhalten.
+
+# POST-MVP-Roadmap
+
+MVP v1.0 – Architecture Freeze
+│
+├── Asset Layer
+├── Grid Layer
+├── Time Series Engine
+├── Benchmark Engine
+│
+└── Data Products V2
+    ├── Benchmarks
+    ├── normalisierte Last- und Erzeugungsprofile
+    ├── Producer-Consumer-Matching
+    ├── EEG-Analysen
+    ├── P2P-Analysen
+    └── Wirtschaftlichkeitsszenarien

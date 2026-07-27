@@ -47,7 +47,6 @@ function List() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const page = Math.max(1, Number(params.get("page")) || 1);
-  const includeDeleted = params.get("includeDeleted") === "true";
   const [search, setSearch] = useState(params.get("search") ?? "");
   const [result, setResult] = useState<PagedResult<BuildingSummary>>();
   const [error, setError] = useState("");
@@ -57,12 +56,12 @@ function List() {
     buildingService.list({
       search: params.get("search") ?? undefined,
       customerId: params.get("customerId") ?? undefined,
-      includeDeleted, page, pageSize: 50,
+      page, pageSize: 50,
     }, controller.signal).then(setResult).catch((e) => {
       if (!controller.signal.aborted) setError(errorMessage(e));
     });
     return () => controller.abort();
-  }, [params, page, includeDeleted]);
+  }, [params, page]);
   const update = (values: Record<string, string | undefined>) =>
     setParams((current) => {
       const next = new URLSearchParams(current);
@@ -80,10 +79,6 @@ function List() {
       event.preventDefault(); update({ search: search.trim(), page: "1" });
     }}>
       <label>Suche<input value={search} onChange={(event) => setSearch(event.target.value)} /></label>
-      <label><input type="checkbox" checked={includeDeleted} onChange={(event) =>
-        update({ includeDeleted: event.target.checked ? "true" : undefined, page: "1" })} />
-        Deaktivierte anzeigen
-      </label>
       <button>Suchen</button>
     </form>
     {error ? <PageState>{error}</PageState> : !result

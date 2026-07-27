@@ -207,8 +207,7 @@ function CustomerForm({
 function List() {
   const nav = useNavigate(),
     [params, setParams] = useSearchParams();
-  const page = Math.max(1, Number(params.get("page")) || 1),
-    showDeleted = params.get("includeDeleted") === "true";
+  const page = Math.max(1, Number(params.get("page")) || 1);
   const [search, setSearch] = useState(params.get("search") ?? ""),
     [result, setResult] = useState<PagedResult<CustomerSummary>>(),
     [error, setError] = useState(""),
@@ -221,7 +220,6 @@ function List() {
           search: params.get("search") ?? undefined,
           page,
           pageSize: 50,
-          includeDeleted: showDeleted,
         },
         c.signal,
       )
@@ -230,7 +228,7 @@ function List() {
         if (!c.signal.aborted) setError(errorMessage(e));
       });
     return () => c.abort();
-  }, [params, page, showDeleted]);
+  }, [params, page]);
   const update = (key: string, v?: string) =>
     setParams((p) => {
       const n = new URLSearchParams(p);
@@ -261,16 +259,6 @@ function List() {
           Suche
           <input value={search} onChange={(e) => setSearch(e.target.value)} />
         </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={showDeleted}
-            onChange={(e) =>
-              update("includeDeleted", e.target.checked ? "true" : undefined)
-            }
-          />{" "}
-          Deaktivierte anzeigen
-        </label>
         <button>Suchen</button>
       </form>
       {error ? (
@@ -292,7 +280,6 @@ function List() {
                   <th>Objekte</th>
                   <th>Telefon</th>
                   <th>E-Mail</th>
-                  {showDeleted && <th>Aktivität</th>}
                   <th></th>
                 </tr>
               </thead>
@@ -306,9 +293,6 @@ function List() {
                     <td>{x.buildingCount}</td>
                     <td>{x.phone ?? "–"}</td>
                     <td>{x.email ?? "–"}</td>
-                    {showDeleted && (
-                      <td>{x.isDeleted ? "Deaktiviert" : "Aktiv"}</td>
-                    )}
                     <td>
                       <Link to={`/customers/${x.id}`}>Öffnen</Link>
                     </td>

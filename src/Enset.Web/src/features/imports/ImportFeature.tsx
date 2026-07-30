@@ -12,11 +12,14 @@ import type {
 } from "./components/models/WizardState";
 import "./ImportFeature.css";
 
-function createInitialState(): WizardState {
+function createInitialState(selectedFile: File | null = null): WizardState {
+  const sourceType = selectedFile?.name.toLowerCase().endsWith(".csv")
+    ? "Csv"
+    : "CRM_Excel";
   return {
     currentStep: "upload",
-    selectedFile: null,
-    sourceType: "CRM_Excel",
+    selectedFile,
+    sourceType,
     medium: null,
     importId: null,
     analysisResult: null,
@@ -39,10 +42,7 @@ export function ImportFeature() {
   const [state, setState] = useState<WizardState>(createInitialState);
 
   function handleFileSelected(file: File | null) {
-    setState(current => ({
-      ...current,
-      selectedFile: file,
-    }));
+    setState(createInitialState(file));
   }
 
   async function handleAnalyze() {

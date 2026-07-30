@@ -6,6 +6,8 @@ using Enset.Domain.Customers;
 using Enset.Domain.Data;
 using Enset.Domain.Energy;
 using Enset.Domain.Buildings;
+using Enset.Domain.Common;
+using Enset.Domain.Geography;
 using Enset.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,6 +50,7 @@ public sealed class DatabaseImportWriter : IImportWriter
 
             var buildings = await UpsertBuildingsAsync(
                 context.Buildings,
+                context,
                 cancellationToken);
 
             await EnsureCustomerBuildingAssignmentsAsync(
@@ -172,6 +175,7 @@ public sealed class DatabaseImportWriter : IImportWriter
 
     private async Task<Dictionary<string, Building>> UpsertBuildingsAsync(
         IReadOnlyCollection<BuildingImportDto> source,
+        ImportWriteContext context,
         CancellationToken cancellationToken)
     {
         var result = new Dictionary<string, Building>(
@@ -185,6 +189,12 @@ public sealed class DatabaseImportWriter : IImportWriter
             .ToList();
 
         var existingBuildings = await _dbContext.Buildings
+            .Include(x => x.Versions)
+                .ThenInclude(x => x.Address)
+                    .ThenInclude(x => x!.PostalCodeArea)
+            .Include(x => x.Versions)
+                .ThenInclude(x => x.Address)
+                    .ThenInclude(x => x!.Country)
             .Where(x => buildingNumbers.Contains(x.BuildingNumber))
             .ToDictionaryAsync(
                 x => x.BuildingNumber,
@@ -212,10 +222,20 @@ public sealed class DatabaseImportWriter : IImportWriter
 
             building.Name = FirstNonEmpty(
                 dto.BuildingName,
+                building.Name,
                 buildingNumber);
 
             building.ExternalIdentifier = buildingNumber;
             building.IsActive = true;
+
+            if (HasBuildingVersionData(dto))
+            {
+                await AddBuildingVersionAsync(
+                    building,
+                    dto,
+                    context,
+                    cancellationToken);
+            }
 
             result[buildingNumber] = building;
         }
@@ -224,6 +244,165 @@ public sealed class DatabaseImportWriter : IImportWriter
 
         return result;
     }
+
+    private async Task AddBuildingVersionAsync(
+        Building building,
+        BuildingImportDto dto,
+        ImportWriteContext context,
+        CancellationToken cancellationToken)
+    {
+        var previous = building.Versions
+            .Where(x => x.ValidTo == null)
+            .OrderByDescending(x => x.VersionNumber)
+            .FirstOrDefault();
+        var address = await BuildImportedAddressAsync(
+            dto,
+            previous?.Address,
+            cancellationToken);
+        var validFrom = context.Timestamp.ToUniversalTime();
+
+        if (previous is not null)
+            previous.ValidTo = validFrom;
+
+        var version = new BuildingVersion
+        {
+            BuildingId = building.Id,
+            VersionNumber = (previous?.VersionNumber ?? 0) + 1,
+            ValidFrom = validFrom,
+            RecordedAt = validFrom,
+            ChangeReason = "Import",
+            Address = address,
+            AddressId = address?.Id,
+            CadastralMunicipality = previous?.CadastralMunicipality,
+            PropertyNumber = previous?.PropertyNumber,
+            BuildingRegistryIdentifier =
+                previous?.BuildingRegistryIdentifier,
+            PrimaryUseType = ParseEnum<PrimaryUseType>(dto.UsageType)
+                ?? previous?.PrimaryUseType,
+            BuildingCategory =
+                ParseEnum<BuildingCategory>(dto.BuildingType)
+                ?? previous?.BuildingCategory,
+            OwnershipType = previous?.OwnershipType,
+            IsResidential = previous?.IsResidential ?? false,
+            IsCommercial = previous?.IsCommercial ?? false,
+            IsPublic = previous?.IsPublic ?? false,
+            HasMixedUse = previous?.HasMixedUse ?? false,
+            YearOfConstruction =
+                dto.ConstructionYear ?? previous?.YearOfConstruction,
+            YearOfLastMajorRenovation =
+                dto.RenovationYear ??
+                previous?.YearOfLastMajorRenovation,
+            GrossFloorAreaM2 =
+                dto.GrossFloorAreaM2 ?? previous?.GrossFloorAreaM2,
+            NetFloorAreaM2 =
+                dto.NetFloorAreaM2 ?? previous?.NetFloorAreaM2,
+            ConditionedFloorAreaM2 =
+                dto.ConditionedFloorAreaM2 ??
+                previous?.ConditionedFloorAreaM2,
+            HeatedFloorAreaM2 =
+                dto.HeatedFloorAreaM2 ?? previous?.HeatedFloorAreaM2,
+            CooledFloorAreaM2 =
+                dto.CooledFloorAreaM2 ?? previous?.CooledFloorAreaM2,
+            BuildingVolumeM3 =
+                dto.BuildingVolumeM3 ?? previous?.BuildingVolumeM3,
+            Latitude = previous?.Latitude,
+            Longitude = previous?.Longitude,
+            NumberOfFloors =
+                dto.NumberOfFloors ?? previous?.NumberOfFloors,
+            NumberOfUsageUnits = previous?.NumberOfUsageUnits,
+            IsProtectedBuilding =
+                previous?.IsProtectedBuilding ?? false,
+            IsTemporaryBuilding =
+                previous?.IsTemporaryBuilding ?? false,
+            DataOrigin = DataOrigin.Imported,
+            LastImportId = context.ImportId,
+            LastModifiedSource = LastModifiedSource.Import
+        };
+
+        _dbContext.BuildingVersions.Add(version);
+        building.Versions.Add(version);
+    }
+
+    private async Task<Address?> BuildImportedAddressAsync(
+        BuildingImportDto dto,
+        Address? previous,
+        CancellationToken cancellationToken)
+    {
+        var countryCode = NormalizeOptional(dto.Country);
+        var country = countryCode is null
+            ? previous?.Country
+            : await _dbContext.Countries.SingleOrDefaultAsync(
+                x => x.IsoCode2 == NormalizeCountryCode(countryCode),
+                cancellationToken);
+        if (country is null)
+            return previous;
+
+        PostalCodeArea? postalCodeArea = previous?.PostalCodeArea;
+        var postalCode = NormalizeOptional(dto.PostalCode);
+        if (postalCode is not null)
+        {
+            postalCodeArea = await _dbContext.PostalCodeAreas
+                .SingleOrDefaultAsync(
+                    x => x.CountryId == country.Id &&
+                         x.Code == postalCode,
+                    cancellationToken);
+            if (postalCodeArea is null)
+            {
+                postalCodeArea = new PostalCodeArea
+                {
+                    CountryId = country.Id,
+                    Code = postalCode,
+                    Name = NormalizeOptional(dto.City),
+                    DataOrigin = DataOrigin.Imported,
+                    LastModifiedSource = LastModifiedSource.Import
+                };
+                _dbContext.PostalCodeAreas.Add(postalCodeArea);
+            }
+        }
+
+        return new Address
+        {
+            CountryId = country.Id,
+            Country = country,
+            PostalCodeAreaId = postalCodeArea?.Id,
+            PostalCodeArea = postalCodeArea,
+            Street = NormalizeOptional(dto.Street) ?? previous?.Street,
+            HouseNumber =
+                NormalizeOptional(dto.HouseNumber) ??
+                previous?.HouseNumber,
+            AddressAddition =
+                NormalizeOptional(dto.AddressAddition) ??
+                previous?.AddressAddition,
+            City = NormalizeOptional(dto.City) ?? previous?.City,
+            Latitude = previous?.Latitude,
+            Longitude = previous?.Longitude,
+            DataOrigin = DataOrigin.Imported,
+            LastModifiedSource = LastModifiedSource.Import
+        };
+    }
+
+    private static bool HasBuildingVersionData(BuildingImportDto dto) =>
+        new[]
+        {
+            dto.Street, dto.HouseNumber, dto.AddressAddition,
+            dto.PostalCode, dto.City, dto.Country, dto.BuildingType,
+            dto.UsageType, dto.BuildingState
+        }.Any(value => !string.IsNullOrWhiteSpace(value)) ||
+        dto.ConstructionYear.HasValue ||
+        dto.RenovationYear.HasValue ||
+        dto.GrossFloorAreaM2.HasValue ||
+        dto.NetFloorAreaM2.HasValue ||
+        dto.ConditionedFloorAreaM2.HasValue ||
+        dto.HeatedFloorAreaM2.HasValue ||
+        dto.CooledFloorAreaM2.HasValue ||
+        dto.BuildingVolumeM3.HasValue ||
+        dto.NumberOfFloors.HasValue;
+
+    private static TEnum? ParseEnum<TEnum>(string? value)
+        where TEnum : struct, Enum =>
+        Enum.TryParse<TEnum>(NormalizeOptional(value), true, out var parsed)
+            ? parsed
+            : null;
 
     private async Task EnsureCustomerBuildingAssignmentsAsync(
         ImportWriteContext context,
@@ -325,10 +504,30 @@ public sealed class DatabaseImportWriter : IImportWriter
             }
 
             meter.Name = FirstNonEmpty(
+                dto.Name,
                 dto.ProfileName,
+                meter.Name,
                 meterNumber);
 
-            meter.Unit = ParseMeterUnit(dto.Unit);
+            var importedUnit = ParseMeterUnit(dto.Unit);
+            if (importedUnit != MeterUnit.Unknown ||
+                meter.Unit == MeterUnit.Unknown)
+            {
+                meter.Unit = importedUnit;
+            }
+            var importedQuantity = DeriveMeterQuantity(importedUnit);
+            if (importedQuantity != MeterQuantity.Unknown ||
+                meter.Quantity == MeterQuantity.Unknown)
+            {
+                meter.Quantity = importedQuantity;
+            }
+            if (dto.AnnualValue.HasValue)
+            {
+                meter.AnnualValue = dto.AnnualValue;
+                meter.AnnualValueOrigin = "ImportedAnnualTotal";
+                meter.AnnualValueReferenceYear =
+                    dto.AnnualValueReferenceYear;
+            }
             meter.Medium = dto.ProfileName switch
             {
                 nameof(ImportMedium.Electricity) => MeterMedium.Electricity,
@@ -486,7 +685,7 @@ public sealed class DatabaseImportWriter : IImportWriter
                 ParsingError = dto.ErrorMessage ?? dto.ParsingError
             };
             _dbContext.ImportedMeterReadings.Add(raw);
-            result.Add(new RawReadingCandidate(dto, raw));
+            result.Add(new RawReadingCandidate(dto, raw, meter));
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -507,6 +706,14 @@ public sealed class DatabaseImportWriter : IImportWriter
             .ToList();
         if (eligible.Count == 0)
             return;
+
+        var inferredIntervals = eligible
+            .GroupBy(candidate => candidate.Raw.MeterId!.Value)
+            .ToDictionary(
+                group => group.Key,
+                group => InferFixedIntervalSeconds(
+                    group.Select(candidate =>
+                        candidate.Raw.Timestamp!.Value)));
 
         var meterIds = eligible
             .Select(candidate => candidate.Raw.MeterId!.Value)
@@ -542,17 +749,36 @@ public sealed class DatabaseImportWriter : IImportWriter
                 MeterId = meterId,
                 Timestamp = timestamp,
                 Value = candidate.Raw.Value!.Value,
-                ReadingType = MeterReadingType.Unknown,
+                ReadingType = candidate.Dto.ReadingType,
+                IntervalSeconds = candidate.Dto.IntervalSeconds ??
+                    inferredIntervals[meterId],
                 QualityFlag = ParseDataQuality(candidate.Raw.Quality),
                 SourceRawReadingId = candidate.Raw.Id,
                 SourceImportJobId = context.ImportId
             });
+
+            var importedUnit = ParseMeterUnit(candidate.Dto.Unit);
+            var importedQuantity = DeriveMeterQuantity(importedUnit);
+            if (candidate.Meter is not null)
+            {
+                if (candidate.Meter.Unit == MeterUnit.Unknown &&
+                    importedUnit != MeterUnit.Unknown)
+                {
+                    candidate.Meter.Unit = importedUnit;
+                }
+                if (candidate.Meter.Quantity == MeterQuantity.Unknown &&
+                    importedQuantity != MeterQuantity.Unknown)
+                {
+                    candidate.Meter.Quantity = importedQuantity;
+                }
+            }
         }
     }
 
     private sealed record RawReadingCandidate(
         MeterReadingImportDto Dto,
-        ImportedMeterReading Raw);
+        ImportedMeterReading Raw,
+        Meter? Meter);
 
     private static string ResolveCustomerNumber(
         string? externalCustomerId,
@@ -612,6 +838,46 @@ public sealed class DatabaseImportWriter : IImportWriter
             "%" => MeterUnit.Percent,
             _ => MeterUnit.Unknown
         };
+    }
+
+    private static MeterQuantity DeriveMeterQuantity(MeterUnit unit) =>
+        unit switch
+        {
+            MeterUnit.Wh or MeterUnit.KWh or MeterUnit.MWh =>
+                MeterQuantity.Energy,
+            MeterUnit.W or MeterUnit.KW or MeterUnit.MW =>
+                MeterQuantity.Power,
+            MeterUnit.CubicMeter or MeterUnit.Liter =>
+                MeterQuantity.Volume,
+            MeterUnit.CubicMeterPerHour or
+                MeterUnit.LiterPerSecond => MeterQuantity.Flow,
+            MeterUnit.Celsius or MeterUnit.Kelvin =>
+                MeterQuantity.Temperature,
+            MeterUnit.Pascal or MeterUnit.Bar =>
+                MeterQuantity.Pressure,
+            MeterUnit.Volt => MeterQuantity.Voltage,
+            MeterUnit.Ampere => MeterQuantity.Current,
+            MeterUnit.Hertz => MeterQuantity.Frequency,
+            MeterUnit.WattPerSquareMeter =>
+                MeterQuantity.Irradiance,
+            MeterUnit.MeterPerSecond => MeterQuantity.WindSpeed,
+            _ => MeterQuantity.Unknown
+        };
+
+    private static int? InferFixedIntervalSeconds(
+        IEnumerable<DateTime> timestamps)
+    {
+        var ordered = timestamps.Distinct().OrderBy(x => x).ToList();
+        if (ordered.Count < 2)
+            return null;
+
+        var gaps = ordered
+            .Zip(ordered.Skip(1), (left, right) =>
+                (int)(right - left).TotalSeconds)
+            .Where(seconds => seconds > 0)
+            .Distinct()
+            .ToList();
+        return gaps.Count == 1 ? gaps[0] : null;
     }
 
     private static DataQuality ParseDataQuality(int? qualityFlag)

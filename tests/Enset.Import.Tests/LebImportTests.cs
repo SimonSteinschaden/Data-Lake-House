@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using ClosedXML.Excel;
 using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Exceptions;
 using Enset.Application.Imports.Leb;
@@ -93,9 +92,12 @@ public sealed class LebImportTests
         Assert.Equal("LEB:GEM:123", Assert.Single(workbook.Customers).InternalCustomerId);
         Assert.Equal("LEB:GEM:123:GEB:45",
             Assert.Single(workbook.Buildings).InternalBuildingId);
-        Assert.Equal("LEB:GEM:123:GEB:45:Z:99",
-            Assert.Single(workbook.Meters).MeterNumber);
-        Assert.Equal("Electricity", Assert.Single(workbook.Meters).ProfileName);
+        var meter = Assert.Single(workbook.Meters);
+        Assert.Equal("99", meter.MeterNumber);
+        Assert.Equal("Hauptzähler", meter.Name);
+        Assert.Equal("Electricity", meter.ProfileName);
+        Assert.Equal(78m, meter.AnnualValue);
+        Assert.Equal(2025, meter.AnnualValueReferenceYear);
         Assert.Equal(2, workbook.MeterReadings.Count);
         Assert.StartsWith("2025-01-01", workbook.MeterReadings[0].Timestamp);
         Assert.StartsWith("2025-02-01", workbook.MeterReadings[1].Timestamp);
@@ -155,63 +157,15 @@ public sealed class LebImportTests
         }
     }
 
-    [Fact]
-    public void XlsxReader_ReadsLebRows()
+    [Theory]
+    [InlineData(".xlsx")]
+    [InlineData(".xlsm")]
+    [InlineData(".xls")]
+    public void Reader_RejectsExcelFiles(string extension)
     {
-        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.xlsx");
-        try
-        {
-            using (var workbook = new XLWorkbook())
-            {
-                var sheet = workbook.AddWorksheet("Export");
-                var headers = Header.Split(';');
-                for (var column = 0; column < headers.Length; column++)
-                    sheet.Cell(1, column + 1).Value = headers[column];
-                var data = Data("7", "8", "9", "1", "12").Split(';');
-                for (var column = 0; column < data.Length; column++)
-                    sheet.Cell(2, column + 1).Value = data[column];
-                workbook.SaveAs(path);
-            }
-
-            var row = Assert.Single(new LebWorkbookReader().Read(path).Rows);
-            Assert.Equal("7", row.MunicipalityId);
-            Assert.Equal("8", row.BuildingId);
-            Assert.Equal("9", row.MeterId);
-        }
-        finally
-        {
-            File.Delete(path);
-        }
-    }
-
-    [Fact]
-    public void XlsxReader_UsesTheSameGeneratedHeaderSchema()
-    {
-        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.xlsx");
-        try
-        {
-            using (var workbook = new XLWorkbook())
-            {
-                var sheet = workbook.AddWorksheet("Export");
-                var headers = RealHeader.Split(';');
-                var data = RealData("NÖ").Split(';');
-                for (var index = 0; index < headers.Length; index++)
-                    sheet.Cell(1, index + 1).Value = headers[index];
-                for (var index = 0; index < data.Length; index++)
-                    sheet.Cell(2, index + 1).Value = data[index];
-                workbook.SaveAs(path);
-            }
-
-            var result = new LebWorkbookReader().Read(path);
-            Assert.Equal("Tabelle1", result.Columns[2].EffectiveHeader);
-            Assert.Equal("NÖ", Assert.Single(result.Rows).SourceValues["Tabelle1"]);
-            Assert.Equal("ReadingYear", result.Columns[12].EffectiveHeader);
-            Assert.Equal("AnnualTotal", result.Columns[31].EffectiveHeader);
-        }
-        finally
-        {
-            File.Delete(path);
-        }
+        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}{extension}");
+        Assert.Throws<InvalidImportFileException>(
+            () => new LebWorkbookReader().Read(path));
     }
 
     [Fact]

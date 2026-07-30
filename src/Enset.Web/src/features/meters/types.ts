@@ -49,6 +49,13 @@ export interface MeterSummary {
   dataMaturity: "Bronze" | "Silver" | "Gold";
   goldReadinessPercent: number;
   isDeleted: boolean;
+  qualityLevel: "Bronze" | "Silver" | "Gold";
+  quantity: string | null;
+  readingType: string | null;
+  intervalSeconds: number | null;
+  annualValueStatus: "CompleteYear" | "IncompleteYear" | "NotAvailable";
+  annualValueUnit: string | null;
+  annualValueReferenceYear: number | null;
 }
 
 export interface MeterDetail extends MeterSummary, EntityMetadata {

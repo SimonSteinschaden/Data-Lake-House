@@ -13,6 +13,13 @@ export interface BuildingSummary {
   dataMaturity: "Bronze" | "Silver" | "Gold";
   goldReadinessPercent: number;
   isDeleted: boolean;
+  qualityLevel: "Bronze" | "Silver" | "Gold";
+  postalCode: string | null;
+  city: string | null;
+  municipalityId: string | null;
+  municipality: string | null;
+  conditionedFloorArea: number | null;
+  constructionYear: number | null;
 }
 
 export interface BuildingCustomer {
@@ -56,6 +63,10 @@ export interface BuildingDetail extends EntityMetadata {
   city: string | null;
   street: string | null;
   houseNumber: string | null;
+  qualityLevel: "Bronze" | "Silver" | "Gold";
+  municipalityId: string | null;
+  municipality: string | null;
+  conditionedFloorArea: number | null;
   customers: BuildingCustomer[];
   meters: BuildingMeter[];
 }

@@ -15,6 +15,8 @@ import { MeterReadingForm } from "../features/meterReadings/MeterReadingForm";
 import { CurationReadinessPanel } from "../features/curation/CurationReadinessPanel";
 import { DataProductReadinessPanel } from "../features/dataProductReadiness/DataProductReadinessPanel";
 import { GoldProfileVersionsPanel } from "../features/goldProfiles/GoldProfileVersionsPanel";
+import { internalDataProductService } from "../services/internalDataProductService";
+import type { MeterSummaryProduct } from "../features/internalDataProducts/types";
 
 const mediumLabel: Record<string, string> = {
   Electricity: "Strom", Gas: "Gas", Heat: "Wärme", Cooling: "Kälte", Water: "Wasser",
@@ -106,6 +108,7 @@ function List() {
 
 function Detail({ id }: { id: string }) {
   const [item, setItem] = useState<MeterDetail>();
+  const [summary, setSummary] = useState<MeterSummaryProduct>();
   const [readings, setReadings] = useState<PagedResult<MeterReading>>();
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
@@ -119,10 +122,11 @@ function Detail({ id }: { id: string }) {
   const [page, setPage] = useState(1);
   const load = useCallback(async () => {
     try {
-      const [meter, values] = await Promise.all([
+      const [meter, values, product] = await Promise.all([
         meterService.get(id), meterReadingService.list(id, from, to, page),
+        internalDataProductService.meter(id),
       ]);
-      setItem(meter); setReadings(values);
+      setItem(meter); setReadings(values); setSummary(product);
     } catch (loadError) { setError(errorMessage(loadError)); }
   }, [id, from, to, page]);
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -166,6 +170,16 @@ function Detail({ id }: { id: string }) {
       </button>
     </div>
     <EntityMetadataBar entity={item} />
+    {summary && <section className="detail-section"><h2>Fachliche Summary</h2>
+      <dl className="detail-grid">
+        <div><dt>Jahreswert</dt><dd>{summary.annualValue ?? "Nicht verfügbar"}</dd></div>
+        <div><dt>Messwerte</dt><dd>{summary.readingCount}</dd></div>
+        <div><dt>Vollständigkeit</dt><dd>{summary.completenessPercentage == null
+          ? "Nicht bestimmbar" : `${summary.completenessPercentage} %`}</dd></div>
+        <div><dt>Gold-Reife</dt><dd>{summary.maturity.goldMaturityPercentage} %</dd></div>
+        <div><dt>Offene Curation Tasks</dt><dd>{summary.openCurationTaskCount}</dd></div>
+      </dl>
+    </section>}
     <section className="detail-section"><h2>Stammdaten</h2><dl className="detail-grid">
       <div><dt>Zählpunktnummer</dt><dd>{item.meterNumber}</dd></div>
       <div><dt>Interne ID</dt><dd>{item.name}</dd></div>

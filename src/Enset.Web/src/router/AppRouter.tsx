@@ -5,6 +5,7 @@ import { BuildingsPage } from "../pages/BuildingsPage";
 import { CustomersPage } from "../pages/CustomersPage";
 import { DashboardPage } from "../pages/DashboardPage";
 import { ImportPage } from "../pages/ImportPage";
+import { ExportsPage } from "../pages/ExportsPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { DataProductsPage } from "../pages/DataProductsPage";
@@ -22,6 +23,7 @@ export function AppRouter() {
         <Route index element={<DashboardPage />} />
 
         <Route path="imports" element={<ImportPage />} />
+        <Route path="exports" element={<ExportsPage />} />
 
         <Route path="customers" element={<CustomersPage />} />
         <Route

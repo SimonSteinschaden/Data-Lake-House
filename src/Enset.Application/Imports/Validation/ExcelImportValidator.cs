@@ -164,7 +164,72 @@ public class ExcelImportValidator : IImportValidator
                 DateTime.UtcNow);
             issues.Add(issue);
         }
+
+        var mappedReadings = readings
+            .Select(MeterReadingExcelRowMapper.ToDto)
+            .Where(reading =>
+                !reading.HasError &&
+                !string.IsNullOrWhiteSpace(reading.MeterNumber))
+            .ToList();
+        foreach (var series in mappedReadings.GroupBy(
+                     reading => reading.MeterNumber,
+                     StringComparer.OrdinalIgnoreCase))
+        {
+            var timestamps = series
+                .Where(reading => reading.Timestamp.HasValue)
+                .Select(reading => reading.Timestamp!.Value)
+                .Distinct()
+                .OrderBy(timestamp => timestamp)
+                .ToList();
+            var gaps = timestamps
+                .Zip(timestamps.Skip(1), (left, right) =>
+                    (right - left).TotalSeconds)
+                .Where(seconds => seconds > 0)
+                .Distinct()
+                .ToList();
+            if (gaps.Count > 1)
+            {
+                issues.Add(new ImportIssue
+                {
+                    Type = ImportIssueType.InvalidValue,
+                    Severity = ImportIssueSeverity.Warning,
+                    FieldName = "Interval",
+                    FirstValue = series.Key,
+                    Message =
+                        $"Meter '{series.Key}' contains mixed timestamp intervals; no interval is persisted.",
+                    RequiresUserDecision = false
+                });
+            }
+        }
+
+        foreach (var unit in mappedReadings
+                     .Select(reading => reading.Unit?.Trim())
+                     .Where(unit => !string.IsNullOrWhiteSpace(unit))
+                     .Distinct(StringComparer.OrdinalIgnoreCase)
+                     .Where(unit => !IsKnownPhysicalUnit(unit!)))
+        {
+            issues.Add(new ImportIssue
+            {
+                Type = ImportIssueType.InvalidValue,
+                Severity = ImportIssueSeverity.Warning,
+                FieldName = "Unit",
+                FirstValue = unit,
+                Message =
+                    $"Unit '{unit}' cannot be mapped to a physical quantity; Quantity remains Unknown.",
+                RequiresUserDecision = false
+            });
+        }
     }
+
+    private static bool IsKnownPhysicalUnit(string unit) =>
+        new[]
+        {
+            "wh", "kwh", "mwh", "w", "kw", "mw", "m3", "m³",
+            "m3/h", "m³/h", "l", "l/s", "°c", "c", "k", "pa",
+            "bar", "v", "a", "hz", "w/m2", "w/m²", "m/s", "%"
+        }.Contains(
+            unit.Replace(" ", string.Empty).ToLowerInvariant(),
+            StringComparer.Ordinal);
 
     private static void AddIssue(
         ICollection<ImportIssue> issues,

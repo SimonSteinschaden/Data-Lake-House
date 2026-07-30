@@ -1,5 +1,12 @@
 # Gold-Profil-Versionierung und Data Product Readiness
 
+> Phase-B-Hinweis: `GoldProfileVersion` bleibt die persistierte Versions- und
+> Freigabestruktur. Ihr fachlicher Inhalt ist Teil der allgemeinen
+> Canonical-Snapshot-Schicht. `Released`, `IsCurrent` und das Quality Level
+> `Gold` sind unabhängige Zustände. Internal Data Products konsumieren
+> ausschließlich `ICanonicalSnapshotReader` und lesen Gold-Versionen oder
+> `CuratedFieldValues` nicht direkt.
+
 Gold-Profile können als unveränderliche Snapshots versioniert werden. Der
 SHA-256-Hash enthält ausschließlich den fachlichen Snapshot; Datenbank-ID,
 Ersteller, Zeitstempel und `xmin` gehören nicht zum Hash. Ein identischer Hash

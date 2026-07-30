@@ -29,11 +29,11 @@ public class BuildingVersion : BaseEntity
 
     public string? BuildingRegistryIdentifier { get; set; }
 
-    public PrimaryUseType PrimaryUseType { get; set; }
+    public PrimaryUseType? PrimaryUseType { get; set; }
 
-    public BuildingCategory BuildingCategory { get; set; }
+    public BuildingCategory? BuildingCategory { get; set; }
 
-    public OwnershipType OwnershipType { get; set; }
+    public OwnershipType? OwnershipType { get; set; }
 
     public bool IsResidential { get; set; }
 

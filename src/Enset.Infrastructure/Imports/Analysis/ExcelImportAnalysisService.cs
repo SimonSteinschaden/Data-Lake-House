@@ -141,26 +141,10 @@ public sealed class ExcelImportAnalysisService : IImportAnalysisService
         ImportMedium? medium,
         string? defaultMeterNumber)
     {
-        var extension = Path.GetExtension(fileName).ToLowerInvariant();
-        if (sourceType == ImportSourceType.CRM_Excel &&
-            extension is not ".xlsx" and not ".xlsm")
-        {
-            throw new InvalidImportFileException(
-                "CRM_Excel supports only .xlsx and .xlsm workbooks.");
-        }
-
-        if (sourceType == ImportSourceType.Csv && extension != ".csv")
-        {
-            throw new InvalidImportFileException(
-                "The CSV load-profile source requires a .csv file.");
-        }
+        ValidateFileExtension(fileName, sourceType);
 
         if (sourceType == ImportSourceType.Landesenergiebuchhaltung)
         {
-            if (extension is not ".xlsx" and not ".xlsm")
-                throw new InvalidImportFileException(
-                    "Die Landesenergiebuchhaltung benötigt eine .xlsx- oder .xlsm-Datei.");
-
             if (medium is null)
                 throw new InvalidImportFileException(
                     "Für die Landesenergiebuchhaltung muss das Medium ausgewählt werden.");
@@ -183,7 +167,34 @@ public sealed class ExcelImportAnalysisService : IImportAnalysisService
             _ => throw new InvalidImportFileException(
                 $"Import source '{sourceType}' is not supported for this file.")
         };
+
         return (reader, new ExcelImportValidator());
+    }
+
+    public static void ValidateFileExtension(
+        string fileName,
+        ImportSourceType sourceType)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        if (sourceType == ImportSourceType.CRM_Excel &&
+            extension is not ".xlsx" and not ".xlsm")
+        {
+            throw new InvalidImportFileException(
+                "CRM_Excel supports only .xlsx and .xlsm workbooks.");
+        }
+
+        if (sourceType == ImportSourceType.Csv && extension != ".csv")
+        {
+            throw new InvalidImportFileException(
+                "Das Lastprofil erwartet eine CSV-Datei (*.csv).");
+        }
+
+        if (sourceType == ImportSourceType.Landesenergiebuchhaltung)
+        {
+            if (extension != ".csv")
+                throw new InvalidImportFileException(
+                    "Die Landesenergiebuchhaltung erwartet eine CSV-Datei (*.csv).");
+        }
     }
 
     private static async Task<string> CalculateSha256Async(

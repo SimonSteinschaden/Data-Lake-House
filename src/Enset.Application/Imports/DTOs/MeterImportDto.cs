@@ -4,11 +4,17 @@ public sealed class MeterImportDto
 {
     public string MeterNumber { get; set; } = string.Empty;
 
+    public string? Name { get; set; }
+
     public string FileName { get; set; } = string.Empty;
 
     public string? ProfileName { get; set; }
 
     public string? Unit { get; set; }
+
+    public decimal? AnnualValue { get; set; }
+
+    public int? AnnualValueReferenceYear { get; set; }
 
     public string? PostalCode { get; set; }
 

@@ -79,8 +79,20 @@ public sealed class LebImportValidator(LebWorkbookDto source) : IImportValidator
             }
 
             if (!string.IsNullOrWhiteSpace(row.AnnualValue))
+            {
                 AddNumberFormatIssueWhenNeeded(
                     report, row.RowNumber, "AnnualTotal", row.AnnualValue);
+                if (TryParseDecimal(row.AnnualValue, out var annualValue) &&
+                    annualValue < 0)
+                {
+                    Add(
+                        report,
+                        row.RowNumber,
+                        "AnnualTotal",
+                        "Ein importierter Jahresgesamtwert darf nicht negativ sein.",
+                        row.AnnualValue);
+                }
+            }
         }
 
         return report;
@@ -173,4 +185,16 @@ public sealed class LebImportValidator(LebWorkbookDto source) : IImportValidator
 
     private static string MonthName(int month) =>
         new DateTime(2000, month, 1).ToString("MMM", CultureInfo.GetCultureInfo("de-AT"));
+
+    private static bool TryParseDecimal(string value, out decimal parsed) =>
+        decimal.TryParse(
+            value.Trim(),
+            NumberStyles.Number,
+            CultureInfo.GetCultureInfo("de-AT"),
+            out parsed) ||
+        decimal.TryParse(
+            value.Trim(),
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out parsed);
 }

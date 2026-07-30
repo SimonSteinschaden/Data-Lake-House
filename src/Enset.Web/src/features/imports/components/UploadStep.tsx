@@ -9,6 +9,28 @@ type ImportSourceType =
 
 type ImportMedium = "Electricity" | "Heat";
 
+const importSourceOptions: ReadonlyArray<{
+  value: ImportSourceType;
+  label: string;
+  supportedFormats: string;
+}> = [
+  {
+    value: "CRM_Excel",
+    label: "CRM Excel",
+    supportedFormats: ".xlsx und .xlsm",
+  },
+  {
+    value: "Landesenergiebuchhaltung",
+    label: "Landesenergiebuchhaltung (CSV)",
+    supportedFormats: ".csv",
+  },
+  {
+    value: "Csv",
+    label: "Lastprofil (CSV)",
+    supportedFormats: ".csv",
+  },
+];
+
 interface UploadStepProps {
   selectedFile: File | null;
   sourceType: ImportSourceType;
@@ -41,6 +63,10 @@ export function UploadStep({
 
   const requiresMedium =
     sourceType === "Landesenergiebuchhaltung";
+  const selectedSource =
+    importSourceOptions.find(
+      (option) => option.value === sourceType,
+    ) ?? importSourceOptions[0];
 
   const canAnalyze =
     selectedFile !== null &&
@@ -78,7 +104,6 @@ export function UploadStep({
             name="import-file"
             className="import-wizard__file-input"
             type="file"
-            accept=".xlsx,.xlsm,.csv,text/csv"
             onChange={handleFileChange}
             disabled={isAnalyzing}
           />
@@ -102,7 +127,8 @@ export function UploadStep({
             </dl>
           ) : (
             <p className="import-wizard__hint">
-              Unterstützte Formate: .xlsx, .xlsm und .csv
+              Unterstützte Formate:{" "}
+              {selectedSource.supportedFormats}
             </p>
           )}
         </div>
@@ -110,46 +136,19 @@ export function UploadStep({
         <fieldset disabled={isAnalyzing}>
           <legend>Importquelle</legend>
 
-          <label>
-            <input
-              type="radio"
-              name="sourceType"
-              checked={sourceType === "CRM_Excel"}
-              onChange={() =>
-                onSourceTypeChanged("CRM_Excel")
-              }
-            />
-            CRM Excel
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              name="sourceType"
-              checked={
-                sourceType ===
-                "Landesenergiebuchhaltung"
-              }
-              onChange={() =>
-                onSourceTypeChanged(
-                  "Landesenergiebuchhaltung",
-                )
-              }
-            />
-            Landesenergiebuchhaltung
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              name="sourceType"
-              checked={sourceType === "Csv"}
-              onChange={() =>
-                onSourceTypeChanged("Csv")
-              }
-            />
-            CSV-Lastprofil
-          </label>
+          {importSourceOptions.map((option) => (
+            <label key={option.value}>
+              <input
+                type="radio"
+                name="sourceType"
+                checked={sourceType === option.value}
+                onChange={() =>
+                  onSourceTypeChanged(option.value)
+                }
+              />
+              {option.label}
+            </label>
+          ))}
         </fieldset>
 
         {requiresMedium && (

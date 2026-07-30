@@ -105,6 +105,91 @@ public sealed class RawMeterReadingPersistenceTests
         Assert.Equal(2, await db.ImportedMeterReadings.CountAsync());
     }
 
+    [Theory]
+    [InlineData("kWh", MeterQuantity.Energy)]
+    [InlineData("kW", MeterQuantity.Power)]
+    public async Task UnitDerivesMeterQuantity(
+        string unit,
+        MeterQuantity expected)
+    {
+        await using var db = CreateDatabase();
+        var meter = new Meter
+        {
+            MeterNumber = "KNOWN",
+            Name = "Known meter"
+        };
+        db.Meters.Add(meter);
+        await db.SaveChangesAsync();
+        var reading = Reading(
+            2,
+            "KNOWN",
+            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            1m,
+            "2026-01-01",
+            "1");
+        reading.Unit = unit;
+        reading.ReadingType = MeterReadingType.IntervalValue;
+
+        await WriteAsync(db, Report(Guid.NewGuid(), reading));
+
+        Assert.Equal(expected, meter.Quantity);
+        Assert.Equal(
+            MeterReadingType.IntervalValue,
+            Assert.Single(await db.MeterReadings.ToListAsync()).ReadingType);
+    }
+
+    [Theory]
+    [InlineData(15, 900)]
+    [InlineData(60, 3600)]
+    public async Task FixedTimestampGridPersistsInterval(
+        int minutes,
+        int expectedSeconds)
+    {
+        await using var db = CreateDatabase();
+        db.Meters.Add(new Meter
+        {
+            MeterNumber = "KNOWN",
+            Name = "Known meter"
+        });
+        await db.SaveChangesAsync();
+        var start =
+            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        await WriteAsync(db, Report(
+            Guid.NewGuid(),
+            Reading(2, "KNOWN", start, 1m, "start", "1"),
+            Reading(3, "KNOWN", start.AddMinutes(minutes), 2m, "next", "2"),
+            Reading(4, "KNOWN", start.AddMinutes(minutes * 2), 3m, "last", "3")));
+
+        Assert.All(
+            await db.MeterReadings.ToListAsync(),
+            reading => Assert.Equal(expectedSeconds, reading.IntervalSeconds));
+    }
+
+    [Fact]
+    public async Task IrregularTimestampGridDoesNotInventInterval()
+    {
+        await using var db = CreateDatabase();
+        db.Meters.Add(new Meter
+        {
+            MeterNumber = "KNOWN",
+            Name = "Known meter"
+        });
+        await db.SaveChangesAsync();
+        var start =
+            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        await WriteAsync(db, Report(
+            Guid.NewGuid(),
+            Reading(2, "KNOWN", start, 1m, "start", "1"),
+            Reading(3, "KNOWN", start.AddMinutes(15), 2m, "next", "2"),
+            Reading(4, "KNOWN", start.AddMinutes(45), 3m, "last", "3")));
+
+        Assert.All(
+            await db.MeterReadings.ToListAsync(),
+            reading => Assert.Null(reading.IntervalSeconds));
+    }
+
     private static EnsetDbContext CreateDatabase()
     {
         var options = new DbContextOptionsBuilder<EnsetDbContext>()

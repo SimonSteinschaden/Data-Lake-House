@@ -1,5 +1,6 @@
 using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Models;
+using Enset.Domain.Energy;
 
 namespace Enset.Application.Imports.Mapping;
 
@@ -34,7 +35,11 @@ public static class CsvMeterReadingMappingService
                 QualitySource = mapping.QualityColumn is null
                     ? ImportFieldSource.Generated
                     : mapping.QualitySource,
-                ParsingError = raw.ParsingError
+                ParsingError = raw.ParsingError,
+                ReadingType = MeterReadingType.IntervalValue,
+                IntervalSeconds = mapping.SamplingInterval.HasValue
+                    ? checked((int)mapping.SamplingInterval.Value.TotalSeconds)
+                    : null
             };
         }).ToList();
     }

@@ -2,7 +2,13 @@ namespace Enset.Application.ReadModel;
 
 public sealed record CustomerSummaryDto(Guid Id, string CustomerNumber, string Name,
     string? PostalCode, string? City, string? Phone, string? Email,
-    bool IsActive, bool IsDeleted, int BuildingCount);
+    bool IsActive, bool IsDeleted, int BuildingCount)
+{
+    public string QualityLevel { get; init; } = "Bronze";
+    public int MeterCount { get; init; }
+    public string? MunicipalityId { get; init; }
+    public string? Municipality { get; init; }
+}
 
 public sealed record CustomerBuildingDto(Guid Id, string BuildingNumber, string Name,
     string Role, bool IsPrimary, string? UsageType, int MeterCount, string DataMaturity);
@@ -13,12 +19,26 @@ public sealed record CustomerDetailDto(Guid Id, string CustomerNumber, string Na
     string CountryCode, bool IsActive, IReadOnlyList<CustomerBuildingDto> Buildings,
     string DataOrigin, DateTime CreatedAtUtc, Guid? CreatedByUserId,
     DateTime? UpdatedAtUtc, Guid? UpdatedByUserId, bool IsDeleted, uint RowVersion,
-    int MeterCount, int EnergySystemCount);
+    int MeterCount, int EnergySystemCount)
+{
+    public string QualityLevel { get; init; } = "Bronze";
+    public string? MunicipalityId { get; init; }
+    public string? Municipality { get; init; }
+}
 
 public sealed record BuildingSummaryDto(Guid Id, string BuildingNumber, string Name,
     string? BuildingCategory, string? PrimaryUseType, string? CustomerNumber,
     string? CustomerName, int MeterCount, string BenchmarkState,
-    string DataMaturity, int GoldReadinessPercent, bool IsDeleted);
+    string DataMaturity, int GoldReadinessPercent, bool IsDeleted)
+{
+    public string QualityLevel { get; init; } = "Bronze";
+    public string? PostalCode { get; init; }
+    public string? City { get; init; }
+    public string? MunicipalityId { get; init; }
+    public string? Municipality { get; init; }
+    public decimal? ConditionedFloorArea { get; init; }
+    public int? ConstructionYear { get; init; }
+}
 
 public sealed record BuildingCustomerDto(Guid CustomerId, string CustomerNumber,
     string CustomerName, string Role, bool IsPrimary);
@@ -36,14 +56,29 @@ public sealed record BuildingDetailDto(Guid Id, string BuildingNumber, string Na
     int? YearOfConstruction, decimal? Latitude, decimal? Longitude,
     string? BuildingCategory, string? PrimaryUseType, decimal? HeatedFloorAreaM2,
     int? YearOfLastMajorRenovation, string BenchmarkState, string? PostalCode,
-    string? City, string? Street, string? HouseNumber);
+    string? City, string? Street, string? HouseNumber)
+{
+    public string QualityLevel { get; init; } = "Bronze";
+    public string? MunicipalityId { get; init; }
+    public string? Municipality { get; init; }
+    public decimal? ConditionedFloorArea { get; init; }
+}
 
 public sealed record MeterSummaryDto(Guid Id, string MeterNumber, string Name,
     string Medium, string Unit, string Direction, Guid? BuildingId, string? BuildingNumber,
     string? BuildingName, string? CustomerNumber, string? CustomerName,
     decimal? AnnualValue, string? AnnualValueOrigin, long ReadingCount,
     DateTime? FirstReadingAt, DateTime? LastReadingAt, string DataMaturity,
-    int GoldReadinessPercent, bool IsDeleted);
+    int GoldReadinessPercent, bool IsDeleted)
+{
+    public string QualityLevel { get; init; } = "Bronze";
+    public string? Quantity { get; init; }
+    public string? ReadingType { get; init; }
+    public int? IntervalSeconds { get; init; }
+    public string AnnualValueStatus { get; init; } = "NotAvailable";
+    public string? AnnualValueUnit { get; init; }
+    public int? AnnualValueReferenceYear { get; init; }
+}
 
 public sealed record MeterDetailDto(Guid Id, string MeterNumber, string Name,
     string? Description, string? ExternalIdentifier, string Medium, string Quantity,
@@ -54,7 +89,17 @@ public sealed record MeterDetailDto(Guid Id, string MeterNumber, string Name,
     string DataOrigin, DateTime CreatedAtUtc, Guid? CreatedByUserId,
     DateTime? UpdatedAtUtc, Guid? UpdatedByUserId, bool IsDeleted, uint RowVersion,
     string? BuildingNumber, string? CustomerNumber, string? CustomerName,
-    decimal? AnnualValue, string? AnnualValueOrigin, int? IntervalSeconds);
+    decimal? AnnualValue, string? AnnualValueOrigin, int? IntervalSeconds)
+{
+    public string QualityLevel { get; init; } = "Bronze";
+    public string? ReadingType { get; init; }
+    public string AnnualValueStatus { get; init; } = "NotAvailable";
+    public string? AnnualValueUnit { get; init; }
+    public int? AnnualValueReferenceYear { get; init; }
+    public long MeasurementCount => ReadingCount;
+    public DateTime? PeriodStart => FirstReadingAt;
+    public DateTime? PeriodEnd => LastReadingAt;
+}
 
 public sealed record RawMeterReadingDto(DateTime Timestamp, decimal Value,
     string Quality, int? IntervalSeconds);

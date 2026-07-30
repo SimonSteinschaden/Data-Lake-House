@@ -1,6 +1,7 @@
 namespace Enset.Application.Imports.Models;
 
 using Enset.Application.Imports.Enums;
+using Enset.Domain.Energy;
 
 public sealed class MeterReadingExcelRow
 {
@@ -19,4 +20,7 @@ public sealed class MeterReadingExcelRow
     public ImportFieldSource QualitySource { get; set; } =
         ImportFieldSource.FileColumn;
     public string? ParsingError { get; set; }
+    public MeterReadingType ReadingType { get; set; } =
+        MeterReadingType.Unknown;
+    public int? IntervalSeconds { get; set; }
 }

@@ -1,6 +1,7 @@
 namespace Enset.Application.Imports.DTOs;
 
 using Enset.Application.Imports.Enums;
+using Enset.Domain.Energy;
 
 public sealed class MeterReadingImportDto
 {
@@ -41,4 +42,9 @@ public sealed class MeterReadingImportDto
     public bool HasError { get; set; }
 
     public string? ErrorMessage { get; set; }
+
+    public MeterReadingType ReadingType { get; set; } =
+        MeterReadingType.Unknown;
+
+    public int? IntervalSeconds { get; set; }
 }

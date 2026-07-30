@@ -8,6 +8,7 @@ interface BreadcrumbItem {
 
 const routeLabels: Record<string, string> = {
   imports: "Importe",
+  exports: "Exporte",
   customers: "Kunden",
   buildings: "Gebäude",
   meters: "Zähler",

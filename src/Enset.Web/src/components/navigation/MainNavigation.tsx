@@ -5,6 +5,7 @@ import "./MainNavigation.css";
 interface NavigationItem {
   path?: string;
   label: string;
+  icon?: "export";
   end?: boolean;
   disabled?: boolean;
   internalCustomerAdministration?: boolean;
@@ -35,6 +36,11 @@ const navigationGroups: NavigationGroup[] = [
       {
         path: "/imports",
         label: "Importe",
+      },
+      {
+        path: "/exports",
+        label: "Exporte",
+        icon: "export",
       },
       {
         path: "/customers",
@@ -195,7 +201,10 @@ export function MainNavigation() {
                           : "main-navigation__link"
                       }
                     >
-                      {item.label}
+                      <span className="main-navigation__link-label">
+                        {item.icon === "export" && <ExportIcon />}
+                        <span>{item.label}</span>
+                      </span>
                     </NavLink>
                   )}
                 </li>
@@ -205,5 +214,21 @@ export function MainNavigation() {
         );
       })}
     </nav>
+  );
+}
+
+function ExportIcon() {
+  return (
+    <svg
+      className="main-navigation__icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      aria-hidden="true"
+    >
+      <path d="M12 3v11m0 0 4-4m-4 4-4-4" />
+      <path d="M5 14v5h14v-5" />
+    </svg>
   );
 }

@@ -199,7 +199,6 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("BuildingCategory")
-                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
@@ -278,12 +277,10 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("OwnershipType")
-                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
                     b.Property<string>("PrimaryUseType")
-                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
@@ -1416,6 +1413,9 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<int?>("AnnualValueReferenceYear")
+                        .HasColumnType("integer");
+
                     b.Property<Guid?>("BuildingId")
                         .HasColumnType("uuid");
 
@@ -1757,6 +1757,10 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("AddressAddition")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("City")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 

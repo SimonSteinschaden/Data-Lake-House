@@ -192,7 +192,12 @@ public class EnsetDbContext : DbContext
                     entity.DataOrigin == DataOrigin.Imported)
                     entity.DataOrigin = DataOrigin.ImportedAndModified;
 
-                var wasDeleted = entry.Property(nameof(BaseEntity.IsDeleted)).OriginalValue as bool? ?? false;
+                var deletedProperty =
+                    entry.Metadata.FindProperty(nameof(BaseEntity.IsDeleted));
+                var wasDeleted = deletedProperty is null
+                    ? entity.IsDeleted
+                    : entry.Property(nameof(BaseEntity.IsDeleted))
+                        .OriginalValue as bool? ?? false;
                 if (!wasDeleted && entity.IsDeleted)
                     entity.DeletedByUserId = userId;
                 changeType = !wasDeleted && entity.IsDeleted

@@ -1,423 +1,722 @@
 using Enset.Application.Authorization;
+using Enset.Application.CanonicalSnapshots;
 using Enset.Application.ReadModel;
 using Enset.Domain.Energy;
-using Enset.Domain.Curation;
+using Enset.Infrastructure.CanonicalSnapshots;
 using Enset.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Enset.Infrastructure.ReadModel;
 
-public sealed class EfEntityReadService : IEntityReadService
+public sealed class EfEntityReadService(
+    EnsetDbContext db,
+    IDataAccessScope scope,
+    ICanonicalSnapshotReader snapshots) : IEntityReadService
 {
     public const int MaximumPageSize = 200;
-    private readonly EnsetDbContext _db;
-    private readonly IDataAccessScope _scope;
 
     public EfEntityReadService(EnsetDbContext db, IDataAccessScope scope)
+        : this(
+            db,
+            scope,
+            new EfCanonicalSnapshotReader(
+                db,
+                scope,
+                TimeProvider.System))
     {
-        _db = db;
-        _scope = scope;
     }
 
     public async Task<PagedResult<CustomerSummaryDto>> GetCustomersAsync(
-        CustomerListQuery request, CancellationToken ct = default)
+        CustomerListQuery request,
+        CancellationToken ct = default)
     {
-        var (page, size) = Page(request.Page, request.PageSize);
-        var now = DateTime.UtcNow;
-        var source = request.IncludeDeleted
-            ? _db.Customers.IgnoreQueryFilters().AsNoTracking()
-            : _db.Customers.AsNoTracking();
-        var query = _scope.ApplyCustomerScope(source);
-        if (!request.IncludeDeleted) query = query.Where(x => !x.IsDeleted);
+        var portfolio = await snapshots.GetPortfolio(ct);
+        var buildingsByCustomer = portfolio.Buildings
+            .Where(x => x.CustomerId.HasValue)
+            .GroupBy(x => x.CustomerId!.Value)
+            .ToDictionary(x => x.Key, x => x.ToArray());
+        var metersByBuilding = portfolio.Meters
+            .Where(x => x.BuildingId.HasValue)
+            .GroupBy(x => x.BuildingId!.Value)
+            .ToDictionary(x => x.Key, x => x.Count());
+        var values = portfolio.Customers.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim();
-            query = query.Where(x => EF.Functions.ILike(x.Name, $"%{search}%") ||
-                EF.Functions.ILike(x.CustomerNumber, $"%{search}%"));
+            values = values.Where(x =>
+                Contains(x.Name, search) ||
+                Contains(x.CustomerNumber, search));
         }
         if (request.IsActive.HasValue)
-            query = query.Where(x => x.IsActive == request.IsActive.Value);
-
-        var total = await query.CountAsync(ct);
-        var ordered = request.SortBy.Equals("customerNumber", StringComparison.OrdinalIgnoreCase)
-            ? Order(query, request.SortDirection, x => x.CustomerNumber)
-            : Order(query, request.SortDirection, x => x.Name);
-        var items = await ordered.ThenBy(x => x.Id).Skip((page - 1) * size).Take(size)
-            .Select(x => new CustomerSummaryDto(x.Id, x.CustomerNumber, x.Name,
-                x.PostalCode, x.City, x.Phone, x.Email, x.IsActive, x.IsDeleted,
-                x.BuildingAssignments.Count(a =>
-                    a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now))))
-            .ToListAsync(ct);
-        return new(items, page, size, total);
+            values = values.Where(x =>
+                x.IsActive == request.IsActive.Value);
+        values = request.SortBy.Equals(
+                "customerNumber",
+                StringComparison.OrdinalIgnoreCase)
+            ? Sort(
+                values,
+                request.SortDirection,
+                x => x.CustomerNumber)
+            : Sort(values, request.SortDirection, x => x.Name);
+        var projected = values.Select(customer =>
+        {
+            var buildings = buildingsByCustomer.GetValueOrDefault(
+                customer.CustomerId,
+                []);
+            return new CustomerSummaryDto(
+                customer.CustomerId,
+                customer.CustomerNumber,
+                customer.Name,
+                customer.PostalCode,
+                customer.City,
+                customer.Phone,
+                customer.Email,
+                customer.IsActive,
+                false,
+                buildings.Length)
+            {
+                QualityLevel = customer.Quality.Level.ToString(),
+                MeterCount = buildings.Sum(x =>
+                    metersByBuilding.GetValueOrDefault(
+                        x.BuildingId,
+                        0)),
+                MunicipalityId = customer.MunicipalityId,
+                Municipality = customer.MunicipalityName
+            };
+        });
+        return Page(projected, request.Page, request.PageSize);
     }
 
-    public async Task<CustomerDetailDto?> GetCustomerAsync(Guid id, bool includeDeleted = false,
+    public async Task<CustomerDetailDto?> GetCustomerAsync(
+        Guid id,
+        bool includeDeleted = false,
         CancellationToken ct = default)
     {
-        var now = DateTime.UtcNow;
-        var source = includeDeleted ? _db.Customers.IgnoreQueryFilters().AsNoTracking() : _db.Customers.AsNoTracking();
-        return await _scope.ApplyCustomerScope(source)
+        var customer = await snapshots.GetCustomer(id, ct);
+        if (customer is null)
+            return null;
+        var metadata = await scope.ApplyCustomerScope(
+                includeDeleted
+                    ? db.Customers.IgnoreQueryFilters().AsNoTracking()
+                    : db.Customers.AsNoTracking())
             .Where(x => x.Id == id)
-            .Select(x => new CustomerDetailDto(x.Id, x.CustomerNumber, x.Name,
-                x.LegalName, x.Type.ToString(), x.Email, x.Phone, x.ContactPerson, x.Website,
-                x.Street, x.HouseNumber, x.PostalCode, x.City, x.CountryCode,
-                x.IsActive, x.BuildingAssignments
-                    .Where(a => a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now))
-                    .OrderBy(a => a.Building.Name)
-                    .Select(a => new CustomerBuildingDto(a.BuildingId,
-                        a.Building.BuildingNumber, a.Building.Name, a.Role.ToString(),
-                        a.IsPrimary,
-                        a.Building.Versions.OrderByDescending(v => v.VersionNumber)
-                            .Select(v => v.PrimaryUseType.ToString()).FirstOrDefault(),
-                        a.Building.Meters.Count,
-                        _db.CuratedFieldValues.Any(v => v.EntityType == "Building" &&
-                            v.EntityId == a.BuildingId && v.ValidToUtc == null &&
-                            v.MaturityLevel == DataMaturityLevel.Gold) ? "Gold" :
-                        a.Building.Versions.Any() ? "Silver" : "Bronze")).ToList(),
-                x.DataOrigin.ToString(), x.CreatedAt,
-                x.CreatedByUserId, x.UpdatedAt, x.UpdatedByUserId, x.IsDeleted, x.RowVersion,
-                x.BuildingAssignments.SelectMany(a => a.Building.Meters).Count(),
-                x.BuildingAssignments.SelectMany(a => a.Building.EnergySystemAssignments).Count()))
+            .Select(x => new
+            {
+                x.LegalName,
+                Type = x.Type.ToString(),
+                x.Website,
+                x.Street,
+                x.HouseNumber,
+                x.CountryCode,
+                DataOrigin = x.DataOrigin.ToString(),
+                x.CreatedAt,
+                x.CreatedByUserId,
+                x.UpdatedAt,
+                x.UpdatedByUserId,
+                x.IsDeleted,
+                x.RowVersion
+            })
             .SingleOrDefaultAsync(ct);
+        if (metadata is null)
+            return null;
+        var portfolio = await snapshots.GetPortfolio(ct);
+        var buildings = portfolio.Buildings
+            .Where(x => x.CustomerId == id)
+            .OrderBy(x => x.Name)
+            .ToArray();
+        var buildingIds = buildings
+            .Select(x => x.BuildingId)
+            .ToHashSet();
+        var meters = portfolio.Meters
+            .Where(x =>
+                x.BuildingId.HasValue &&
+                buildingIds.Contains(x.BuildingId.Value))
+            .ToArray();
+        return new CustomerDetailDto(
+            customer.CustomerId,
+            customer.CustomerNumber,
+            customer.Name,
+            metadata.LegalName,
+            metadata.Type,
+            customer.Email,
+            customer.Phone,
+            customer.ContactPerson,
+            metadata.Website,
+            metadata.Street,
+            metadata.HouseNumber,
+            customer.PostalCode,
+            customer.City,
+            metadata.CountryCode,
+            customer.IsActive,
+            buildings.Select(x => new CustomerBuildingDto(
+                x.BuildingId,
+                x.BuildingNumber,
+                x.Name,
+                "Unknown",
+                false,
+                x.UsageType,
+                meters.Count(m => m.BuildingId == x.BuildingId),
+                x.Quality.Level.ToString())).ToArray(),
+            metadata.DataOrigin,
+            metadata.CreatedAt,
+            metadata.CreatedByUserId,
+            metadata.UpdatedAt,
+            metadata.UpdatedByUserId,
+            metadata.IsDeleted,
+            metadata.RowVersion,
+            meters.Length,
+            portfolio.EnergySystems.Count(x =>
+                x.BuildingId.HasValue &&
+                buildingIds.Contains(x.BuildingId.Value)))
+        {
+            QualityLevel = customer.Quality.Level.ToString(),
+            MunicipalityId = customer.MunicipalityId,
+            Municipality = customer.MunicipalityName
+        };
     }
 
     public async Task<PagedResult<BuildingSummaryDto>> GetBuildingsAsync(
-        BuildingListQuery request, CancellationToken ct = default)
+        BuildingListQuery request,
+        CancellationToken ct = default)
     {
-        var (page, size) = Page(request.Page, request.PageSize);
-        var now = DateTime.UtcNow;
-        var source = request.IncludeDeleted
-            ? _db.Buildings.IgnoreQueryFilters().AsNoTracking()
-            : _db.Buildings.AsNoTracking();
-        var query = _scope.ApplyBuildingScope(source);
-        if (!request.IncludeDeleted) query = query.Where(x => !x.IsDeleted);
+        var portfolio = await snapshots.GetPortfolio(ct);
+        var values = portfolio.Buildings.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim();
-            query = query.Where(x => EF.Functions.ILike(x.Name, $"%{search}%") ||
-                EF.Functions.ILike(x.BuildingNumber, $"%{search}%"));
+            values = values.Where(x =>
+                Contains(x.Name, search) ||
+                Contains(x.BuildingNumber, search));
         }
         if (request.CustomerId.HasValue)
-            query = query.Where(x => x.CustomerAssignments.Any(a =>
-                a.CustomerId == request.CustomerId.Value && a.ValidFrom <= now &&
-                (a.ValidTo == null || a.ValidTo > now)));
+            values = values.Where(x =>
+                x.CustomerId == request.CustomerId.Value);
         if (request.IsActive.HasValue)
-            query = query.Where(x => x.IsActive == request.IsActive.Value);
-
-        var total = await query.CountAsync(ct);
-        var ordered = request.SortBy.Equals("buildingNumber", StringComparison.OrdinalIgnoreCase)
-            ? Order(query, request.SortDirection, x => x.BuildingNumber)
-            : Order(query, request.SortDirection, x => x.Name);
-        var items = await ordered.ThenBy(x => x.Id).Skip((page - 1) * size).Take(size)
-            .Select(x => new BuildingSummaryDto(x.Id, x.BuildingNumber, x.Name,
-                x.Versions.OrderByDescending(v => v.VersionNumber)
-                    .Select(v => v.BuildingCategory.ToString()).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber)
-                    .Select(v => v.PrimaryUseType.ToString()).FirstOrDefault(),
-                x.CustomerAssignments.Where(a => a.ValidFrom <= now &&
-                    (a.ValidTo == null || a.ValidTo > now))
-                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.CustomerNumber).FirstOrDefault(),
-                x.CustomerAssignments.Where(a => a.ValidFrom <= now &&
-                    (a.ValidTo == null || a.ValidTo > now))
-                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.Name).FirstOrDefault(),
-                x.Meters.Count,
-                _db.CuratedFieldValues.Where(v => v.EntityType == "Building" &&
-                    v.EntityId == x.Id && v.ValidToUtc == null && v.FieldName == "BenchmarkState")
-                    .Select(v => v.NormalizedValue).FirstOrDefault() ?? "Unknown",
-                _db.CuratedFieldValues.Count(v => v.EntityType == "Building" &&
-                    v.EntityId == x.Id && v.ValidToUtc == null &&
-                    v.MaturityLevel == DataMaturityLevel.Gold &&
-                    (v.FieldName == "CustomerId" || v.FieldName == "UsageType" ||
-                     v.FieldName == "HeatedAreaSquareMeters" || v.FieldName == "PostalCode" ||
-                     v.FieldName == "BenchmarkState")) == 5 ? "Gold" :
-                x.CustomerAssignments.Any(a => a.ValidFrom <= now &&
-                    (a.ValidTo == null || a.ValidTo > now)) &&
-                x.Versions.Any(v => v.HeatedFloorAreaM2 != null &&
-                    v.Address != null && v.Address.PostalCodeArea != null) &&
-                _db.CuratedFieldValues.Any(v => v.EntityType == "Building" &&
-                    v.EntityId == x.Id && v.ValidToUtc == null &&
-                    v.FieldName == "BenchmarkState") ? "Silver" : "Bronze",
-                _db.CuratedFieldValues.Count(v => v.EntityType == "Building" &&
-                    v.EntityId == x.Id && v.ValidToUtc == null &&
-                    v.MaturityLevel == DataMaturityLevel.Gold &&
-                    (v.FieldName == "CustomerId" || v.FieldName == "UsageType" ||
-                     v.FieldName == "HeatedAreaSquareMeters" || v.FieldName == "PostalCode" ||
-                     v.FieldName == "BenchmarkState")) * 20,
-                x.IsDeleted))
-            .ToListAsync(ct);
-        return new(items, page, size, total);
+            values = values.Where(x =>
+                x.IsActive == request.IsActive.Value);
+        values = request.SortBy.Equals(
+                "buildingNumber",
+                StringComparison.OrdinalIgnoreCase)
+            ? Sort(
+                values,
+                request.SortDirection,
+                x => x.BuildingNumber)
+            : Sort(values, request.SortDirection, x => x.Name);
+        var projected = values.Select(building =>
+            new BuildingSummaryDto(
+                building.BuildingId,
+                building.BuildingNumber,
+                building.Name,
+                building.BuildingType,
+                building.UsageType,
+                building.CustomerNumber,
+                building.CustomerName,
+                portfolio.Meters.Count(x =>
+                    x.BuildingId == building.BuildingId),
+                building.BuildingState ?? "NotAvailable",
+                building.Quality.Level.ToString(),
+                building.Quality.CompletenessPercentage,
+                false)
+            {
+                QualityLevel = building.Quality.Level.ToString(),
+                PostalCode = building.PostalCode,
+                City = building.City,
+                MunicipalityId = building.MunicipalityId,
+                Municipality = building.MunicipalityName,
+                ConditionedFloorArea = building.ConditionedFloorArea,
+                ConstructionYear = building.ConstructionYear
+            });
+        return Page(projected, request.Page, request.PageSize);
     }
 
-    public async Task<BuildingDetailDto?> GetBuildingAsync(Guid id, bool includeDeleted = false,
+    public async Task<BuildingDetailDto?> GetBuildingAsync(
+        Guid id,
+        bool includeDeleted = false,
         CancellationToken ct = default)
     {
-        var allowedCustomers = _scope.ApplyCustomerScope(_db.Customers).Select(x => x.Id);
-        var now = DateTime.UtcNow;
-        var source = includeDeleted
-            ? _db.Buildings.IgnoreQueryFilters().AsNoTracking()
-            : _db.Buildings.AsNoTracking();
-        return await _scope.ApplyBuildingScope(source)
+        var building = await snapshots.GetBuilding(id, ct);
+        if (building is null)
+            return null;
+        var metadata = await scope.ApplyBuildingScope(
+                includeDeleted
+                    ? db.Buildings.IgnoreQueryFilters().AsNoTracking()
+                    : db.Buildings.AsNoTracking())
             .Where(x => x.Id == id)
-            .Select(x => new BuildingDetailDto(x.Id, x.BuildingNumber, x.Name,
-                x.ExternalIdentifier, x.IsActive, x.Meters.Count,
-                x.Meters.SelectMany(m => m.Readings).Min(r => (DateTime?)r.Timestamp),
-                x.Meters.SelectMany(m => m.Readings).Max(r => (DateTime?)r.Timestamp),
-                x.CustomerAssignments.Where(a => allowedCustomers.Contains(a.CustomerId) &&
-                    a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now))
-                    .OrderBy(a => a.Customer.Name)
-                    .Select(a => new BuildingCustomerDto(a.CustomerId,
-                        a.Customer.CustomerNumber, a.Customer.Name, a.Role.ToString(),
-                        a.IsPrimary)).ToList(),
-                x.Meters.OrderBy(m => m.MeterNumber)
-                    .Select(m => new BuildingMeterDto(m.Id, m.MeterNumber, m.Name,
-                        m.Medium.ToString(), m.Direction.ToString(), m.Unit.ToString(),
-                        _db.CuratedFieldValues.Any(v => v.EntityType == "MeteringPoint" &&
-                            v.EntityId == m.Id && v.ValidToUtc == null &&
-                            v.MaturityLevel == DataMaturityLevel.Gold) ? "Gold" :
-                        m.Readings.Any() ? "Silver" : "Bronze", m.IsActive)).ToList(),
-                x.DataOrigin.ToString(), x.CreatedAt, x.CreatedByUserId, x.UpdatedAt,
-                x.UpdatedByUserId, x.IsDeleted, x.RowVersion,
-                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.GrossFloorAreaM2).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.YearOfConstruction).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.Latitude).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.Longitude).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.BuildingCategory.ToString()).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.PrimaryUseType.ToString()).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.HeatedFloorAreaM2).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber).Select(v => v.YearOfLastMajorRenovation).FirstOrDefault(),
-                _db.CuratedFieldValues.Where(v => v.EntityType == "Building" && v.EntityId == x.Id &&
-                    v.ValidToUtc == null && v.FieldName == "BenchmarkState")
-                    .Select(v => v.NormalizedValue).FirstOrDefault() ?? "Unknown",
-                x.Versions.OrderByDescending(v => v.VersionNumber)
-                    .Select(v => v.Address!.PostalCodeArea!.Code).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber)
-                    .Select(v => v.Address!.PostalCodeArea!.Name).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber)
-                    .Select(v => v.Address!.Street).FirstOrDefault(),
-                x.Versions.OrderByDescending(v => v.VersionNumber)
-                    .Select(v => v.Address!.HouseNumber).FirstOrDefault()))
+            .Select(x => new
+            {
+                x.ExternalIdentifier,
+                DataOrigin = x.DataOrigin.ToString(),
+                x.CreatedAt,
+                x.CreatedByUserId,
+                x.UpdatedAt,
+                x.UpdatedByUserId,
+                x.IsDeleted,
+                x.RowVersion
+            })
             .SingleOrDefaultAsync(ct);
+        if (metadata is null)
+            return null;
+        var portfolio = await snapshots.GetPortfolio(ct);
+        var meters = portfolio.Meters
+            .Where(x => x.BuildingId == id)
+            .OrderBy(x => x.MeterNumber)
+            .ToArray();
+        var periods = meters
+            .Select(x => x.Readings)
+            .ToArray();
+        var customers = building.CustomerId.HasValue
+            ? new[]
+            {
+                new BuildingCustomerDto(
+                    building.CustomerId.Value,
+                    building.CustomerNumber ?? string.Empty,
+                    building.CustomerName ?? string.Empty,
+                    "Unknown",
+                    false)
+            }
+            : [];
+        return new BuildingDetailDto(
+            building.BuildingId,
+            building.BuildingNumber,
+            building.Name,
+            metadata.ExternalIdentifier,
+            building.IsActive,
+            meters.Length,
+            periods.Length == 0
+                ? null
+                : periods.Min(x => x.PeriodStart),
+            periods.Length == 0
+                ? null
+                : periods.Max(x => x.PeriodEnd),
+            customers,
+            meters.Select(x => new BuildingMeterDto(
+                x.MeterId,
+                x.MeterNumber,
+                x.Name,
+                x.Medium?.ToString() ?? "Unknown",
+                x.Direction?.ToString() ?? "Unknown",
+                x.Unit?.ToString() ?? "Unknown",
+                x.Quality.Level.ToString(),
+                x.IsActive)).ToArray(),
+            metadata.DataOrigin,
+            metadata.CreatedAt,
+            metadata.CreatedByUserId,
+            metadata.UpdatedAt,
+            metadata.UpdatedByUserId,
+            metadata.IsDeleted,
+            metadata.RowVersion,
+            building.GrossFloorArea,
+            building.ConstructionYear,
+            null,
+            null,
+            building.BuildingType,
+            building.UsageType,
+            building.HeatedArea,
+            building.RenovationYear,
+            building.BuildingState ?? "NotAvailable",
+            building.PostalCode,
+            building.City,
+            building.Street,
+            building.HouseNumber)
+        {
+            QualityLevel = building.Quality.Level.ToString(),
+            MunicipalityId = building.MunicipalityId,
+            Municipality = building.MunicipalityName,
+            ConditionedFloorArea = building.ConditionedFloorArea
+        };
     }
 
     public async Task<PagedResult<MeterSummaryDto>> GetMetersAsync(
-        MeterListQuery request, CancellationToken ct = default)
+        MeterListQuery request,
+        CancellationToken ct = default)
     {
-        var (page, size) = Page(request.Page, request.PageSize);
-        var now = DateTime.UtcNow;
-        var source = request.IncludeDeleted
-            ? _db.Meters.IgnoreQueryFilters().AsNoTracking()
-            : _db.Meters.AsNoTracking();
-        var query = _scope.ApplyMeterScope(source);
-        if (!request.IncludeDeleted) query = query.Where(x => !x.IsDeleted);
+        var portfolio = await snapshots.GetPortfolio(ct);
+        var values = portfolio.Meters.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim();
-            query = query.Where(x => EF.Functions.ILike(x.Name, $"%{search}%") ||
-                EF.Functions.ILike(x.MeterNumber, $"%{search}%"));
+            values = values.Where(x =>
+                Contains(x.Name, search) ||
+                Contains(x.MeterNumber, search));
         }
         if (request.CustomerId.HasValue)
-            query = query.Where(x => x.Building != null &&
-                x.Building.CustomerAssignments.Any(a => a.CustomerId == request.CustomerId &&
-                    a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now)));
+            values = values.Where(x =>
+                x.CustomerId == request.CustomerId.Value);
         if (request.BuildingId.HasValue)
-            query = query.Where(x => x.BuildingId == request.BuildingId);
+            values = values.Where(x =>
+                x.BuildingId == request.BuildingId.Value);
         if (request.IsActive.HasValue)
-            query = query.Where(x => x.IsActive == request.IsActive.Value);
-
-        var total = await query.CountAsync(ct);
-        var ordered = request.SortBy.Equals("name", StringComparison.OrdinalIgnoreCase)
-            ? Order(query, request.SortDirection, x => x.Name)
-            : Order(query, request.SortDirection, x => x.MeterNumber);
-        var items = await ordered.ThenBy(x => x.Id).Skip((page - 1) * size).Take(size)
-            .Select(x => new MeterSummaryDto(x.Id, x.MeterNumber, x.Name,
-                x.Medium.ToString(), x.Unit.ToString(), x.Direction.ToString(), x.BuildingId,
-                x.Building == null ? null : x.Building.BuildingNumber,
-                x.Building == null ? null : x.Building.Name,
-                x.Building == null ? null : x.Building.CustomerAssignments
-                    .Where(a => a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now))
-                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.CustomerNumber).FirstOrDefault(),
-                x.Building == null ? null : x.Building.CustomerAssignments
-                    .Where(a => a.ValidFrom <= now && (a.ValidTo == null || a.ValidTo > now))
-                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.Name).FirstOrDefault(),
-                x.AnnualValue ?? (x.Quantity == MeterQuantity.Energy &&
-                    x.Readings.Max(r => (DateTime?)r.Timestamp) -
-                    x.Readings.Min(r => (DateTime?)r.Timestamp) >= TimeSpan.FromDays(364)
-                    ? x.Readings.Where(r => r.ReadingType == MeterReadingType.IntervalValue)
-                        .Sum(r => (decimal?)r.Value) : null),
-                x.AnnualValue != null ? x.AnnualValueOrigin :
-                    x.Quantity == MeterQuantity.Energy &&
-                    x.Readings.Max(r => (DateTime?)r.Timestamp) -
-                    x.Readings.Min(r => (DateTime?)r.Timestamp) >= TimeSpan.FromDays(364)
-                        ? "CalculatedFromReadings" : null,
-                x.Readings.LongCount(),
-                x.Readings.Min(r => (DateTime?)r.Timestamp),
-                x.Readings.Max(r => (DateTime?)r.Timestamp),
-                _db.CuratedFieldValues.Any(v => v.EntityType == "MeteringPoint" &&
-                    v.EntityId == x.Id && v.ValidToUtc == null &&
-                    v.MaturityLevel == DataMaturityLevel.Gold) ? "Gold" :
-                x.Readings.Any() ? "Silver" : "Bronze",
-                _db.CuratedFieldValues.Count(v => v.EntityType == "MeteringPoint" &&
-                    v.EntityId == x.Id && v.ValidToUtc == null &&
-                    v.MaturityLevel == DataMaturityLevel.Gold) * 100 / 9,
-                x.IsDeleted))
-            .ToListAsync(ct);
-        return new(items, page, size, total);
+            values = values.Where(x =>
+                x.IsActive == request.IsActive.Value);
+        values = request.SortBy.Equals(
+                "name",
+                StringComparison.OrdinalIgnoreCase)
+            ? Sort(values, request.SortDirection, x => x.Name)
+            : Sort(
+                values,
+                request.SortDirection,
+                x => x.MeterNumber);
+        var projected = values.Select(ToMeterSummary);
+        return Page(projected, request.Page, request.PageSize);
     }
 
-    public async Task<MeterDetailDto?> GetMeterAsync(Guid id, bool includeDeleted = false,
+    public async Task<MeterDetailDto?> GetMeterAsync(
+        Guid id,
+        bool includeDeleted = false,
         CancellationToken ct = default)
     {
-        var source = includeDeleted
-            ? _db.Meters.IgnoreQueryFilters().AsNoTracking()
-            : _db.Meters.AsNoTracking();
-        return await _scope.ApplyMeterScope(source)
-            .Where(x => x.Id == id)
-            .Select(x => new MeterDetailDto(x.Id, x.MeterNumber, x.Name,
-                x.Description, x.ExternalIdentifier, x.Medium.ToString(),
-                x.Quantity.ToString(), x.Unit.ToString(), x.Direction.ToString(),
-                x.Type.ToString(), x.Manufacturer, x.Model, x.SerialNumber,
-                x.BuildingId, x.Building == null ? null : x.Building.Name, x.IsActive,
-                x.Readings.LongCount(), x.Readings.Min(r => (DateTime?)r.Timestamp),
-                x.Readings.Max(r => (DateTime?)r.Timestamp),
-                x.Readings.OrderByDescending(r => r.Timestamp)
-                    .Select(r => (DateTime?)r.Timestamp).FirstOrDefault(),
-                x.Readings.OrderByDescending(r => r.Timestamp)
-                    .Select(r => (decimal?)r.Value).FirstOrDefault(),
-                x.Readings.OrderByDescending(r => r.Timestamp)
-                    .Select(r => r.QualityFlag.ToString()).FirstOrDefault(),
-                x.DataOrigin.ToString(), x.CreatedAt, x.CreatedByUserId, x.UpdatedAt,
-                x.UpdatedByUserId, x.IsDeleted, x.RowVersion,
-                x.Building == null ? null : x.Building.BuildingNumber,
-                x.Building == null ? null : x.Building.CustomerAssignments
-                    .Where(a => a.ValidFrom <= DateTime.UtcNow && (a.ValidTo == null || a.ValidTo > DateTime.UtcNow))
-                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.CustomerNumber).FirstOrDefault(),
-                x.Building == null ? null : x.Building.CustomerAssignments
-                    .Where(a => a.ValidFrom <= DateTime.UtcNow && (a.ValidTo == null || a.ValidTo > DateTime.UtcNow))
-                    .OrderByDescending(a => a.IsPrimary).Select(a => a.Customer.Name).FirstOrDefault(),
-                x.AnnualValue ?? (x.Quantity == MeterQuantity.Energy &&
-                    x.Readings.Max(r => (DateTime?)r.Timestamp) -
-                    x.Readings.Min(r => (DateTime?)r.Timestamp) >= TimeSpan.FromDays(364)
-                    ? x.Readings.Where(r => r.ReadingType == MeterReadingType.IntervalValue)
-                        .Sum(r => (decimal?)r.Value) : null),
-                x.AnnualValue != null ? x.AnnualValueOrigin :
-                    x.Quantity == MeterQuantity.Energy &&
-                    x.Readings.Max(r => (DateTime?)r.Timestamp) -
-                    x.Readings.Min(r => (DateTime?)r.Timestamp) >= TimeSpan.FromDays(364)
-                        ? "CalculatedFromReadings" : null,
-                x.Readings.Where(r => r.IntervalSeconds != null)
-                    .GroupBy(r => r.IntervalSeconds).OrderByDescending(g => g.Count())
-                    .Select(g => g.Key).FirstOrDefault()))
-            .SingleOrDefaultAsync(ct);
-    }
-
-    public async Task<MeterReadingsDto?> GetMeterReadingsAsync(Guid meterId,
-        MeterReadingQuery request, CancellationToken ct = default)
-    {
-        var meter = await _scope.ApplyMeterScope(_db.Meters.AsNoTracking())
-            .Where(x => x.Id == meterId)
-            .Select(x => new { x.Id, x.MeterNumber, x.Unit, x.Quantity })
-            .SingleOrDefaultAsync(ct);
+        var meter = await snapshots.GetMeter(id, ct);
         if (meter is null)
             return null;
+        var metadata = await scope.ApplyMeterScope(
+                includeDeleted
+                    ? db.Meters.IgnoreQueryFilters().AsNoTracking()
+                    : db.Meters.AsNoTracking())
+            .Where(x => x.Id == id)
+            .Select(x => new
+            {
+                x.Description,
+                x.ExternalIdentifier,
+                Type = x.Type.ToString(),
+                x.Manufacturer,
+                x.Model,
+                x.SerialNumber,
+                DataOrigin = x.DataOrigin.ToString(),
+                x.CreatedAt,
+                x.CreatedByUserId,
+                x.UpdatedAt,
+                x.UpdatedByUserId,
+                x.IsDeleted,
+                x.RowVersion
+            })
+            .SingleOrDefaultAsync(ct);
+        if (metadata is null)
+            return null;
+        var latest = await scope.ApplyMeterReadingScope(
+                db.MeterReadings.AsNoTracking())
+            .Where(x => x.MeterId == id)
+            .OrderByDescending(x => x.Timestamp)
+            .Select(x => new
+            {
+                x.Timestamp,
+                x.Value,
+                Quality = x.QualityFlag.ToString()
+            })
+            .FirstOrDefaultAsync(ct);
+        var readings = meter.Readings;
+        return new MeterDetailDto(
+            meter.MeterId,
+            meter.MeterNumber,
+            meter.Name,
+            metadata.Description,
+            metadata.ExternalIdentifier,
+            meter.Medium?.ToString() ?? "Unknown",
+            meter.Quantity?.ToString() ?? "Unknown",
+            meter.Unit?.ToString() ?? "Unknown",
+            meter.Direction?.ToString() ?? "Unknown",
+            metadata.Type,
+            metadata.Manufacturer,
+            metadata.Model,
+            metadata.SerialNumber,
+            meter.BuildingId,
+            meter.BuildingName,
+            meter.IsActive,
+            readings.MeasurementCount,
+            readings.PeriodStart,
+            readings.PeriodEnd,
+            latest?.Timestamp,
+            latest?.Value,
+            latest?.Quality,
+            metadata.DataOrigin,
+            metadata.CreatedAt,
+            metadata.CreatedByUserId,
+            metadata.UpdatedAt,
+            metadata.UpdatedByUserId,
+            metadata.IsDeleted,
+            metadata.RowVersion,
+            meter.BuildingNumber,
+            meter.CustomerNumber,
+            meter.CustomerName,
+            readings.AnnualValue,
+            readings.AnnualValueStatus.ToString(),
+            readings.IntervalSeconds)
+        {
+            QualityLevel = meter.Quality.Level.ToString(),
+            ReadingType = readings.ReadingType?.ToString(),
+            AnnualValueStatus = readings.AnnualValueStatus.ToString(),
+            AnnualValueUnit = readings.Unit?.ToString(),
+            AnnualValueReferenceYear =
+                readings.AnnualValueReferenceYear
+        };
+    }
 
+    public async Task<MeterReadingsDto?> GetMeterReadingsAsync(
+        Guid meterId,
+        MeterReadingQuery request,
+        CancellationToken ct = default)
+    {
+        var meter = await snapshots.GetMeter(meterId, ct);
+        if (meter is null)
+            return null;
         var from = Utc(request.From);
         var to = Utc(request.To);
         if (from.HasValue && to.HasValue && from.Value >= to.Value)
-            throw new ArgumentException("'from' must be earlier than 'to'.");
-
-        var scoped = _scope.ApplyMeterReadingScope(_db.MeterReadings.AsNoTracking())
+            throw new ArgumentException(
+                "'from' must be earlier than 'to'.");
+        var scoped = scope.ApplyMeterReadingScope(
+                db.MeterReadings.AsNoTracking())
             .Where(x => x.MeterId == meterId);
-        var availableFrom = await scoped.MinAsync(x => (DateTime?)x.Timestamp, ct);
-        var availableTo = await scoped.MaxAsync(x => (DateTime?)x.Timestamp, ct);
-        if (from.HasValue) scoped = scoped.Where(x => x.Timestamp >= from.Value);
-        if (to.HasValue) scoped = scoped.Where(x => x.Timestamp < to.Value);
-
-        var readingTypes = await scoped.Select(x => x.ReadingType).Distinct().ToListAsync(ct);
-        var typeName = readingTypes.Count switch
-        {
-            0 => MeterReadingType.Unknown.ToString(),
-            1 => readingTypes[0].ToString(),
-            _ => "Mixed"
-        };
-
+        if (from.HasValue)
+            scoped = scoped.Where(x => x.Timestamp >= from.Value);
+        if (to.HasValue)
+            scoped = scoped.Where(x => x.Timestamp < to.Value);
         if (request.Aggregation == MeterReadingAggregation.Raw)
         {
-            var (page, size) = Page(request.Page, request.PageSize);
+            var (page, size) = NormalizePage(
+                request.Page,
+                request.PageSize);
             var total = await scoped.CountAsync(ct);
             var ordered = Desc(request.SortDirection)
                 ? scoped.OrderByDescending(x => x.Timestamp)
                 : scoped.OrderBy(x => x.Timestamp);
-            var values = await ordered.Skip((page - 1) * size).Take(size)
-                .Select(x => new RawMeterReadingDto(x.Timestamp, x.Value,
-                    x.QualityFlag.ToString(), x.IntervalSeconds)).ToListAsync(ct);
-            return new(meter.Id, meter.MeterNumber, meter.Unit.ToString(),
-                meter.Quantity.ToString(), typeName, request.Aggregation.ToString(),
-                availableFrom, availableTo, from, to,
-                new(values, page, size, total), null);
+            var values = await ordered
+                .Skip((page - 1) * size)
+                .Take(size)
+                .Select(x => new RawMeterReadingDto(
+                    x.Timestamp,
+                    x.Value,
+                    x.QualityFlag.ToString(),
+                    x.IntervalSeconds))
+                .ToListAsync(ct);
+            return new(
+                meter.MeterId,
+                meter.MeterNumber,
+                meter.Unit?.ToString() ?? "Unknown",
+                meter.Quantity?.ToString() ?? "Unknown",
+                meter.Readings.ReadingType?.ToString() ?? "Unknown",
+                request.Aggregation.ToString(),
+                meter.Readings.PeriodStart,
+                meter.Readings.PeriodEnd,
+                from,
+                to,
+                new(values, page, size, total),
+                null);
         }
-
-        var aggregated = await AggregateAsync(scoped, request.Aggregation,
-            Desc(request.SortDirection), ct);
-        return new(meter.Id, meter.MeterNumber, meter.Unit.ToString(),
-            meter.Quantity.ToString(), typeName, request.Aggregation.ToString(),
-            availableFrom, availableTo, from, to, null, aggregated);
+        var aggregated = await AggregateAsync(
+            scoped,
+            request.Aggregation,
+            Desc(request.SortDirection),
+            ct);
+        return new(
+            meter.MeterId,
+            meter.MeterNumber,
+            meter.Unit?.ToString() ?? "Unknown",
+            meter.Quantity?.ToString() ?? "Unknown",
+            meter.Readings.ReadingType?.ToString() ?? "Unknown",
+            request.Aggregation.ToString(),
+            meter.Readings.PeriodStart,
+            meter.Readings.PeriodEnd,
+            from,
+            to,
+            null,
+            aggregated);
     }
 
-    private static async Task<IReadOnlyList<AggregatedMeterReadingDto>> AggregateAsync(
-        IQueryable<MeterReading> source, MeterReadingAggregation aggregation,
-        bool descending, CancellationToken ct)
+    private static MeterSummaryDto ToMeterSummary(
+        MeterCanonicalSnapshot meter)
+    {
+        var readings = meter.Readings;
+        return new MeterSummaryDto(
+            meter.MeterId,
+            meter.MeterNumber,
+            meter.Name,
+            meter.Medium?.ToString() ?? "Unknown",
+            meter.Unit?.ToString() ?? "Unknown",
+            meter.Direction?.ToString() ?? "Unknown",
+            meter.BuildingId,
+            meter.BuildingNumber,
+            meter.BuildingName,
+            meter.CustomerNumber,
+            meter.CustomerName,
+            readings.AnnualValue,
+            readings.AnnualValueStatus.ToString(),
+            readings.MeasurementCount,
+            readings.PeriodStart,
+            readings.PeriodEnd,
+            meter.Quality.Level.ToString(),
+            meter.Quality.CompletenessPercentage,
+            false)
+        {
+            QualityLevel = meter.Quality.Level.ToString(),
+            Quantity = meter.Quantity?.ToString(),
+            ReadingType = readings.ReadingType?.ToString(),
+            IntervalSeconds = readings.IntervalSeconds,
+            AnnualValueStatus = readings.AnnualValueStatus.ToString(),
+            AnnualValueUnit = readings.Unit?.ToString(),
+            AnnualValueReferenceYear =
+                readings.AnnualValueReferenceYear
+        };
+    }
+
+    private static PagedResult<T> Page<T>(
+        IEnumerable<T> source,
+        int requestedPage,
+        int requestedSize)
+    {
+        var (page, size) = NormalizePage(
+            requestedPage,
+            requestedSize);
+        var values = source.ToArray();
+        return new(
+            values
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToArray(),
+            page,
+            size,
+            values.Length);
+    }
+
+    private static IOrderedEnumerable<T> Sort<T>(
+        IEnumerable<T> source,
+        string direction,
+        Func<T, string> key) =>
+        Desc(direction)
+            ? source.OrderByDescending(
+                key,
+                StringComparer.OrdinalIgnoreCase)
+            : source.OrderBy(
+                key,
+                StringComparer.OrdinalIgnoreCase);
+
+    private static bool Contains(string? value, string search) =>
+        value?.Contains(
+            search,
+            StringComparison.OrdinalIgnoreCase) == true;
+
+    private static async Task<IReadOnlyList<AggregatedMeterReadingDto>>
+        AggregateAsync(
+            IQueryable<MeterReading> source,
+            MeterReadingAggregation aggregation,
+            bool descending,
+            CancellationToken ct)
     {
         var grouped = aggregation switch
         {
-            MeterReadingAggregation.FifteenMinutes => source.GroupBy(x => new
-                { x.Timestamp.Year, x.Timestamp.Month, x.Timestamp.Day, x.Timestamp.Hour,
-                  Minute = x.Timestamp.Minute / 15, x.ReadingType }),
-            MeterReadingAggregation.Hour => source.GroupBy(x => new
-                { x.Timestamp.Year, x.Timestamp.Month, x.Timestamp.Day, x.Timestamp.Hour,
-                  Minute = 0, x.ReadingType }),
-            MeterReadingAggregation.Day => source.GroupBy(x => new
-                { x.Timestamp.Year, x.Timestamp.Month, x.Timestamp.Day, Hour = 0,
-                  Minute = 0, x.ReadingType }),
-            MeterReadingAggregation.Month => source.GroupBy(x => new
-                { x.Timestamp.Year, x.Timestamp.Month, Day = 1, Hour = 0,
-                  Minute = 0, x.ReadingType }),
-            _ => throw new ArgumentOutOfRangeException(nameof(aggregation))
+            MeterReadingAggregation.FifteenMinutes => source.GroupBy(x =>
+                new
+                {
+                    x.Timestamp.Year,
+                    x.Timestamp.Month,
+                    x.Timestamp.Day,
+                    x.Timestamp.Hour,
+                    Minute = x.Timestamp.Minute / 15,
+                    x.ReadingType
+                }),
+            MeterReadingAggregation.Hour => source.GroupBy(x =>
+                new
+                {
+                    x.Timestamp.Year,
+                    x.Timestamp.Month,
+                    x.Timestamp.Day,
+                    x.Timestamp.Hour,
+                    Minute = 0,
+                    x.ReadingType
+                }),
+            MeterReadingAggregation.Day => source.GroupBy(x =>
+                new
+                {
+                    x.Timestamp.Year,
+                    x.Timestamp.Month,
+                    x.Timestamp.Day,
+                    Hour = 0,
+                    Minute = 0,
+                    x.ReadingType
+                }),
+            MeterReadingAggregation.Month => source.GroupBy(x =>
+                new
+                {
+                    x.Timestamp.Year,
+                    x.Timestamp.Month,
+                    Day = 1,
+                    Hour = 0,
+                    Minute = 0,
+                    x.ReadingType
+                }),
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(aggregation))
         };
-
-        var rows = await grouped.Select(g => new
-        {
-            g.Key.Year, g.Key.Month, g.Key.Day, g.Key.Hour, g.Key.Minute,
-            g.Key.ReadingType,
-            Minimum = g.Min(x => x.Value), Maximum = g.Max(x => x.Value),
-            Average = g.Average(x => x.Value),
-            Sum = g.Key.ReadingType == MeterReadingType.IntervalValue
-                ? (decimal?)g.Sum(x => x.Value) : null,
-            First = g.OrderBy(x => x.Timestamp).Select(x => x.Value).First(),
-            Last = g.OrderByDescending(x => x.Timestamp).Select(x => x.Value).First(),
-            Count = g.Count()
-        }).ToListAsync(ct);
-
-        var result = rows.Select(x => new AggregatedMeterReadingDto(
-            new DateTime(x.Year, x.Month, x.Day, x.Hour,
-                x.Minute * (aggregation == MeterReadingAggregation.FifteenMinutes ? 15 : 1),
-                0, DateTimeKind.Utc), x.ReadingType.ToString(), x.Minimum, x.Maximum,
-            x.Average, x.Sum, x.First, x.Last, x.Last - x.First, x.Count));
-        return (descending ? result.OrderByDescending(x => x.BucketStart)
-            : result.OrderBy(x => x.BucketStart)).ToList();
+        var rows = await grouped
+            .Select(group => new
+            {
+                group.Key.Year,
+                group.Key.Month,
+                group.Key.Day,
+                group.Key.Hour,
+                group.Key.Minute,
+                group.Key.ReadingType,
+                Minimum = group.Min(x => x.Value),
+                Maximum = group.Max(x => x.Value),
+                Average = group.Average(x => x.Value),
+                Sum = group.Key.ReadingType ==
+                      MeterReadingType.IntervalValue
+                    ? (decimal?)group.Sum(x => x.Value)
+                    : null,
+                First = group.OrderBy(x => x.Timestamp)
+                    .Select(x => x.Value)
+                    .First(),
+                Last = group.OrderByDescending(x => x.Timestamp)
+                    .Select(x => x.Value)
+                    .First(),
+                Count = group.Count()
+            })
+            .ToListAsync(ct);
+        var result = rows.Select(x =>
+            new AggregatedMeterReadingDto(
+                new DateTime(
+                    x.Year,
+                    x.Month,
+                    x.Day,
+                    x.Hour,
+                    x.Minute *
+                    (aggregation ==
+                     MeterReadingAggregation.FifteenMinutes
+                        ? 15
+                        : 1),
+                    0,
+                    DateTimeKind.Utc),
+                x.ReadingType.ToString(),
+                x.Minimum,
+                x.Maximum,
+                x.Average,
+                x.Sum,
+                x.First,
+                x.Last,
+                x.Last - x.First,
+                x.Count));
+        return (descending
+                ? result.OrderByDescending(x => x.BucketStart)
+                : result.OrderBy(x => x.BucketStart))
+            .ToArray();
     }
 
-    private static (int Page, int Size) Page(int page, int size) =>
+    private static (int Page, int Size) NormalizePage(
+        int page,
+        int size) =>
         (Math.Max(1, page), Math.Clamp(size, 1, MaximumPageSize));
+
     private static bool Desc(string value) =>
         value.Equals("desc", StringComparison.OrdinalIgnoreCase);
-    private static IOrderedQueryable<T> Order<T, TKey>(IQueryable<T> query,
-        string direction, System.Linq.Expressions.Expression<Func<T, TKey>> key) =>
-        Desc(direction) ? query.OrderByDescending(key) : query.OrderBy(key);
-    private static DateTime? Utc(DateTime? value) => value switch
-    {
-        null => null,
-        { Kind: DateTimeKind.Utc } utc => utc,
-        { Kind: DateTimeKind.Local } local => local.ToUniversalTime(),
-        var unspecified => DateTime.SpecifyKind(unspecified.Value, DateTimeKind.Utc)
-    };
+
+    private static DateTime? Utc(DateTime? value) =>
+        value switch
+        {
+            null => null,
+            { Kind: DateTimeKind.Utc } utc => utc,
+            { Kind: DateTimeKind.Local } local =>
+                local.ToUniversalTime(),
+            var unspecified => DateTime.SpecifyKind(
+                unspecified.Value,
+                DateTimeKind.Utc)
+        };
 }

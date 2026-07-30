@@ -14,6 +14,8 @@ public sealed class BuildingImportDto
 
     public string? HouseNumber { get; set; }
 
+    public string? AddressAddition { get; set; }
+
     public string? PostalCode { get; set; }
 
     public string? City { get; set; }
@@ -21,4 +23,26 @@ public sealed class BuildingImportDto
     public string? Country { get; set; }
 
     public string? BuildingType { get; set; }
+
+    public string? UsageType { get; set; }
+
+    public int? ConstructionYear { get; set; }
+
+    public int? RenovationYear { get; set; }
+
+    public decimal? GrossFloorAreaM2 { get; set; }
+
+    public decimal? NetFloorAreaM2 { get; set; }
+
+    public decimal? ConditionedFloorAreaM2 { get; set; }
+
+    public decimal? HeatedFloorAreaM2 { get; set; }
+
+    public decimal? CooledFloorAreaM2 { get; set; }
+
+    public decimal? BuildingVolumeM3 { get; set; }
+
+    public int? NumberOfFloors { get; set; }
+
+    public string? BuildingState { get; set; }
 }

@@ -18,6 +18,8 @@ public class Meter : BaseEntity
 
     public string? AnnualValueOrigin { get; set; }
 
+    public int? AnnualValueReferenceYear { get; set; }
+
     public MeterMedium Medium { get; set; }
 
     public MeterQuantity Quantity { get; set; }

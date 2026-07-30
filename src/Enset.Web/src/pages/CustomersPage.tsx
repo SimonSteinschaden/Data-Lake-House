@@ -8,6 +8,8 @@ import {
 import { errorMessage } from "../components/admin/adminFormat";
 import "../components/admin/admin.css";
 import { customerService } from "../services/customerService";
+import { internalDataProductService } from "../services/internalDataProductService";
+import type { CustomerSummaryProduct } from "../features/internalDataProducts/types";
 import type {
   CustomerDetail,
   CustomerSummary,
@@ -320,6 +322,7 @@ function List() {
 }
 function Detail({ id }: { id: string }) {
   const [item, setItem] = useState<CustomerDetail>(),
+    [summary, setSummary] = useState<CustomerSummaryProduct>(),
     [error, setError] = useState(""),
     [editing, setEditing] = useState(false),
     [audit, setAudit] = useState(false),
@@ -328,9 +331,8 @@ function Detail({ id }: { id: string }) {
     [busy, setBusy] = useState(false);
   const load = useCallback(
     () =>
-      customerService
-        .get(id)
-        .then(setItem)
+      Promise.all([customerService.get(id), internalDataProductService.customer(id)])
+        .then(([customer, product]) => { setItem(customer); setSummary(product); })
         .catch((e) => setError(errorMessage(e))),
     [id],
   );
@@ -378,6 +380,19 @@ function Detail({ id }: { id: string }) {
         </button>
       </div>
       <EntityMetadataBar entity={item} />
+      {summary && <section className="detail-section">
+        <h2>Fachliche Summary</h2>
+        <dl className="detail-grid">
+          <div><dt>Objekte</dt><dd>{summary.buildingCount}</dd></div>
+          <div><dt>Zählpunkte</dt><dd>{summary.meterCount}</dd></div>
+          <div><dt>Jahresverbrauch</dt><dd>{summary.totalAnnualConsumption ??
+            "Nicht einheitenrein summierbar"}</dd></div>
+          <div><dt>Jahreserzeugung</dt><dd>{summary.totalAnnualGeneration ??
+            "Nicht einheitenrein summierbar"}</dd></div>
+          <div><dt>Gold-Reife</dt><dd>{summary.averageMaturity.goldMaturityPercentage} %</dd></div>
+          <div><dt>Offene Curation Tasks</dt><dd>{summary.openCurationTaskCount}</dd></div>
+        </dl>
+      </section>}
       <section className="detail-section">
         <h2>Stammdaten</h2>
         <dl className="detail-grid">

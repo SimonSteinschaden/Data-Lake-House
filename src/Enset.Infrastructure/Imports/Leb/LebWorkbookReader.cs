@@ -1,5 +1,4 @@
 using System.Text;
-using ClosedXML.Excel;
 using Enset.Application.Imports.Exceptions;
 using Enset.Application.Imports.Leb.DTOs;
 
@@ -17,49 +16,10 @@ public sealed class LebWorkbookReader
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         return Path.GetExtension(filePath).ToLowerInvariant() switch
         {
-            ".xlsx" or ".xlsm" => ReadXlsx(filePath),
             ".csv" => ReadCsv(filePath),
             var extension => throw new InvalidImportFileException(
                 $"Dateityp '{extension}' wird für die Landesenergiebuchhaltung nicht unterstützt.")
         };
-    }
-
-    private static LebWorkbookDto ReadXlsx(string filePath)
-    {
-        try
-        {
-            using var workbook = new XLWorkbook(filePath);
-            var rows = new List<LebRowDto>();
-            IReadOnlyList<LebSourceColumn>? columns = null;
-            foreach (var worksheet in workbook.Worksheets)
-            {
-                var used = worksheet.RangeUsed();
-                if (used is null)
-                    continue;
-
-                HeaderMap? headers = null;
-                foreach (var row in used.Rows())
-                {
-                    var values = row.Cells(1, used.ColumnCount())
-                        .Select(cell => cell.GetFormattedString().Trim())
-                        .ToArray();
-                    ProcessRow(
-                        row.RowNumber(), values, ref headers, rows, ref columns);
-                }
-            }
-
-            EnsureData(rows);
-            return CreateWorkbook(columns, rows);
-        }
-        catch (InvalidImportFileException)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            throw new InvalidImportFileException(
-                "Die LEB-Datei ist keine gültige Excel-Arbeitsmappe.", exception);
-        }
     }
 
     private static LebWorkbookDto ReadCsv(string filePath)

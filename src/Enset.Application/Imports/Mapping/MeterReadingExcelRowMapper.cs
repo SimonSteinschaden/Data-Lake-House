@@ -89,7 +89,10 @@ public static class MeterReadingExcelRowMapper
 
             ErrorMessage = errors.Count == 0
                 ? null
-                : string.Join("; ", errors)
+                : string.Join("; ", errors),
+
+            ReadingType = row.ReadingType,
+            IntervalSeconds = row.IntervalSeconds
         };
     }
 

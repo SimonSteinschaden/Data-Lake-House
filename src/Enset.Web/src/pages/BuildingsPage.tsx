@@ -15,6 +15,8 @@ import { EnergySystemForm } from "../features/energySystems/EnergySystemForm";
 import { CurationReadinessPanel } from "../features/curation/CurationReadinessPanel";
 import { DataProductReadinessPanel } from "../features/dataProductReadiness/DataProductReadinessPanel";
 import { GoldProfileVersionsPanel } from "../features/goldProfiles/GoldProfileVersionsPanel";
+import { internalDataProductService } from "../services/internalDataProductService";
+import type { BuildingSummaryProduct } from "../features/internalDataProducts/types";
 
 const categoryLabel: Record<string, string> = {
   Apartment: "Mehrfamilienhaus", House: "Haus", Office: "Büro", Hall: "Halle",
@@ -109,6 +111,7 @@ function List() {
 
 function Detail({ id }: { id: string }) {
   const [item, setItem] = useState<BuildingDetail>();
+  const [summary, setSummary] = useState<BuildingSummaryProduct>();
   const [systems, setSystems] = useState<EnergySystem[]>([]);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
@@ -120,10 +123,12 @@ function Detail({ id }: { id: string }) {
   const [actionError, setActionError] = useState("");
   const load = useCallback(async () => {
     try {
-      const [building, allSystems] = await Promise.all([
+      const [building, allSystems, product] = await Promise.all([
         buildingService.get(id), energySystemService.list(),
+        internalDataProductService.building(id),
       ]);
       setItem(building);
+      setSummary(product);
       setSystems(allSystems.items.filter((x) => x.buildingId === id));
     } catch (loadError) { setError(errorMessage(loadError)); }
   }, [id]);
@@ -175,6 +180,17 @@ function Detail({ id }: { id: string }) {
       </button>
     </div>
     <EntityMetadataBar entity={item} />
+    {summary && <section className="detail-section"><h2>Fachliche Summary</h2>
+      <dl className="detail-grid">
+        <div><dt>Zählpunkte</dt><dd>{summary.meterCount}</dd></div>
+        <div><dt>Jahresverbrauch</dt><dd>{summary.annualConsumption == null
+          ? "Nicht verfügbar" : `${summary.annualConsumption} ${summary.unit ?? ""}`}</dd></div>
+        <div><dt>Jahreserzeugung</dt><dd>{summary.annualGeneration == null
+          ? "Nicht verfügbar" : `${summary.annualGeneration} ${summary.unit ?? ""}`}</dd></div>
+        <div><dt>Gold-Reife</dt><dd>{summary.maturity.goldMaturityPercentage} %</dd></div>
+        <div><dt>Offene Curation Tasks</dt><dd>{summary.openCurationTaskCount}</dd></div>
+      </dl>
+    </section>}
     <section className="detail-section"><h2>Stammdaten</h2><dl className="detail-grid">
       <div><dt>Gebäudetyp</dt><dd>{value(categoryLabel, item.buildingCategory)}</dd></div>
       <div><dt>Nutzungstyp</dt><dd>{value(useLabel, item.primaryUseType)}</dd></div>

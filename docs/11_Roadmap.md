@@ -64,9 +64,11 @@ Die Roadmap konkretisiert ausschließlich die noch offenen Arbeiten der verbindl
 
 Die verbindliche offene Arbeitsliste wurde nach [IMPLEMENTATION_ROADMAP_V1_0_RC.md](IMPLEMENTATION_ROADMAP_V1_0_RC.md) konsolidiert. Dieses Dokument bleibt als historische Langfrist-Roadmap erhalten.
 
+## Architecture Freeze 2.0 RC
+
 # POST-MVP-Roadmap
 
-MVP v1.0 – Architecture Freeze
+MVP v2.0 – Architecture Freeze
 │
 ├── Asset Layer
 ├── Grid Layer

@@ -24,6 +24,8 @@ public class Address : BaseEntity
 
     public string? AddressAddition { get; set; }
 
+    public string? City { get; set; }
+
     public decimal? Latitude { get; set; }
 
     public decimal? Longitude { get; set; }

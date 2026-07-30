@@ -115,7 +115,19 @@ public sealed class ExcelWorkbookReader : IExcelReader, IExcelWorkbookReader
             PostalCode = Get(row, sheet.Headers, "PostalCode"),
             City = Get(row, sheet.Headers, "City"),
             Country = Get(row, sheet.Headers, "Country"),
-            BuildingType = Get(row, sheet.Headers, "BuildingType")
+            BuildingType = Get(row, sheet.Headers, "BuildingType"),
+            UsageType = Get(row, sheet.Headers, "UsageType", "PrimaryUseType", "MainUsage"),
+            ConstructionYear = Get(row, sheet.Headers, "ConstructionYear"),
+            RenovationYear = Get(row, sheet.Headers, "RenovationYear"),
+            FloorArea = Get(row, sheet.Headers, "GrossFloorAreaM2", "FloorArea"),
+            NetFloorArea = Get(row, sheet.Headers, "NetFloorAreaM2", "NetFloorArea"),
+            ConditionedFloorArea = Get(
+                row, sheet.Headers, "ConditionedFloorAreaM2", "ConditionedFloorArea"),
+            HeatedFloorArea = Get(row, sheet.Headers, "HeatedFloorAreaM2", "HeatedFloorArea"),
+            CooledFloorArea = Get(row, sheet.Headers, "CooledFloorAreaM2", "CooledFloorArea"),
+            BuildingVolume = Get(row, sheet.Headers, "BuildingVolumeM3", "BuildingVolume"),
+            NumberOfFloors = Get(row, sheet.Headers, "NumberOfFloors", "FloorCount"),
+            BuildingState = Get(row, sheet.Headers, "BuildingState", "BenchmarkState")
         }).ToList();
     }
 
@@ -126,6 +138,7 @@ public sealed class ExcelWorkbookReader : IExcelReader, IExcelWorkbookReader
         {
             RowNumber = row.RowNumber(),
             MeterNumber = Get(row, sheet.Headers, "MeterNumber"),
+            Name = Get(row, sheet.Headers, "Name", "MeterName"),
             FileName = Get(row, sheet.Headers, "FileName"),
             ProfileName = Get(row, sheet.Headers, "ProfileName"),
             Unit = Get(row, sheet.Headers, "Unit"),

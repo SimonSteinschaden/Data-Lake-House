@@ -16,6 +16,14 @@ using Enset.Application.Curation;
 using Enset.Infrastructure.Curation;
 using Enset.Application.GoldProfiles;
 using Enset.Infrastructure.GoldProfiles;
+using Enset.Application.InternalDataProducts;
+using Enset.Application.CanonicalSnapshots;
+using Enset.Infrastructure.CanonicalSnapshots;
+using Enset.Infrastructure.InternalDataProducts;
+using Enset.Application.Exports.LEB.Abstractions;
+using Enset.Application.Exports.LEB.Services;
+using Enset.Application.Exports.LEB.Validation;
+using Enset.Infrastructure.Exports.LEB;
 
 namespace Enset.Infrastructure.Persistence;
 
@@ -61,6 +69,24 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<ICurationService, EfCurationService>();
         services.AddScoped<IGoldProfileVersionService, GoldProfileVersionService>();
         services.AddScoped<IDataProductReadinessService, DataProductReadinessService>();
+        services.AddScoped<EfInternalDataProductService>();
+        services.AddScoped<ICanonicalSnapshotReader,
+            EfCanonicalSnapshotReader>();
+        services.AddScoped<IBuildingSummaryProductService>(sp =>
+            sp.GetRequiredService<EfInternalDataProductService>());
+        services.AddScoped<IMeterSummaryProductService>(sp =>
+            sp.GetRequiredService<EfInternalDataProductService>());
+        services.AddScoped<ICustomerSummaryProductService>(sp =>
+            sp.GetRequiredService<EfInternalDataProductService>());
+        services.AddScoped<IPortfolioSummaryProductService>(sp =>
+            sp.GetRequiredService<EfInternalDataProductService>());
+        services.AddScoped<IImportQualityProductService>(sp =>
+            sp.GetRequiredService<EfInternalDataProductService>());
+        services.AddScoped<INoeLebContractBuilder, EfNoeLebContractBuilder>();
+        services.AddSingleton<LebExportValidator>();
+        services.AddSingleton<ICsvLebExporter, CsvLebExporter>();
+        services.AddSingleton<IExcelLebExporter, ExcelLebExporter>();
+        services.AddScoped<ILebExportService, LebExportService>();
 
         return services;
     }

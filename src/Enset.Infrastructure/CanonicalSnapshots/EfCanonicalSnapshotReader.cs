@@ -15,52 +15,80 @@ public sealed class EfCanonicalSnapshotReader(
     IDataAccessScope scope,
     TimeProvider clock) : ICanonicalSnapshotReader
 {
+    public const int PortfolioQueryBudget = 12;
+
     public async Task<CustomerCanonicalSnapshot?> GetCustomer(
-        Guid id, CancellationToken ct)
+        Guid id, CancellationToken ct) =>
+        (await GetCustomers([id], ct)).SingleOrDefault();
+
+    public async Task<IReadOnlyList<CustomerCanonicalSnapshot>> GetCustomers(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken ct)
     {
-        var customer = await scope.ApplyCustomerScope(db.Customers)
+        if (ids.Count == 0)
+            return [];
+        var idSet = ids.ToHashSet();
+        var customers = await scope.ApplyCustomerScope(db.Customers)
             .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.Id == id, ct);
-        return customer is null ? null : new(
-            customer.Id,
-            customer.CustomerNumber,
-            customer.Name,
-            customer.ContactPerson,
-            customer.Email,
-            customer.Phone,
-            customer.PostalCode,
-            customer.City,
-            null,
-            null,
-            customer.IsActive,
-            Quality([
+            .Where(x => idSet.Contains(x.Id))
+            .ToListAsync(ct);
+        var versions = await Versions("Customer", idSet, ct);
+        return customers.Select(customer => new CustomerCanonicalSnapshot(
+                customer.Id,
                 customer.CustomerNumber,
                 customer.Name,
-                customer.City
-            ], EmptyFields),
-            Suitability(customer.CustomerNumber, customer.Name),
-            await Version("Customer", customer.Id, ct));
+                customer.ContactPerson,
+                customer.Email,
+                customer.Phone,
+                customer.PostalCode,
+                customer.City,
+                null,
+                null,
+                customer.IsActive,
+                Quality([
+                    customer.CustomerNumber,
+                    customer.Name,
+                    customer.City
+                ], EmptyFields),
+                Suitability(customer.CustomerNumber, customer.Name),
+                VersionOrTechnical(
+                    versions,
+                    "Customer",
+                    customer.Id)))
+            .ToArray();
     }
 
     public async Task<BuildingCanonicalSnapshot?> GetBuilding(
-        Guid id, CancellationToken ct)
+        Guid id, CancellationToken ct) =>
+        (await GetBuildings([id], ct)).SingleOrDefault();
+
+    public async Task<IReadOnlyList<BuildingCanonicalSnapshot>> GetBuildings(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken ct)
     {
-        var building = await scope.ApplyBuildingScope(db.Buildings)
+        if (ids.Count == 0)
+            return [];
+        var idSet = ids.ToHashSet();
+        var buildings = await scope.ApplyBuildingScope(db.Buildings)
             .AsNoTracking()
-            .Include(x => x.Versions)
+            .Include(x => x.Versions.Where(v => v.ValidTo == null))
                 .ThenInclude(x => x.Address)
                     .ThenInclude(x => x!.PostalCodeArea)
-            .Include(x => x.Versions)
+            .Include(x => x.Versions.Where(v => v.ValidTo == null))
                 .ThenInclude(x => x.Address)
                     .ThenInclude(x => x!.Municipality)
                         .ThenInclude(x => x!.Regions)
-            .Include(x => x.CustomerAssignments)
+            .Include(x => x.CustomerAssignments.Where(a => a.ValidTo == null))
                 .ThenInclude(x => x.Customer)
-            .SingleOrDefaultAsync(x => x.Id == id, ct);
-        if (building is null)
-            return null;
-
-        var curated = await Fields("Building", id, ct);
+            .Where(x => idSet.Contains(x.Id))
+            .ToListAsync(ct);
+        var allCurated = await Fields("Building", idSet, ct);
+        var versions = await Versions("Building", idSet, ct);
+        return buildings.Select(building =>
+        {
+        var curated = allCurated.GetValueOrDefault(
+            building.Id,
+            EmptyFields);
         var version = building.Versions
             .Where(x => x.ValidTo == null)
             .OrderByDescending(x => x.VersionNumber)
@@ -100,7 +128,7 @@ public sealed class EfCanonicalSnapshotReader(
             ],
             curated);
 
-        return new(
+        return new BuildingCanonicalSnapshot(
             building.Id,
             building.BuildingNumber,
             building.Name,
@@ -139,7 +167,10 @@ public sealed class EfCanonicalSnapshotReader(
             building.IsActive,
             quality,
             Suitability(usageType, conditioned),
-            await Version("Building", id, ct))
+            VersionOrTechnical(
+                versions,
+                "Building",
+                building.Id))
         {
             MunicipalityNumber =
                 version?.Address?.Municipality?.Code,
@@ -147,14 +178,23 @@ public sealed class EfCanonicalSnapshotReader(
                 .Select(x => x.Name)
                 .FirstOrDefault()
         };
+        }).ToArray();
     }
 
     public async Task<MeterCanonicalSnapshot?> GetMeter(
-        Guid id, CancellationToken ct)
+        Guid id, CancellationToken ct) =>
+        (await GetMeters([id], ct)).SingleOrDefault();
+
+    public async Task<IReadOnlyList<MeterCanonicalSnapshot>> GetMeters(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken ct)
     {
-        var row = await scope.ApplyMeterScope(db.Meters)
+        if (ids.Count == 0)
+            return [];
+        var idSet = ids.ToHashSet();
+        var rows = await scope.ApplyMeterScope(db.Meters)
             .AsNoTracking()
-            .Where(x => x.Id == id)
+            .Where(x => idSet.Contains(x.Id))
             .Select(x => new
             {
                 Meter = x,
@@ -176,11 +216,20 @@ public sealed class EfCanonicalSnapshotReader(
                     r.DataOrigin
                 }).ToList()
             })
-            .SingleOrDefaultAsync(ct);
-        if (row is null)
-            return null;
-
-        var curated = await Fields("MeteringPoint", id, ct);
+            .ToListAsync(ct);
+        var allCurated = await Fields(
+            "MeteringPoint",
+            idSet,
+            ct);
+        var versions = await Versions(
+            "MeteringPoint",
+            idSet,
+            ct);
+        return rows.Select(row =>
+        {
+        var curated = allCurated.GetValueOrDefault(
+            row.Meter.Id,
+            EmptyFields);
         var readings = row.Readings
             .OrderBy(x => x.Timestamp)
             .ToArray();
@@ -266,7 +315,7 @@ public sealed class EfCanonicalSnapshotReader(
                     : null
         };
 
-        return new(
+        return new MeterCanonicalSnapshot(
             row.Meter.Id,
             row.Meter.MeterNumber,
             row.Meter.Name,
@@ -289,7 +338,10 @@ public sealed class EfCanonicalSnapshotReader(
                 row.Meter.MeterNumber,
                 unit,
                 fixedInterval),
-            await Version("MeteringPoint", id, ct))
+            VersionOrTechnical(
+                versions,
+                "MeteringPoint",
+                row.Meter.Id))
         {
             CustomerNumber = row.Customer?.CustomerNumber,
             ExternalIdentifier = row.Meter.ExternalIdentifier,
@@ -309,6 +361,7 @@ public sealed class EfCanonicalSnapshotReader(
                     x.QualityFlag == DataQuality.Calculated))
                 .ToArray()
         };
+        }).ToArray();
     }
 
     public async Task<CanonicalSnapshotSet> GetPortfolio(
@@ -326,18 +379,9 @@ public sealed class EfCanonicalSnapshotReader(
             .AsNoTracking()
             .Select(x => x.Id)
             .ToListAsync(ct);
-        var customers = new List<CustomerCanonicalSnapshot>();
-        var buildings = new List<BuildingCanonicalSnapshot>();
-        var meters = new List<MeterCanonicalSnapshot>();
-        foreach (var id in customerIds)
-            if (await GetCustomer(id, ct) is { } value)
-                customers.Add(value);
-        foreach (var id in buildingIds)
-            if (await GetBuilding(id, ct) is { } value)
-                buildings.Add(value);
-        foreach (var id in meterIds)
-            if (await GetMeter(id, ct) is { } value)
-                meters.Add(value);
+        var customers = await GetCustomers(customerIds, ct);
+        var buildings = await GetBuildings(buildingIds, ct);
+        var meters = await GetMeters(meterIds, ct);
 
         var systems = await db.EnergySystems.AsNoTracking()
             .Select(x => new
@@ -384,52 +428,67 @@ public sealed class EfCanonicalSnapshotReader(
         return new(customers, buildings, meters, energySystems);
     }
 
-    private async Task<IReadOnlyDictionary<string, CuratedFieldValue>> Fields(
+    private async Task<IReadOnlyDictionary<Guid,
+        IReadOnlyDictionary<string, CuratedFieldValue>>> Fields(
         string entity,
-        Guid id,
+        IReadOnlySet<Guid> ids,
         CancellationToken ct) =>
-        await db.CuratedFieldValues
+        (await db.CuratedFieldValues
             .AsNoTracking()
             .Where(x =>
                 x.EntityType == entity &&
-                x.EntityId == id &&
+                ids.Contains(x.EntityId) &&
                 x.ValidToUtc == null &&
                 x.Confirmed)
-            .GroupBy(x => x.FieldName)
-            .Select(group => group
-                .OrderByDescending(x => x.ValidFromUtc)
-                .First())
-            .ToDictionaryAsync(x => x.FieldName, ct);
+            .ToListAsync(ct))
+        .GroupBy(x => x.EntityId)
+        .ToDictionary(
+            entityGroup => entityGroup.Key,
+            entityGroup => (IReadOnlyDictionary<string, CuratedFieldValue>)
+                entityGroup
+                    .GroupBy(x => x.FieldName)
+                    .ToDictionary(
+                        fieldGroup => fieldGroup.Key,
+                        fieldGroup => fieldGroup
+                            .OrderByDescending(x => x.ValidFromUtc)
+                            .First()));
 
-    private async Task<CanonicalVersion> Version(
+    private async Task<IReadOnlyDictionary<Guid, CanonicalVersion>> Versions(
         string entity,
-        Guid id,
+        IReadOnlySet<Guid> ids,
         CancellationToken ct)
     {
-        var version = await db.GoldProfileVersions
+        var values = await db.GoldProfileVersions
             .AsNoTracking()
             .Where(x =>
                 x.EntityType == entity &&
-                x.EntityId == id &&
+                ids.Contains(x.EntityId) &&
                 x.IsCurrent)
-            .OrderByDescending(x => x.VersionNumber)
-            .Select(x => new
-            {
-                x.Id,
-                x.VersionNumber,
-                x.CreatedAtUtc,
-                x.ReleaseStatus
-            })
-            .FirstOrDefaultAsync(ct);
-        return version is null
-            ? TechnicalVersion(entity, id)
-            : new(
-                version.Id,
-                version.VersionNumber,
-                version.CreatedAtUtc,
-                "GoldProfileVersion",
-                version.ReleaseStatus);
+            .ToListAsync(ct);
+        return values
+            .GroupBy(x => x.EntityId)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                {
+                    var version = group
+                        .OrderByDescending(x => x.VersionNumber)
+                        .First();
+                    return new CanonicalVersion(
+                        version.Id,
+                        version.VersionNumber,
+                        version.CreatedAtUtc,
+                        "GoldProfileVersion",
+                        version.ReleaseStatus);
+                });
     }
+
+    private CanonicalVersion VersionOrTechnical(
+        IReadOnlyDictionary<Guid, CanonicalVersion> versions,
+        string entity,
+        Guid id) =>
+        versions.GetValueOrDefault(id) ??
+        TechnicalVersion(entity, id);
 
     private CanonicalVersion TechnicalVersion(string entity, Guid id) =>
         new(

@@ -170,6 +170,15 @@ public sealed record CanonicalSnapshotSet(
 
 public interface ICanonicalSnapshotReader
 {
+    Task<IReadOnlyList<CustomerCanonicalSnapshot>> GetCustomers(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<BuildingCanonicalSnapshot>> GetBuildings(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken);
+    Task<IReadOnlyList<MeterCanonicalSnapshot>> GetMeters(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken);
     Task<CustomerCanonicalSnapshot?> GetCustomer(
         Guid id, CancellationToken cancellationToken);
     Task<BuildingCanonicalSnapshot?> GetBuilding(

@@ -12,6 +12,8 @@ using Enset.Application.Authorization;
 using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Leb;
 using Enset.Infrastructure.Imports.Leb;
+using Enset.Infrastructure.Imports.MassImport;
+using Microsoft.Extensions.Options;
 
 namespace Enset.Infrastructure.Imports.Analysis;
 
@@ -22,19 +24,25 @@ public sealed class ExcelImportAnalysisService : IImportAnalysisService
     private readonly IImportLogger _logger;
     private readonly IImportReferenceValidationService _referenceValidationService;
     private readonly ICurrentUserContext _currentUser;
+    private readonly IMeterReadingStreamingAnalyzer _streamingAnalyzer;
+    private readonly IOptions<MeterReadingMassImportOptions> _massOptions;
 
     public ExcelImportAnalysisService(
         string stagingPath,
         IImportReportRepository reports,
         IImportLogger logger,
         IImportReferenceValidationService referenceValidationService,
-        ICurrentUserContext currentUser)
+        ICurrentUserContext currentUser,
+        IMeterReadingStreamingAnalyzer streamingAnalyzer,
+        IOptions<MeterReadingMassImportOptions> massOptions)
     {
         _stagingPath = Path.GetFullPath(stagingPath);
         _reports = reports;
         _logger = logger;
         _referenceValidationService = referenceValidationService;
         _currentUser = currentUser;
+        _streamingAnalyzer = streamingAnalyzer;
+        _massOptions = massOptions;
         Directory.CreateDirectory(_stagingPath);
     }
 
@@ -81,6 +89,51 @@ public sealed class ExcelImportAnalysisService : IImportAnalysisService
             var fileInfo = new FileInfo(stagedPath);
             _logger.Info($"File staged: '{safeFileName}', {fileInfo.Length} byte(s).");
             var sha256 = await CalculateSha256Async(stagedPath, cancellationToken);
+
+            if (sourceType == ImportSourceType.Csv)
+            {
+                ValidateFileExtension(safeFileName, sourceType);
+                var analysis = await _streamingAnalyzer.Analyze(
+                    stagedPath,
+                    defaultMeterNumber,
+                    _massOptions.Value.ChunkSize,
+                    cancellationToken);
+                var csvReport = new ImportReport
+                {
+                    CreatedByUserId = _currentUser.UserId,
+                    SourceType = ImportSourceType.Csv,
+                    DefaultMeterNumber =
+                        string.IsNullOrWhiteSpace(defaultMeterNumber)
+                            ? null
+                            : defaultMeterNumber.Trim(),
+                    SourceFile = new ImportSourceFileMetadata
+                    {
+                        FileName = safeFileName,
+                        ContentType = contentType,
+                        Length = fileInfo.Length,
+                        Sha256 = sha256,
+                        StagedPath = stagedPath
+                    },
+                    MeterReadingAnalysis = analysis.Summary,
+                    MeterReadings = analysis.Samples,
+                    MeterReadingCount = checked(
+                        (int)analysis.Summary.ReadRows),
+                    Issues = analysis.Issues.ToList(),
+                    UpdatedAt = DateTime.UtcNow
+                };
+                csvReport.RecalculateCommitReadiness();
+                csvReport.AuditTrail.Add(new ImportAuditEntry
+                {
+                    Timestamp = csvReport.UpdatedAt,
+                    UserId = userId,
+                    Action = "StreamingAnalysisCompleted",
+                    Details =
+                        $"Source={safeFileName}; Rows=" +
+                        $"{analysis.Summary.ReadRows}; Sha256={sha256}"
+                });
+                await _reports.SaveAsync(csvReport, cancellationToken);
+                return csvReport;
+            }
 
             var (reader, validator) = CreatePipeline(
                 stagedPath,
@@ -161,9 +214,8 @@ public sealed class ExcelImportAnalysisService : IImportAnalysisService
             ImportSourceType.CRM_Excel => new ExcelImportReader(
                 new ExcelWorkbookReader(_logger),
                 stagedPath),
-            ImportSourceType.Csv => new CsvImportReader(
-                stagedPath,
-                new CsvMeterReadingReader(defaultMeterNumber)),
+            ImportSourceType.Csv => throw new InvalidOperationException(
+                "CSV analysis must use the streaming analysis path."),
             _ => throw new InvalidImportFileException(
                 $"Import source '{sourceType}' is not supported for this file.")
         };

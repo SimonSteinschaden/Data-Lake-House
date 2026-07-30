@@ -23,6 +23,7 @@ public class ImportReport
     public string? DefaultMeterNumber { get; set; }
     public Guid? AssignedMeterId { get; set; }
     public CsvMeterReadingMapping? CsvMapping { get; set; }
+    public MeterReadingAnalysisSummary? MeterReadingAnalysis { get; set; }
 
     public ImportSourceFileMetadata? SourceFile { get; set; }
 

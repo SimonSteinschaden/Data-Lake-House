@@ -1,6 +1,7 @@
 import type { ImportAnalysisResult } from "../../types/ImportAnalysisResult";
 import type { ImportWizardStep } from "../../types/ImportWizardStep";
 import type { ImportResolutionAction } from "./ImportResolutionAction";
+import type { MeterReadingImportProgress } from "../../../../services/importService";
 
 export interface ResolutionDraft {
   resolutionAction: ImportResolutionAction;
@@ -22,4 +23,5 @@ export interface WizardState {
   resolutionNotice: string | null;
   isCommitting: boolean;
   commitError: string | null;
+  importProgress: MeterReadingImportProgress | null;
 }

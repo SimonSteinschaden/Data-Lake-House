@@ -1,6 +1,7 @@
 using Enset.Domain.Buildings;
 using Enset.Domain.Common;
 using Enset.Domain.EnergyCommunities;
+using Enset.Domain.Associations;
 
 namespace Enset.Domain.Energy;
 
@@ -58,4 +59,6 @@ public class Meter : BaseEntity
     public ICollection<EnergyCommunityMeterAssignment>
         EnergyCommunityAssignments { get; set; }
         = new List<EnergyCommunityMeterAssignment>();
+    public ICollection<BuildingMeterAssignment> BuildingAssignments { get; set; }
+        = new List<BuildingMeterAssignment>();
 }

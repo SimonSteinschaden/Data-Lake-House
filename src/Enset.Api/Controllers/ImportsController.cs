@@ -12,6 +12,7 @@ using Enset.Api.Authorization;
 using Enset.Application.Imports.Resolution;
 using Enset.Application.Imports.Enums;
 using Enset.Application.Imports.Mapping;
+using Enset.Application.Imports.MassImport;
 
 namespace Enset.Api.Controllers;
 
@@ -40,6 +41,7 @@ public sealed class ImportsController : ControllerBase
     private readonly IWebHostEnvironment _environment;
     private readonly ICurrentUserContext _currentUser;
     private readonly IDataAccessScope _accessScope;
+    private readonly IMeterReadingMassImportJobs _massImportJobs;
 
     public ImportsController(
         IImportAnalysisService analysisService,
@@ -49,7 +51,8 @@ public sealed class ImportsController : ControllerBase
         ILogger<ImportsController> logger,
         IWebHostEnvironment environment,
         ICurrentUserContext currentUser,
-        IDataAccessScope accessScope)
+        IDataAccessScope accessScope,
+        IMeterReadingMassImportJobs massImportJobs)
     {
         _analysisService = analysisService;
         _reports = reports;
@@ -59,6 +62,7 @@ public sealed class ImportsController : ControllerBase
         _environment = environment;
         _currentUser = currentUser;
         _accessScope = accessScope;
+        _massImportJobs = massImportJobs;
     }
 
     [HttpPost("analyze")]
@@ -130,10 +134,21 @@ public sealed class ImportsController : ControllerBase
                 report.AssignedMeterId = request.TargetMeteringPointId.Value;
                 report.DefaultMeterNumber = string.IsNullOrWhiteSpace(request.DefaultMeterNumber)
                     ? report.DefaultMeterNumber : request.DefaultMeterNumber.Trim();
+                foreach (var issue in report.Issues.Where(issue =>
+                             issue.Type ==
+                                 Enset.Application.Imports.Issues
+                                     .ImportIssueType.AssignMeterRequired &&
+                             !issue.IsResolved))
+                    issue.ResolveAutomatically(
+                        Enset.Application.Imports.Issues
+                            .ImportResolutionAction.AssignMeter,
+                        DateTime.UtcNow,
+                        report.AssignedMeterId.Value.ToString());
                 if (report.CsvMapping is not null)
                     report.MeterReadings = CsvMeterReadingMappingService.Map(
                         report.CsvMapping, report.DefaultMeterNumber, report.AssignedMeterId)
                         .Select(MeterReadingExcelRowMapper.ToDto).ToList();
+                report.RecalculateCommitReadiness();
                 report.AuditTrail.Add(new()
                 {
                     Timestamp = DateTime.UtcNow,
@@ -293,11 +308,34 @@ public sealed class ImportsController : ControllerBase
     }
 
     [HttpPost("{importId:guid}/commit")]
-    public async Task<ActionResult<ImportReportResponse>> Commit(
+    public async Task<ActionResult> Commit(
         Guid importId,
         [FromBody] CommitImportRequest request,
         CancellationToken cancellationToken)
     {
+        var report = await _reports.GetAsync(
+            importId,
+            cancellationToken);
+        if (report is null)
+            return ApiProblems.ImportNotFound(this, importId);
+        if (report.SourceType == ImportSourceType.Csv &&
+            request.TargetWriter == ImportWriterType.Database)
+        {
+            if (report.HasOpenCommitBlockingIssues)
+                return ApiProblems.ImportConflict(
+                    this,
+                    "The import has unresolved blocking issues.");
+            var accepted = await _massImportJobs.Enqueue(
+                new(
+                    importId,
+                    request.TargetMode,
+                    _currentUser.UserId,
+                    report.SourceFile?.Length ?? 0),
+                cancellationToken);
+            return Accepted(
+                accepted.StatusUrl,
+                accepted);
+        }
         var result = await _commitService.CommitAsync(
             new ImportCommitCommand
             {
@@ -324,5 +362,31 @@ public sealed class ImportsController : ControllerBase
         }
 
         return Ok(result.Report.ToResponse());
+    }
+
+    [HttpGet("{importId:guid}/status")]
+    public async Task<ActionResult<MeterReadingImportJobProgress>> Status(
+        Guid importId,
+        CancellationToken cancellationToken)
+    {
+        var status = await _massImportJobs.Get(
+            importId,
+            cancellationToken);
+        return status is null
+            ? NotFound()
+            : Ok(status);
+    }
+
+    [HttpPost("{importId:guid}/cancel")]
+    public async Task<ActionResult<MeterReadingImportCancelled>> Cancel(
+        Guid importId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _massImportJobs.Cancel(
+            importId,
+            cancellationToken);
+        return result is null
+            ? NotFound()
+            : Ok(result);
     }
 }

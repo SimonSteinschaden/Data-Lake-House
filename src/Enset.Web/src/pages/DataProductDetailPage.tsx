@@ -1,16 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
-import { useParams } from "react-router";
-import { BuildingEnergyDashboard } from "../features/dataProducts/BuildingEnergyDashboard";
-import { DataProductVersionHistory } from "../features/dataProducts/DataProductVersionHistory";
-import { dataProductService } from "../features/dataProducts/dataProductService";
-import type { Availability, DataProductSummary, ProductVersion, VersionHistory } from "../features/dataProducts/types";
+import {useEffect,useState} from "react";
+import {useParams} from "react-router";
+import {dataProductCatalogService,type CatalogItem,type ProductPreview} from "../services/dataProductCatalogService";
 import "../features/dataProducts/dataProducts.css";
-const today = new Date().toISOString().slice(0, 10); const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-export function DataProductDetailPage() {
-  const { id = "" } = useParams(); const [product, setProduct] = useState<DataProductSummary>(); const [latest, setLatest] = useState<ProductVersion>(); const [versions, setVersions] = useState<VersionHistory[]>([]); const [availability, setAvailability] = useState<Availability>(); const [customerId, setCustomerId] = useState(""); const [from, setFrom] = useState(monthAgo); const [to, setTo] = useState(today); const [error, setError] = useState(""); const [busy, setBusy] = useState(false);
-  const reload = useCallback(() => { dataProductService.latest(id).then(setLatest).catch(() => setLatest(undefined)); dataProductService.versions(id).then(setVersions).catch(e => setError(e.message)); }, [id]);
-  useEffect(() => { dataProductService.get(id).then(setProduct).catch(e => setError(e.message)); reload(); }, [id, reload]);
-  const check = async () => { setError(""); try { setAvailability(await dataProductService.availability(id, customerId, new Date(from).toISOString(), new Date(to).toISOString())); } catch (e) { setError((e as Error).message); } };
-  const generate = async () => { setBusy(true); setError(""); try { await dataProductService.generate(id, customerId, new Date(from).toISOString(), new Date(to).toISOString()); await reload(); await check(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
-  return <main><h1>{product?.name ?? "Data Product"}</h1><div className="generation-form"><label>Kunden-ID<input value={customerId} onChange={e => setCustomerId(e.target.value)} /></label><label>Von<input type="date" value={from} onChange={e => setFrom(e.target.value)} /></label><label>Bis<input type="date" value={to} onChange={e => setTo(e.target.value)} /></label><button onClick={check} disabled={!customerId}>Verfügbarkeit prüfen</button><button onClick={generate} disabled={busy || !availability?.isAvailable}>{busy ? "Generiere …" : "Generieren"}</button></div>{availability && !availability.isAvailable && <p className="warning">Fehlende Daten: {availability.missingInputs.join(", ")}</p>}{error && <p className="error">{error}</p>}{latest && <BuildingEnergyDashboard version={latest} />}<DataProductVersionHistory versions={versions} /></main>;
+export function DataProductDetailPage(){
+ const{id=""}=useParams();const[item,setItem]=useState<CatalogItem>(),[preview,setPreview]=useState<ProductPreview>(),[error,setError]=useState("");
+ useEffect(()=>{Promise.all([dataProductCatalogService.get(id),dataProductCatalogService.preview(id)]).then(([a,b])=>{setItem(a);setPreview(b)}).catch(e=>setError(e.message))},[id]);
+ const m=item?.metadata,columns=preview?.rows.length?Object.keys(preview.rows[0]):[];
+ return <main><h1>{m?.germanName??"Data Product"}</h1>{error&&<p className="error">{error}</p>}{m&&<><p>{m.description}</p><dl className="metadata-grid"><dt>Code</dt><dd>{m.code}</dd><dt>Version</dt><dd>{m.version.major}.{m.version.minor}.{m.version.patch}</dd><dt>Owner</dt><dd>{m.owner}</dd><dt>Quelle</dt><dd>{m.dataSource} · {m.snapshotVersion}</dd><dt>Input</dt><dd>{m.inputs.join(", ")}</dd><dt>Verwendete Produkte</dt><dd>{m.usedProducts.join(", ")||"Keine"}</dd><dt>Zeitraum</dt><dd>{m.period}</dd><dt>Aggregation</dt><dd>{m.aggregationLevel}</dd><dt>Fehlende Daten</dt><dd>{m.missingDataBehavior}</dd><dt>Datenherkunft</dt><dd>{m.lineage}</dd><dt>API</dt><dd><code>{m.apiEndpoint}</code></dd></dl><div className="export-actions">{m.supportedExports.map(f=><a key={f} href={dataProductCatalogService.exportUrl(m.code,f)}>Export {f.toUpperCase()}</a>)}</div><h2>Vorschau</h2>{preview&&<div className="table-responsive"><table><thead><tr>{columns.map(c=><th key={c}>{c}</th>)}</tr></thead><tbody>{preview.rows.map((r,i)=><tr key={i}>{columns.map(c=><td key={c}>{String(r[c]??"—")}</td>)}</tr>)}</tbody></table></div>}<h2>API-Schema</h2><pre>{JSON.stringify(m.outputSchema,null,2)}</pre></>}</main>
 }

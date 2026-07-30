@@ -10,6 +10,9 @@
   border-top: 1px solid #c7d0d5;
   border-left: 1px solid #c7d0d5;
   background: #fff;
+  border-radius: var(--enset-radius-lg);
+  box-shadow: var(--enset-shadow-sm);
+  overflow: hidden;
 }
 
 .management-energy__filters label,
@@ -32,7 +35,7 @@
   height: 2.1rem;
   padding: 0 0.45rem;
   border: 1px solid #d3dade;
-  border-radius: 0.125rem;
+  border-radius: 0.5rem;
   color: #63717a;
   background: #f6f8f8;
 }
@@ -79,9 +82,9 @@
 
 .energy-chart__bar {
   min-height: 1px;
-  border: 1px solid #1b6774;
+  border: 1px solid var(--enset-red-dark);
   border-bottom: 0;
-  background: #2b7f8d;
+  background: var(--enset-red);
 }
 
 .energy-chart__line {
@@ -94,7 +97,7 @@
 
 .energy-chart__line polyline {
   fill: none;
-  stroke: #176b79;
+  stroke: var(--enset-petrol);
   stroke-width: 1.2;
   vector-effect: non-scaling-stroke;
 }
@@ -178,7 +181,7 @@
 .energy-bars__row i {
   display: block;
   height: 100%;
-  background: #2b7f8d;
+  background: var(--enset-petrol);
 }
 
 .energy-bars__row strong {

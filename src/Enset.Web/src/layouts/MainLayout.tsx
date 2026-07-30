@@ -8,19 +8,15 @@ export function MainLayout() {
     <div className="main-layout">
       <header className="main-layout__header">
         <div className="main-layout__brand">
-          <span className="main-layout__brand-name">
-            ENSET
-          </span>
-
-          <span className="main-layout__brand-product">
-            Data Platform
-          </span>
+          <span className="main-layout__brand-name">ENSET</span>
+          <span className="main-layout__brand-product">Data Platform</span>
         </div>
 
-        <div className="main-layout__user">
-          <span className="main-layout__user-label">
-            MVP-Benutzer
-          </span>
+        <div className="main-layout__header-actions">
+          <button className="main-layout__user" type="button" aria-label="Benutzermenü">
+            <span className="main-layout__avatar">MB</span>
+            <span className="main-layout__user-label">MVP-Benutzer</span>
+          </button>
         </div>
       </header>
 
@@ -30,7 +26,6 @@ export function MainLayout() {
 
       <main className="main-layout__content">
         <PageBreadcrumbs />
-
         <Outlet />
       </main>
     </div>

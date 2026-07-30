@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "1U0WkaaoaWA=",
+  "dgSpecHash": "tMzVecptdlU=",
   "success": true,
   "projectFilePath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
   "expectedPackageFiles": [
@@ -29,6 +29,9 @@
     "C:\\Users\\rdpadmin\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\10.0.4\\microsoft.extensions.dependencyinjection.10.0.4.nupkg.sha512",
     "C:\\Users\\rdpadmin\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.4\\microsoft.extensions.dependencyinjection.abstractions.10.0.4.nupkg.sha512",
     "C:\\Users\\rdpadmin\\.nuget\\packages\\microsoft.extensions.dependencymodel\\10.0.4\\microsoft.extensions.dependencymodel.10.0.4.nupkg.sha512",
+    "C:\\Users\\rdpadmin\\.nuget\\packages\\microsoft.extensions.diagnostics.abstractions\\10.0.4\\microsoft.extensions.diagnostics.abstractions.10.0.4.nupkg.sha512",
+    "C:\\Users\\rdpadmin\\.nuget\\packages\\microsoft.extensions.fileproviders.abstractions\\10.0.4\\microsoft.extensions.fileproviders.abstractions.10.0.4.nupkg.sha512",
+    "C:\\Users\\rdpadmin\\.nuget\\packages\\microsoft.extensions.hosting.abstractions\\10.0.4\\microsoft.extensions.hosting.abstractions.10.0.4.nupkg.sha512",
     "C:\\Users\\rdpadmin\\.nuget\\packages\\microsoft.extensions.logging\\10.0.4\\microsoft.extensions.logging.10.0.4.nupkg.sha512",
     "C:\\Users\\rdpadmin\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.4\\microsoft.extensions.logging.abstractions.10.0.4.nupkg.sha512",
     "C:\\Users\\rdpadmin\\.nuget\\packages\\microsoft.extensions.options\\10.0.4\\microsoft.extensions.options.10.0.4.nupkg.sha512",

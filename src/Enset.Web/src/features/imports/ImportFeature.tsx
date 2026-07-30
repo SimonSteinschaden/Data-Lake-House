@@ -31,6 +31,7 @@ function createInitialState(selectedFile: File | null = null): WizardState {
     resolutionNotice: null,
     isCommitting: false,
     commitError: null,
+    importProgress: null,
   };
 }
 
@@ -249,13 +250,25 @@ export function ImportFeature() {
     }));
 
     try {
-      const report = await importService.commitImport(state.importId);
-
-      if (report.status !== "Committed") {
+      const commit = await importService.commitImport(state.importId);
+      if (commit.asynchronous) {
+        let progress = commit.progress;
+        while (!["Completed", "Failed", "Cancelled", "Interrupted"]
+          .includes(progress.status)) {
+          setState(current => ({ ...current, importProgress: progress }));
+          await new Promise(resolve => window.setTimeout(resolve, 1000));
+          progress = await importService.getImportStatus(state.importId);
+        }
+        setState(current => ({ ...current, importProgress: progress }));
+        if (progress.status !== "Completed")
+          throw new Error(progress.errorMessage ??
+            `Der Import wurde mit Status '${progress.status}' beendet.`);
+      } else if (commit.report.status !== "Committed") {
         throw new Error(
-          `Der Server meldet nach dem Commit den Status '${report.status}'.`,
+          `Der Server meldet nach dem Commit den Status '${commit.report.status}'.`,
         );
       }
+      const report = await importService.getImportReport(state.importId);
 
       setState(current => ({
         ...current,
@@ -333,6 +346,7 @@ export function ImportFeature() {
         resolutionNotice={state.resolutionNotice}
         isCommitting={state.isCommitting}
         commitError={state.commitError}
+        importProgress={state.importProgress}
         onFileSelected={handleFileSelected}
         onSourceTypeChanged={sourceType =>
           setState(current => ({
@@ -354,6 +368,8 @@ export function ImportFeature() {
         onApplyResolutions={handleApplyResolutions}
         onApplyGroupResolution={handleApplyGroupResolution}
         onCommit={handleCommit}
+        onCancel={() => state.importId &&
+          void importService.cancelImport(state.importId)}
         onBackToUpload={() => moveTo("upload")}
         onBackToAnalysis={() => moveTo("analysis")}
         onBackToResolution={() => moveTo("resolution")}

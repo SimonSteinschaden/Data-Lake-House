@@ -9,6 +9,7 @@ import type { ImportWizardStep } from "../types/ImportWizardStep";
 import type { ImportAnalysisResult } from "../types/ImportAnalysisResult";
 import type { ImportIssueViewModel } from "./models/ImportIssueViewModel";
 import type { ImportResolutionAction } from "./models/ImportResolutionAction";
+import type { MeterReadingImportProgress } from "../../../services/importService";
 
 import "./ImportWizard.css";
 
@@ -29,6 +30,7 @@ interface ImportWizardProps {
 
   isCommitting: boolean;
   commitError: string | null;
+  importProgress: MeterReadingImportProgress | null;
 
   onFileSelected: (file: File | null) => void;
 
@@ -60,6 +62,7 @@ interface ImportWizardProps {
   ) => void;
 
   onCommit: () => void;
+  onCancel: () => void;
   onBackToUpload: () => void;
   onBackToAnalysis: () => void;
   onBackToResolution: () => void;
@@ -80,6 +83,7 @@ export function ImportWizard({
   resolutionNotice,
   isCommitting,
   commitError,
+  importProgress,
   onFileSelected,
   onSourceTypeChanged,
   onMediumChanged,
@@ -89,6 +93,7 @@ export function ImportWizard({
   onApplyResolutions,
   onApplyGroupResolution,
   onCommit,
+  onCancel,
   onBackToUpload,
   onBackToAnalysis,
   onBackToResolution,
@@ -201,7 +206,9 @@ export function ImportWizard({
             }
             isCommitting={isCommitting}
             error={commitError}
+            progress={importProgress}
             onCommit={onCommit}
+            onCancel={onCancel}
             onBack={onBackToResolution}
           />
         )}

@@ -58,12 +58,13 @@ const navigationGroups: NavigationGroup[] = [
       },
       {
         path: "/metering-points",
-        label: "Zähler",
-        disabled: true, //TODO: which information should be displayed here? This is a new concept in the energy sector, but not yet implemented in the system.
+        label: "Messwerte",
+        disabled: true, //TODO: which information should be displayed here, without overwhelming loadprofiles?
       },
       {
         path: "/documents",
-        label: "Dokumente", //TODO: which documents, just Dokumentenliste?
+        label: "Dokumente", //TODO: which documents, just document list?
+        disabled: true, //TODO:  not yet implemented in the system.
       },
     ],
   },
@@ -102,8 +103,8 @@ const navigationGroups: NavigationGroup[] = [
         label: "Datenqualität",
       },
       {
-        path: "/tools/data-curation",
-        label: "Datenkurationscenter",
+        path: "/tools/data-review",
+        label: "Datenprüfung",
       },
       {
         path: "/tools/assignments",
@@ -118,14 +119,17 @@ const navigationGroups: NavigationGroup[] = [
       {
         path: "/admin/users",
         label: "Benutzer",
+        disabled: true,
       },
       {
         path: "/settings",
         label: "Einstellungen",
+        disabled: true,
       },
       {
         path: "/admin/system",
         label: "System",
+        disabled: true,
       },
     ],
   },

@@ -12,10 +12,12 @@ using Enset.Domain.Projects;
 using Enset.Domain.Users;
 using Enset.Domain.Common;
 using Enset.Domain.Curation;
+using Enset.Domain.Associations;
 using Enset.Domain.GoldProfiles;
 using Enset.Application.Authorization;
 
 using Enset.Infrastructure.Imports.Persistence.Entities;
+using Enset.Infrastructure.Imports.MassImport;
 
 namespace Enset.Infrastructure.Persistence;
 
@@ -36,6 +38,10 @@ public class EnsetDbContext : DbContext
         => Set<UserCustomerAssignment>();
     public DbSet<CustomerBuildingAssignment> CustomerBuildingAssignments
         => Set<CustomerBuildingAssignment>();
+    public DbSet<BuildingMeterAssignment> BuildingMeterAssignments => Set<BuildingMeterAssignment>();
+    public DbSet<BuildingDocumentAssignment> BuildingDocumentAssignments => Set<BuildingDocumentAssignment>();
+    public DbSet<CustomerProjectAssignment> CustomerProjectAssignments => Set<CustomerProjectAssignment>();
+    public DbSet<AssociationAuditEntry> AssociationAuditEntries => Set<AssociationAuditEntry>();
 
     public DbSet<Project> Projects => Set<Project>();
 
@@ -92,6 +98,12 @@ public class EnsetDbContext : DbContext
 
     public DbSet<ImportAuditEntryEntity> ImportAuditEntries
         => Set<ImportAuditEntryEntity>();
+    public DbSet<MeterReadingImportJobEntity> MeterReadingImportJobs
+        => Set<MeterReadingImportJobEntity>();
+    public DbSet<ImportStagingMeterReading> ImportStagingMeterReadings
+        => Set<ImportStagingMeterReading>();
+    public DbSet<MeterReadingImportAuditEntity> MeterReadingImportAudits
+        => Set<MeterReadingImportAuditEntity>();
     public DbSet<EntityAuditEntry> EntityAuditEntries => Set<EntityAuditEntry>();
     public DbSet<CurationTask> CurationTasks => Set<CurationTask>();
     public DbSet<CurationDecision> CurationDecisions => Set<CurationDecision>();
@@ -173,7 +185,9 @@ public class EnsetDbContext : DbContext
         var auditEntries = new List<EntityAuditEntry>();
 
         foreach (var entry in ChangeTracker.Entries<BaseEntity>()
-                     .Where(x => x.State is EntityState.Added or EntityState.Modified)
+                     .Where(x =>
+                         x.Entity is not MeterReading &&
+                         x.State is EntityState.Added or EntityState.Modified)
                      .ToList())
         {
             var entity = entry.Entity;

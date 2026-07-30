@@ -62,26 +62,6 @@ C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.In
 C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.Infrastructure\bin\Debug\net10.0\BuildHost-netcore\tr\System.CommandLine.resources.dll
 C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.Infrastructure\bin\Debug\net10.0\BuildHost-netcore\zh-Hans\System.CommandLine.resources.dll
 C:\Users\simon\Desktop\Repositories\Data-Lake-House\Data Lake House\src\Enset.Infrastructure\bin\Debug\net10.0\BuildHost-netcore\zh-Hant\System.CommandLine.resources.dll
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.deps.json
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.dll
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.pdb
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Application.dll
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Domain.dll
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Domain.pdb
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Application.pdb
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.csproj.AssemblyReference.cache
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.AssemblyInfoInputs.cache
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.AssemblyInfo.cs
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.csproj.CoreCompileInputs.cache
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.sourcelink.json
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.In.B7D30C0D.Up2Date
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.dll
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\refint\Enset.Infrastructure.dll
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.pdb
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.genruntimeconfig.cache
-C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\ref\Enset.Infrastructure.dll
 C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.dll
 C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Infrastructure\obj\Debug\net10.0\refint\Enset.Infrastructure.dll
 C:\Users\CodexSandboxOffline\.codex\.sandbox\cwd\d609c3a9d9648696\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.pdb
@@ -329,3 +309,23 @@ C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0
 C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
 C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Infrastructure.dll
 C:\Users\rdpadmin\AppData\Local\Temp\enset-architecture-review-v13\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.deps.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.runtimeconfig.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Application.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Domain.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Domain.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\bin\Debug\net10.0\Enset.Application.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.AssemblyInfo.cs
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.sourcelink.json
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.In.B7D30C0D.Up2Date
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\refint\Enset.Infrastructure.dll
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.pdb
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\Enset.Infrastructure.genruntimeconfig.cache
+C:\Users\rdpadmin\Desktop\Repositories\Data Lake House\Data-Lake-House-main\Data-Lake-House\src\Enset.Infrastructure\obj\Debug\net10.0\ref\Enset.Infrastructure.dll

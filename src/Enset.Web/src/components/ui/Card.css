@@ -1,8 +1,15 @@
 .card {
-  border: 1px solid #d6dde3;
-  border-radius: 0.125rem;
+  border: 1px solid var(--enset-border);
+  border-radius: var(--enset-radius-lg);
   background: #ffffff;
-  box-shadow: none;
+  box-shadow: var(--enset-shadow-sm);
+  overflow: hidden;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.card:hover {
+  box-shadow: var(--enset-shadow-md);
+  transform: translateY(-2px);
 }
 
 .card__header {
@@ -11,9 +18,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1.125rem;
-  border-bottom: 1px solid #d6dde3;
-  border-left: 3px solid #245b4b;
-  background: #f8faf9;
+  border-bottom: 1px solid var(--enset-border);
+  border-top: 3px solid var(--enset-red);
+  background: #fff;
 }
 
 .card__title {

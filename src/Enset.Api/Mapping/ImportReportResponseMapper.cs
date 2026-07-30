@@ -61,6 +61,7 @@ public static class ImportReportResponseMapper
             ? (int)((timestamps[^1] - timestamps[0]).TotalSeconds / interval.Value) + 1 : timestamps.Count;
         var duplicates = validReadings.GroupBy(x => new { x.MeterId, x.MeterNumber, x.Timestamp })
             .Sum(x => Math.Max(0, x.Count() - 1));
+        var streaming = report.MeterReadingAnalysis;
 
         return new ImportReportResponse
         {
@@ -184,14 +185,20 @@ public static class ImportReportResponseMapper
             BuildingCount = report.BuildingCount,
             MeterCount = report.MeterCount,
             MeterReadingCount = report.MeterReadingCount,
-            MeasurementPeriodStart = timestamps.Count == 0 ? null : timestamps[0],
-            MeasurementPeriodEnd = timestamps.Count == 0 ? null : timestamps[^1],
-            IntervalSeconds = interval,
-            ValidReadingCount = validReadings.Count,
-            InvalidReadingCount = report.MeterReadings.Count - validReadings.Count,
+            MeasurementPeriodStart = streaming?.PeriodStart ??
+                (timestamps.Count == 0 ? null : timestamps[0]),
+            MeasurementPeriodEnd = streaming?.PeriodEnd ??
+                (timestamps.Count == 0 ? null : timestamps[^1]),
+            IntervalSeconds = streaming?.IntervalSeconds ?? interval,
+            ValidReadingCount = checked((int)(
+                streaming?.ValidRows ?? validReadings.Count)),
+            InvalidReadingCount = checked((int)(
+                streaming?.InvalidRows ??
+                (report.MeterReadings.Count - validReadings.Count))),
             ExpectedIntervalCount = expected,
             MissingIntervalCount = Math.Max(0, expected - timestamps.Count),
-            DuplicateReadingCount = duplicates,
+            DuplicateReadingCount = checked((int)(
+                streaming?.DuplicateRows ?? duplicates)),
             IssueCount = report.IssueCount,
             ReturnedIssueCount = visibleIssues.Count,
             HasMoreIssues = groupRepresentatives.Count > visibleIssues.Count,

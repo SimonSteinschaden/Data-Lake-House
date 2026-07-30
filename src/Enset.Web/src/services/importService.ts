@@ -106,6 +106,28 @@ interface CommitImportRequest {
   archiveRawSource: true;
 }
 
+export interface MeterReadingImportProgress {
+  importId: string;
+  jobId: string;
+  status: "Queued" | "Reading" | "Staging" | "Validating" | "Writing" |
+    "Completed" | "Failed" | "Cancelled" | "Interrupted";
+  phase: string;
+  progressPercent: number;
+  readRows: number;
+  stagedRows: number;
+  validRows: number;
+  rejectedRows: number;
+  duplicateRows: number;
+  writtenRows: number;
+  currentBatch: number;
+  errorCode: string | null;
+  errorMessage: string | null;
+}
+
+export type CommitImportResult =
+  | { asynchronous: true; progress: MeterReadingImportProgress }
+  | { asynchronous: false; report: ImportAnalysisResult };
+
 interface ApplyResolutionRuleResponse {
   ruleId: string;
   matchedIssueCount: number;
@@ -251,14 +273,16 @@ export const importService = {
     };
   },
 
-  async commitImport(importId: string, signal?: AbortSignal): Promise<ImportAnalysisResult> {
+  async commitImport(importId: string, signal?: AbortSignal): Promise<CommitImportResult> {
     const request: CommitImportRequest = {
       targetMode: "Upsert",
       targetWriter: "Database",
       targetLocation: null,
       archiveRawSource: true,
     };
-    const report = await apiRequest<ImportReportResponse>(
+    const response = await apiRequest<ImportReportResponse | {
+      importId: string; jobId: string; status: MeterReadingImportProgress["status"];
+    }>(
       `${importPath(importId)}/commit`,
       {
         method: "POST",
@@ -266,6 +290,38 @@ export const importService = {
         signal,
       },
     );
-    return mapReport(report);
+    return "jobId" in response
+      ? {
+          asynchronous: true,
+          progress: {
+            ...response,
+            phase: response.status,
+            progressPercent: 0,
+            readRows: 0,
+            stagedRows: 0,
+            validRows: 0,
+            rejectedRows: 0,
+            duplicateRows: 0,
+            writtenRows: 0,
+            currentBatch: 0,
+            errorCode: null,
+            errorMessage: null,
+          },
+        }
+      : { asynchronous: false, report: mapReport(response) };
+  },
+
+  async getImportStatus(
+    importId: string,
+    signal?: AbortSignal,
+  ): Promise<MeterReadingImportProgress> {
+    return apiRequest<MeterReadingImportProgress>(
+      `${importPath(importId)}/status`,
+      { method: "GET", signal },
+    );
+  },
+
+  async cancelImport(importId: string): Promise<void> {
+    await apiRequest(`${importPath(importId)}/cancel`, { method: "POST" });
   },
 };

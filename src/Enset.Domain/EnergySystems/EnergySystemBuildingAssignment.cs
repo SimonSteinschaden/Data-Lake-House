@@ -18,4 +18,5 @@ public class EnergySystemBuildingAssignment : BaseEntity
     public DateTime ValidFrom { get; set; } = DateTime.UtcNow;
 
     public DateTime? ValidTo { get; set; }
+    public bool IsPrimary { get; set; }
 }

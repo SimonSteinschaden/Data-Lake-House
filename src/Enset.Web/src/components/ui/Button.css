@@ -6,7 +6,7 @@
   gap: 0.5rem;
   padding: 0.625rem 1rem;
   border: 1px solid transparent;
-  border-radius: 0.5rem;
+  border-radius: 0.65rem;
   font: inherit;
   font-size: 0.9rem;
   font-weight: 650;
@@ -18,43 +18,46 @@
     border-color 120ms ease,
     color 120ms ease,
     box-shadow 120ms ease,
-    opacity 120ms ease;
+    opacity 180ms ease,
+    transform 180ms ease;
 }
 
 /* Wichtigste Aktion – ENSET-Rot */
 
 .button--primary {
-  border-color: #b42318;
-  background: #b42318;
+  border-color: var(--enset-red);
+  background: var(--enset-red);
   color: #ffffff;
 }
 
 .button--primary:hover:not(:disabled) {
-  border-color: #912018;
-  background: #912018;
+  border-color: var(--enset-red-dark);
+  background: var(--enset-red-dark);
+  box-shadow: 0 7px 16px rgba(200, 16, 46, 0.22);
+  transform: translateY(-1px) scale(1.01);
 }
 
 .button--primary:active:not(:disabled) {
-  border-color: #7a1b14;
-  background: #7a1b14;
+  border-color: #8d0b22;
+  background: #8d0b22;
 }
 
 /* Neutrale Aktion */
 
 .button--secondary {
-  border-color: #cbd5df;
+  border-color: var(--enset-red);
   background: #ffffff;
-  color: #334155;
+  color: var(--enset-red);
 }
 
 .button--secondary:hover:not(:disabled) {
-  border-color: #aebac7;
-  background: #f1f4f6;
-  color: #17202a;
+  border-color: var(--enset-red-dark);
+  background: var(--enset-red-faint);
+  color: var(--enset-red-dark);
 }
 
 .button--secondary:active:not(:disabled) {
-  background: #e5eaee;
+  background: var(--enset-red-soft);
 }
 
 /* Toolbar- und Listenaktion */
@@ -62,16 +65,16 @@
 .button--ghost {
   border-color: transparent;
   background: transparent;
-  color: #475569;
+  color: var(--enset-red);
 }
 
 .button--ghost:hover:not(:disabled) {
-  background: #e8edf2;
-  color: #17202a;
+  background: var(--enset-red-faint);
+  color: var(--enset-red-dark);
 }
 
 .button--ghost:active:not(:disabled) {
-  background: #dce3e8;
+  background: var(--enset-red-soft);
 }
 
 /* Destruktive Aktion */
@@ -94,7 +97,7 @@
 /* Gemeinsame Zustände */
 
 .button:focus-visible {
-  outline: 3px solid rgb(180 35 24 / 25%);
+  outline: 3px solid rgb(200 16 46 / 22%);
   outline-offset: 2px;
 }
 

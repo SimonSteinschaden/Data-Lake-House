@@ -3,6 +3,7 @@ using Enset.Domain.Customers;
 using Enset.Domain.Documents;
 using Enset.Domain.Energy;
 using Enset.Domain.Projects;
+using Enset.Domain.Associations;
 
 namespace Enset.Domain.Buildings;
 
@@ -34,4 +35,9 @@ public class Building : BaseEntity
 
     public ICollection<Document> Documents { get; set; }
         = new List<Document>();
+
+    public ICollection<BuildingMeterAssignment> MeterAssignments { get; set; }
+        = new List<BuildingMeterAssignment>();
+    public ICollection<BuildingDocumentAssignment> DocumentAssignments { get; set; }
+        = new List<BuildingDocumentAssignment>();
 }

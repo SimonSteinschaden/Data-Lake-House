@@ -30,6 +30,9 @@ var connectionString = builder.Configuration.GetConnectionString(
         "Connection string 'EnsetDatabase' is not configured.");
 
 builder.Services.AddDbPersistence(connectionString);
+builder.Services.Configure<
+    Enset.Infrastructure.Imports.MassImport.MeterReadingMassImportOptions>(
+    builder.Configuration.GetSection("MeterReadingMassImport"));
 
 var app = builder.Build();
 

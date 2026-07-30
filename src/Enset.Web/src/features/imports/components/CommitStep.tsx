@@ -1,3 +1,5 @@
+import type { MeterReadingImportProgress } from "../../../services/importService";
+
 interface CommitStepProps {
   fileName: string;
   customerCount: number;
@@ -8,7 +10,9 @@ interface CommitStepProps {
   status: string;
   isCommitting: boolean;
   error: string | null;
+  progress: MeterReadingImportProgress | null;
   onCommit: () => void;
+  onCancel: () => void;
   onBack: () => void;
 }
 
@@ -22,7 +26,9 @@ export function CommitStep({
   status,
   isCommitting,
   error,
+  progress,
   onCommit,
+  onCancel,
   onBack,
 }: CommitStepProps) {
   return (
@@ -59,6 +65,18 @@ export function CommitStep({
         </div>
       )}
 
+      {progress && (
+        <div className="import-wizard__notice" aria-live="polite">
+          <strong>Phase: {progress.phase}</strong>
+          <progress max={100} value={progress.progressPercent} />
+          <p>
+            Gelesen: {progress.readRows} · geschrieben: {progress.writtenRows}
+            {" · "}verworfen: {progress.rejectedRows}
+            {" · "}Dubletten: {progress.duplicateRows}
+          </p>
+        </div>
+      )}
+
       <div className="import-wizard__actions">
         <button
           type="button"
@@ -68,6 +86,12 @@ export function CommitStep({
         >
           Zurück
         </button>
+        {isCommitting && (
+          <button type="button" className="import-wizard__secondary-action"
+            onClick={onCancel}>
+            Import abbrechen
+          </button>
+        )}
 
         <button
           type="button"

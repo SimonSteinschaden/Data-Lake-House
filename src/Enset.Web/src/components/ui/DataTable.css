@@ -1,9 +1,10 @@
 
 .data-table {
   overflow: hidden;
-  border: 1px solid #dbe2e8;
-  border-radius: 0.75rem;
+  border: 1px solid var(--enset-border);
+  border-radius: var(--enset-radius-lg);
   background: #ffffff;
+  box-shadow: var(--enset-shadow-sm);
 }
 
 .data-table__toolbar {
@@ -28,8 +29,8 @@
 }
 
 .data-table__search:focus {
-  border-color: #8b1e1e;
-  outline: 3px solid rgb(180 35 24 / 12%);
+  border-color: var(--enset-red);
+  outline: 3px solid rgb(200 16 46 / 12%);
 }
 
 .data-table__result-count {
@@ -88,7 +89,7 @@
 }
 
 .data-table__sort-indicator {
-  color: #94a3b8;
+  color: var(--enset-red);
   font-size: 0.65rem;
 }
 
@@ -105,11 +106,11 @@
 }
 
 .data-table__row--clickable:hover {
-  background: #f7f9fa;
+  background: var(--enset-red-faint);
 }
 
 .data-table__row--clickable:focus-visible {
-  outline: 2px solid #b42318;
+  outline: 2px solid var(--enset-red);
   outline-offset: -2px;
 }
 
@@ -171,7 +172,9 @@
 }
 
 .data-table__pagination-button:hover:not(:disabled) {
-  background: #f1f4f6;
+  border-color: var(--enset-red);
+  background: var(--enset-red-faint);
+  color: var(--enset-red);
 }
 
 .data-table__pagination-button:disabled {

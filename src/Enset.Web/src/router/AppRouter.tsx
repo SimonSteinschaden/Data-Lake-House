@@ -15,6 +15,9 @@ import { BuildingEnergyPage } from "../pages/BuildingEnergyPage";
 import { MetersPage } from "../pages/MetersPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { CurationCenterPage } from "../pages/CurationCenterPage";
+import { ReportsPage } from "../pages/ReportsPage";
+import { DataQualityPage } from "../pages/DataQualityPage";
+import { AssociationsPage } from "../pages/AssociationsPage";
 
 export function AppRouter() {
   return (
@@ -81,17 +84,7 @@ export function AppRouter() {
           element={<Navigate to="/analysis/object" replace />}
         />
 
-        <Route path="reports">
-          <Route
-            index
-            element={
-              <PlaceholderPage
-                title="Reports"
-                description="Berichte erzeugen, anzeigen und exportieren."
-              />
-            }
-          />
-        </Route>
+        <Route path="reports" element={<ReportsPage />} />
 
         <Route
           path="data-products"
@@ -103,30 +96,15 @@ export function AppRouter() {
         />
 
         <Route path="tools">
-          <Route
-            path="data-quality"
-            element={
-              <PlaceholderPage
-                title="Datenqualität"
-                description="Datenqualität, Validierungsstatus und offene Probleme prüfen."
-              />
-            }
-          />
+          <Route path="data-quality" element={<DataQualityPage />} />
           <Route
             path="data-quality/warnings"
             element={<DataQualityWarningsPage />}
           />
-          <Route path="data-curation" element={<CurationCenterPage />} />
-          <Route path="curation" element={<Navigate to="/tools/data-curation" replace />} />
-          <Route
-            path="assignments"
-            element={
-              <PlaceholderPage
-                title="Zuordnungen"
-                description="Beziehungen zwischen Kunden, Gebäuden, Zählpunkten und Zählern verwalten."
-              />
-            }
-          />
+          <Route path="data-review" element={<CurationCenterPage />} />
+          <Route path="data-curation" element={<Navigate to="/tools/data-review" replace />} />
+          <Route path="curation" element={<Navigate to="/tools/data-review" replace />} />
+          <Route path="assignments" element={<AssociationsPage />} />
         </Route>
 
         <Route path="admin">

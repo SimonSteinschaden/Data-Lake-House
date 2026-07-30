@@ -1,4 +1,22 @@
 :root {
+  --enset-red: #c8102e;
+  --enset-red-dark: #9f0c24;
+  --enset-red-soft: #fff0f3;
+  --enset-red-faint: #fff8f9;
+  --enset-petrol: #176b79;
+  --enset-orange: #d97706;
+  --enset-green: #16805b;
+  --enset-ink: #172033;
+  --enset-muted: #667085;
+  --enset-border: #e3e7ec;
+  --enset-surface: #ffffff;
+  --enset-canvas: #f7f8fa;
+  --enset-beige: #d6c5a7;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 4%), 0 8px 24px rgb(16 24 40 / 5%);
+  --shadow-lift: 0 12px 32px rgb(16 24 40 / 10%);
   font-family:
     Inter,
     system-ui,
@@ -6,8 +24,8 @@
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  color: #1f2933;
-  background: #ffffff;
+  color: var(--enset-ink);
+  background: var(--enset-canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -26,6 +44,8 @@ body,
 
 body {
   min-height: 100vh;
+  background: var(--enset-canvas);
+  line-height: 1.5;
 }
 
 button,
@@ -34,3 +54,60 @@ select,
 textarea {
   font: inherit;
 }
+
+a { color: var(--enset-red); text-underline-offset: 0.18em; }
+a:hover { color: var(--enset-red-dark); }
+
+:focus-visible { outline: 3px solid rgb(200 16 46 / 20%); outline-offset: 2px; }
+
+input,
+select,
+textarea {
+  border-color: #cfd6df;
+  accent-color: var(--enset-red);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--enset-red) !important;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgb(200 16 46 / 12%);
+}
+input[type="checkbox"],
+input[type="radio"] { accent-color: var(--enset-red); }
+
+button {
+  border-radius: var(--radius-sm);
+  transition: color 170ms ease, background-color 170ms ease, border-color 170ms ease,
+    box-shadow 170ms ease, transform 170ms ease;
+}
+button:hover:not(:disabled) { transform: translateY(-1px); }
+button:active:not(:disabled) { transform: translateY(0) scale(0.985); }
+
+.primary-button,
+button[type="submit"] {
+  border: 1px solid var(--enset-red);
+  background: var(--enset-red);
+  color: #fff;
+}
+.primary-button:hover,
+button[type="submit"]:hover:not(:disabled) {
+  border-color: var(--enset-red-dark);
+  background: var(--enset-red-dark);
+  color: #fff;
+}
+.danger-button { border-color: var(--enset-red); color: var(--enset-red); }
+
+.status-badge--active { background: var(--enset-red-soft) !important; color: var(--enset-red) !important; }
+.status-badge--inactive { background: #eef1f4 !important; color: #667085 !important; }
+.status-badge--warning { background: #fff4e5; color: var(--enset-orange); }
+.status-badge--success { background: #eaf8f2; color: var(--enset-green); }
+.status-badge--info { background: #e9f5f7; color: var(--enset-petrol); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+::selection { background: rgb(200 16 46 / 18%); }

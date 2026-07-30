@@ -1,17 +1,20 @@
 .admin-page { display: grid; gap: 1.25rem; }
-.admin-header h1 { margin: 0; font-size: 1.75rem; }
+.admin-header h1 { margin: 0; color: var(--enset-ink); font-size: clamp(1.65rem,3vw,2.15rem); letter-spacing: -.02em; }
 .admin-header p { margin: .35rem 0 0; color: #52606d; }
-.list-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; padding: 1rem; background: #f5f7fa; border: 1px solid #d9e2ec; border-radius: .5rem; }
+.list-toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: end; padding: 1rem; background: #fff; border: 1px solid var(--enset-border); border-radius: var(--enset-radius-lg); box-shadow: var(--enset-shadow-sm); }
 .list-toolbar label { display: grid; gap: .25rem; min-width: 10rem; font-size: .85rem; color: #52606d; }
-.list-toolbar input, .list-toolbar select { min-height: 2.35rem; padding: .4rem .55rem; border: 1px solid #bcccdc; border-radius: .3rem; background: white; color: #1f2933; }
-.list-toolbar button, .pagination button, .table-link { min-height: 2.35rem; padding: .4rem .75rem; border: 1px solid #829ab1; border-radius: .3rem; background: white; color: #174ea6; cursor: pointer; text-decoration: none; }
-.table-wrap { overflow-x: auto; border: 1px solid #d9e2ec; border-radius: .5rem; }
+.list-toolbar input, .list-toolbar select { min-height: 2.35rem; padding: .4rem .55rem; border: 1px solid #bcccdc; border-radius: .55rem; background: white; color: #1f2933; }
+.list-toolbar button, .pagination button, .table-link { min-height: 2.35rem; padding: .4rem .75rem; border: 1px solid var(--enset-red); border-radius: .55rem; background: white; color: var(--enset-red); cursor: pointer; text-decoration: none; transition: all .18s ease; }
+.list-toolbar button:hover, .pagination button:hover:not(:disabled), .table-link:hover { background: var(--enset-red-faint); transform: translateY(-1px); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--enset-border); border-radius: var(--enset-radius-lg); background:#fff; box-shadow:var(--enset-shadow-sm); }
 .admin-table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
 .admin-table th, .admin-table td { padding: .75rem; border-bottom: 1px solid #e4e7eb; }
 .admin-table th { background: #f5f7fa; color: #334e68; font-size: .85rem; }
 .admin-table tbody tr:last-child td { border-bottom: 0; }
+.admin-table tbody tr { transition: background .16s ease; }
+.admin-table tbody tr:hover { background: var(--enset-red-faint); }
 .status-badge { display: inline-block; padding: .2rem .5rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }
-.status-badge--active { background: #d3f9d8; color: #176b2c; }
+.status-badge--active { background: var(--enset-red-soft); color: var(--enset-red-dark); }
 .status-badge--inactive { background: #e4e7eb; color: #52606d; }
 .pagination { display: flex; justify-content: flex-end; align-items: center; gap: .75rem; }
 .pagination button:disabled { opacity: .45; cursor: default; }
@@ -20,4 +23,8 @@
 .detail-grid div { padding: .75rem; background: #f5f7fa; border-radius: .4rem; }
 .detail-grid dt { color: #627d98; font-size: .8rem; }
 .detail-grid dd { margin: .2rem 0 0; font-weight: 600; }
-.back-link { color: #174ea6; }
+.back-link { color: var(--enset-red); font-weight:650; text-decoration:none; }
+.admin-page > .back-link + .admin-header { position:relative; min-height:13rem; display:flex; flex-direction:column; justify-content:flex-end; overflow:hidden; padding:2rem clamp(1.5rem,4vw,3rem); border-radius:var(--enset-radius-lg); color:#fff; background:linear-gradient(110deg,rgba(22,27,35,.96) 0 52%,rgba(22,27,35,.38)),linear-gradient(135deg,var(--enset-red-dark),var(--enset-petrol)); box-shadow:var(--enset-shadow-md); }
+.admin-page > .back-link + .admin-header::after { position:absolute; inset:-30% -8% -40% 58%; border:1px solid rgba(255,255,255,.2); background:repeating-linear-gradient(90deg,transparent 0 2rem,rgba(255,255,255,.08) 2rem 2.08rem); transform:skewX(-12deg); content:""; }
+.admin-page > .back-link + .admin-header h1 { position:relative; z-index:1; color:#fff; font-size:clamp(2rem,4vw,3rem); }
+.admin-page > .back-link + .admin-header p { position:relative; z-index:1; color:rgba(255,255,255,.72); }

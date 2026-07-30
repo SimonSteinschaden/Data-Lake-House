@@ -24,6 +24,13 @@ using Enset.Application.Exports.LEB.Abstractions;
 using Enset.Application.Exports.LEB.Services;
 using Enset.Application.Exports.LEB.Validation;
 using Enset.Infrastructure.Exports.LEB;
+using Enset.Application.ObjectAnalytics;
+using Enset.Infrastructure.ObjectAnalytics;
+using Enset.Application.DataProducts.Catalog;
+using Enset.Application.QualityManagement;
+using Enset.Infrastructure.QualityManagement;
+using Enset.Application.Associations;
+using Enset.Infrastructure.Associations;
 
 namespace Enset.Infrastructure.Persistence;
 
@@ -65,6 +72,13 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IEntityReadService, EfEntityReadService>();
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IAnalyticsDataProductService, EfAnalyticsDataProductService>();
+        services.AddScoped<IObjectAnalyticsService,
+            CanonicalObjectAnalyticsService>();
+        services.AddScoped<IDataProductCatalogService,
+            CanonicalDataProductCatalogService>();
+        services.AddScoped<IDataQualityDashboardService,
+            CanonicalDataQualityDashboardService>();
+        services.AddScoped<IAssociationService, EfAssociationService>();
         services.AddScoped<IEntityCrudService, EfEntityCrudService>();
         services.AddScoped<ICurationService, EfCurationService>();
         services.AddScoped<IGoldProfileVersionService, GoldProfileVersionService>();

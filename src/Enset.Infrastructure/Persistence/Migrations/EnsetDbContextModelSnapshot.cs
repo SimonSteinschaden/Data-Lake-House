@@ -101,6 +101,183 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.ToTable("CalculationResults");
                 });
 
+            modelBuilder.Entity("Enset.Domain.Associations.AssociationAuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("After")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("AssociationType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Before")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("ChangedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ChangedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationId");
+
+                    b.HasIndex("AssociationType", "SourceId", "TargetId", "ChangedAtUtc");
+
+                    b.ToTable("AssociationAuditHistory", (string)null);
+                });
+
+            modelBuilder.Entity("Enset.Domain.Associations.BuildingDocumentAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BuildingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("ValidFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("ValidTo")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("BuildingId", "DocumentId", "ValidFrom")
+                        .IsUnique();
+
+                    b.ToTable("BuildingDocumentAssignments", (string)null);
+                });
+
+            modelBuilder.Entity("Enset.Domain.Associations.BuildingMeterAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BuildingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MeterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("ValidTo")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MeterId", "IsPrimary");
+
+                    b.HasIndex("ValidFrom", "ValidTo");
+
+                    b.HasIndex("BuildingId", "MeterId", "ValidFrom")
+                        .IsUnique();
+
+                    b.ToTable("BuildingMeterAssignments", (string)null);
+                });
+
+            modelBuilder.Entity("Enset.Domain.Associations.CustomerProjectAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("ValidFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("ValidTo")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "IsPrimary");
+
+                    b.HasIndex("CustomerId", "ProjectId", "ValidFrom")
+                        .IsUnique();
+
+                    b.ToTable("CustomerProjectAssignments", (string)null);
+                });
+
             modelBuilder.Entity("Enset.Domain.Buildings.Building", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1312,8 +1489,13 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("EnergySystemId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1326,11 +1508,12 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BuildingId");
+                    b.HasIndex("EnergySystemId", "IsPrimary");
 
-                    b.HasIndex("EnergySystemId");
+                    b.HasIndex("BuildingId", "EnergySystemId", "ValidFrom")
+                        .IsUnique();
 
-                    b.ToTable("EnergySystemBuildingAssignments");
+                    b.ToTable("EnergySystemBuildingAssignments", (string)null);
                 });
 
             modelBuilder.Entity("Enset.Domain.Energy.ImportedMeterReading", b =>
@@ -2237,6 +2420,248 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.ToTable("UserCustomerAssignments", (string)null);
                 });
 
+            modelBuilder.Entity("Enset.Infrastructure.Imports.MassImport.ImportStagingMeterReading", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("BatchNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EnergyDirection")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("ImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("IntervalSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("MeterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MeterNumberOriginal")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("QualityFlag")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RawSourceHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReadingType")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<long>("SourceRowNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ValidationCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ValidationMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<decimal?>("Value")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImportId");
+
+                    b.HasIndex("ImportId", "BatchNumber");
+
+                    b.HasIndex("ImportId", "ValidationStatus");
+
+                    b.HasIndex("MeterId", "Timestamp");
+
+                    b.HasIndex("ImportId", "MeterId", "Timestamp");
+
+                    b.HasIndex("ImportId", "MeterId", "Timestamp", "SourceRowNumber");
+
+                    b.ToTable("ImportStagingMeterReadings", (string)null);
+                });
+
+            modelBuilder.Entity("Enset.Infrastructure.Imports.MassImport.MeterReadingImportAuditEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("DuplicateCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("EndTimestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<Guid>("ImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("MeterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("ReadCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RejectedCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("StartTimestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("WrittenCount")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImportId");
+
+                    b.HasIndex("ImportId", "MeterId");
+
+                    b.ToTable("MeterReadingImportAudits", (string)null);
+                });
+
+            modelBuilder.Entity("Enset.Infrastructure.Imports.MassImport.MeterReadingImportJobEntity", b =>
+                {
+                    b.Property<Guid>("JobId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AcceptedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("CancellationRequested")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CurrentBatch")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("DuplicateRows")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<Guid>("ImportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Phase")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<long>("ProcessedBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ReadRows")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RejectedRows")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("StagedRows")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("TargetMode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<long>("TotalBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("ValidRows")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("WrittenRows")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("JobId");
+
+                    b.HasIndex("ImportId")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("MeterReadingImportJobs", (string)null);
+                });
+
             modelBuilder.Entity("Enset.Infrastructure.Imports.Persistence.Entities.ImportAuditEntryEntity", b =>
                 {
                     b.Property<Guid>("AuditId")
@@ -2458,6 +2883,63 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.ToTable("RegionMunicipalities");
                 });
 
+            modelBuilder.Entity("Enset.Domain.Associations.BuildingDocumentAssignment", b =>
+                {
+                    b.HasOne("Enset.Domain.Buildings.Building", "Building")
+                        .WithMany("DocumentAssignments")
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enset.Domain.Documents.Document", "Document")
+                        .WithMany("BuildingAssignments")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Building");
+
+                    b.Navigation("Document");
+                });
+
+            modelBuilder.Entity("Enset.Domain.Associations.BuildingMeterAssignment", b =>
+                {
+                    b.HasOne("Enset.Domain.Buildings.Building", "Building")
+                        .WithMany("MeterAssignments")
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enset.Domain.Energy.Meter", "Meter")
+                        .WithMany("BuildingAssignments")
+                        .HasForeignKey("MeterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Building");
+
+                    b.Navigation("Meter");
+                });
+
+            modelBuilder.Entity("Enset.Domain.Associations.CustomerProjectAssignment", b =>
+                {
+                    b.HasOne("Enset.Domain.Customers.Customer", "Customer")
+                        .WithMany("ProjectAssignments")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enset.Domain.Projects.Project", "Project")
+                        .WithMany("CustomerAssignments")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Enset.Domain.Buildings.Building", b =>
                 {
                     b.HasOne("Enset.Domain.Projects.Project", "Project")
@@ -2676,13 +3158,13 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.HasOne("Enset.Domain.Buildings.Building", "Building")
                         .WithMany("EnergySystemAssignments")
                         .HasForeignKey("BuildingId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Enset.Domain.Energy.EnergySystem", "EnergySystem")
                         .WithMany("BuildingAssignments")
                         .HasForeignKey("EnergySystemId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Building");
@@ -2930,9 +3412,13 @@ namespace Enset.Infrastructure.Persistence.Migrations
                 {
                     b.Navigation("CustomerAssignments");
 
+                    b.Navigation("DocumentAssignments");
+
                     b.Navigation("Documents");
 
                     b.Navigation("EnergySystemAssignments");
+
+                    b.Navigation("MeterAssignments");
 
                     b.Navigation("Meters");
 
@@ -2947,6 +3433,8 @@ namespace Enset.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Enset.Domain.Customers.Customer", b =>
                 {
                     b.Navigation("BuildingAssignments");
+
+                    b.Navigation("ProjectAssignments");
 
                     b.Navigation("Projects");
 
@@ -2979,6 +3467,11 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Navigation("Values");
                 });
 
+            modelBuilder.Entity("Enset.Domain.Documents.Document", b =>
+                {
+                    b.Navigation("BuildingAssignments");
+                });
+
             modelBuilder.Entity("Enset.Domain.Energy.EnergySystem", b =>
                 {
                     b.Navigation("BuildingAssignments");
@@ -2993,6 +3486,8 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Enset.Domain.Energy.Meter", b =>
                 {
+                    b.Navigation("BuildingAssignments");
+
                     b.Navigation("EnergyCommunityAssignments");
 
                     b.Navigation("Readings");
@@ -3049,6 +3544,8 @@ namespace Enset.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Enset.Domain.Projects.Project", b =>
                 {
                     b.Navigation("Buildings");
+
+                    b.Navigation("CustomerAssignments");
 
                     b.Navigation("Documents");
                 });

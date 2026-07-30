@@ -10,6 +10,10 @@ using Enset.Infrastructure.Imports.Persistence;
 using Enset.Infrastructure.Imports.RawZone;
 using Enset.Infrastructure.Imports.Validation;
 using Enset.Application.Authorization;
+using Enset.Application.Imports.MassImport;
+using Enset.Infrastructure.Imports.MassImport;
+using Enset.Application.Reporting;
+using Enset.Infrastructure.Reporting;
 
 namespace Enset.Api.Extensions;
 
@@ -40,6 +44,9 @@ public static class ImportServiceCollectionExtensions
         var outputPath = Path.Combine(
             appDataPath,
             "outputs");
+        var reportInstancePath = Path.Combine(
+            appDataPath,
+            "report-instances");
 
         services.AddSingleton<IImportLogger, ApiImportLogger>();
 
@@ -55,7 +62,12 @@ public static class ImportServiceCollectionExtensions
                 serviceProvider.GetRequiredService<IImportReportRepository>(),
                 serviceProvider.GetRequiredService<IImportLogger>(),
                 serviceProvider.GetRequiredService<IImportReferenceValidationService>(),
-                serviceProvider.GetRequiredService<ICurrentUserContext>()));
+                serviceProvider.GetRequiredService<ICurrentUserContext>(),
+                serviceProvider.GetRequiredService<
+                    IMeterReadingStreamingAnalyzer>(),
+                serviceProvider.GetRequiredService<
+                    Microsoft.Extensions.Options.IOptions<
+                        MeterReadingMassImportOptions>>()));
 
         services.AddSingleton<
             IApplyResolutionService,
@@ -78,6 +90,28 @@ public static class ImportServiceCollectionExtensions
         services.AddScoped<
             IImportCommitService,
             ImportCommitService>();
+
+        services.AddOptions<MeterReadingMassImportOptions>();
+        services.AddSingleton<IMeterReadingStreamingReader,
+            MeterReadingStreamingReader>();
+        services.AddSingleton<IMeterReadingStreamingAnalyzer,
+            MeterReadingStreamingAnalyzer>();
+        services.AddScoped<IMeterReadingMassImportProcessor,
+            MeterReadingMassImportProcessor>();
+        services.AddSingleton<MeterReadingMassImportBackgroundService>();
+        services.AddSingleton<IMeterReadingMassImportJobs>(sp =>
+            sp.GetRequiredService<
+                MeterReadingMassImportBackgroundService>());
+        services.AddHostedService(sp =>
+            sp.GetRequiredService<
+                MeterReadingMassImportBackgroundService>());
+        services.AddScoped<IReportService>(sp =>
+            new FileReportService(
+                reportInstancePath,
+                sp.GetRequiredService<
+                    Enset.Application.ObjectAnalytics
+                        .IObjectAnalyticsService>(),
+                sp.GetRequiredService<TimeProvider>()));
 
         return services;
     }

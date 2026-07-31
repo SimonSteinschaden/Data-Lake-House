@@ -3,6 +3,7 @@ using Enset.Application.GoldProfiles;
 using Enset.Application.InternalDataProducts;
 using Enset.Domain.Curation;
 using Enset.Domain.GoldProfiles;
+using Enset.Domain.Quality;
 using Enset.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,6 +33,9 @@ public sealed class EfInternalDataProductService(
             .ToArray();
         var energy = Energy(meters);
         var totals = Totals(energy);
+        var openCurationTasks = await db.CurationTasks.CountAsync(x =>
+            x.EntityType == "Building" && x.EntityId == id &&
+            x.Status == CurationTaskStatus.Open, ct);
         return new(
             building.BuildingId,
             building.BuildingNumber,
@@ -61,15 +65,24 @@ public sealed class EfInternalDataProductService(
                 : "CanonicalMeasurementProjection",
             Period(meters),
             energy,
-            Maturity(building.Quality),
+            Maturity(Operational(building)),
             building.GoldAssessment,
-            0,
+            openCurationTasks,
             Warnings(meters),
             Gold(building.Version),
             Suitability(building.Suitability.Benchmark),
             Suitability(building.Suitability.Benchmark),
             Suitability(building.Suitability.Navigator),
-            Suitability(building.Suitability.Navigator));
+            Suitability(building.Suitability.Navigator))
+        {
+            OperationalQualityLevel = building.OverallQualityLevel.ToString(),
+            GoldProgressPercentage = building.GoldProgressPercentage,
+            BronzeCount = building.BronzeCount,
+            SilverCount = building.SilverCount,
+            GoldCount = building.GoldCount,
+            BlockingReasons = building.BlockingReasons,
+            QualityNextActions = building.NextActions
+        };
     }
 
     async Task<MeterSummaryProduct?>
@@ -92,6 +105,9 @@ public sealed class EfInternalDataProductService(
         long? missing = expected.HasValue
             ? Math.Max(0, expected.Value - readings.MeasurementCount)
             : null;
+        var openCurationTasks = await db.CurationTasks.CountAsync(x =>
+            x.EntityType == "MeteringPoint" && x.EntityId == id &&
+            x.Status == CurationTaskStatus.Open, ct);
         return new(
             meter.MeterId,
             meter.MeterNumber,
@@ -123,8 +139,8 @@ public sealed class EfInternalDataProductService(
             readings.MeasuredCount,
             readings.DerivedCount,
             readings.CompletenessPercentage,
-            Maturity(meter.Quality),
-            0,
+            Maturity(Operational(meter)),
+            openCurationTasks,
             Gold(meter.Version),
             Suitability(meter.Suitability.Navigator),
             Suitability(meter.Suitability.Navigator),
@@ -134,7 +150,17 @@ public sealed class EfInternalDataProductService(
             ReadingType = readings.ReadingType?.ToString(),
             Quantity = readings.Quantity?.ToString(),
             IntervalSeconds = readings.IntervalSeconds,
-            AnnualValueStatus = readings.AnnualValueStatus.ToString()
+            AnnualValueStatus = readings.AnnualValueStatus.ToString(),
+            OperationalQualityLevel =
+                meter.QualityAssessment?.QualityLevel.ToString(),
+            ProfileAnalysisStatus =
+                meter.QualityAssessment?.ProfileAnalysisStatus.ToString(),
+            BlockingIssueCount =
+                meter.QualityAssessment?.BlockingIssueCount ?? 0,
+            BlockingReasons =
+                meter.QualityAssessment?.BlockingReasons ?? [],
+            QualityNextActions =
+                meter.QualityAssessment?.NextActions ?? []
         };
     }
 
@@ -161,8 +187,8 @@ public sealed class EfInternalDataProductService(
         var energy = Energy(meters);
         var totals = Totals(energy);
         var quality = buildings
-            .Select(x => x.Quality)
-            .Concat(meters.Select(x => x.Quality))
+            .Select(Operational)
+            .Concat(meters.Select(Operational))
             .Append(customer.Quality)
             .ToArray();
         var suitability = new Dictionary<string, ReadinessSummary>
@@ -172,6 +198,13 @@ public sealed class EfInternalDataProductService(
             ["Benchmark"] = Suitability(customer.Suitability.Benchmark),
             ["Iso50001"] = Suitability(customer.Suitability.Iso50001)
         };
+        var meterIds = meters.Select(x => x.MeterId).ToHashSet();
+        var openCurationTasks = await db.CurationTasks.CountAsync(x =>
+            x.Status == CurationTaskStatus.Open &&
+            ((x.EntityType == "Building" && buildingIds.Contains(x.EntityId)) ||
+             (x.EntityType == "MeteringPoint" && meterIds.Contains(x.EntityId))), ct);
+        var operationalLevel = quality.Any(x => x.Level == DataMaturityLevel.Bronze) ? "Bronze"
+            : quality.Any(x => x.Level == DataMaturityLevel.Silver) ? "Silver" : "Gold";
         return new(
             customer.CustomerId,
             customer.CustomerNumber,
@@ -194,9 +227,12 @@ public sealed class EfInternalDataProductService(
                 x.Version.Status != GoldProfileReleaseStatus.Released),
             meters.Count(x =>
                 x.Version.Status != GoldProfileReleaseStatus.Released),
-            0,
+            openCurationTasks,
             Warnings(meters),
-            suitability);
+            suitability)
+        {
+            OperationalQualityLevel = operationalLevel
+        };
     }
 
     async Task<PortfolioSummaryProduct>
@@ -206,9 +242,10 @@ public sealed class EfInternalDataProductService(
         var energy = Energy(portfolio.Meters);
         var totals = Totals(energy);
         var quality = portfolio.Customers.Select(x => x.Quality)
-            .Concat(portfolio.Buildings.Select(x => x.Quality))
-            .Concat(portfolio.Meters.Select(x => x.Quality))
-            .Concat(portfolio.EnergySystems.Select(x => x.Quality))
+            .Concat(portfolio.Buildings.Select(Operational))
+            .Concat(portfolio.Meters.Select(Operational))
+            .Concat(portfolio.EnergySystems.Select(x => x.Quality with
+            { Level = x.QualityAssessment?.QualityLevel ?? x.Quality.Level }))
             .ToArray();
         var releasedBuildings = portfolio.Buildings.Count(x =>
             x.Version.Status == GoldProfileReleaseStatus.Released);
@@ -241,6 +278,13 @@ public sealed class EfInternalDataProductService(
                 portfolio.Meters.Select(x =>
                     x.Suitability.Navigator))
         };
+        var openCurationTasks = await db.CurationTasks.CountAsync(
+            x => x.Status == CurationTaskStatus.Open, ct);
+        var highPriorityCurationTasks = await db.CurationTasks.CountAsync(
+            x => x.Status == CurationTaskStatus.Open && x.ConfidencePercent < 70, ct);
+        var invalidatedBuildingIds = await db.BuildingInventoryDeclarations.AsNoTracking()
+            .Where(x => x.InvalidatedAtUtc != null)
+            .Select(x => x.BuildingId).Distinct().ToListAsync(ct);
         return new(
             portfolio.Customers.Count,
             portfolio.Customers.Count(x => x.IsActive),
@@ -257,8 +301,8 @@ public sealed class EfInternalDataProductService(
             releasedMeters,
             portfolio.Meters.Count - releasedMeters,
             portfolio.Meters.Count - releasedMeters,
-            0,
-            0,
+            openCurationTasks,
+            highPriorityCurationTasks,
             suitability[0].ReadyScopeCount,
             suitability[1].ReadyScopeCount,
             suitability[2].ReadyScopeCount,
@@ -280,7 +324,20 @@ public sealed class EfInternalDataProductService(
             await db.ImportIssues.CountAsync(x => !x.IsResolved, ct),
             Warnings(portfolio.Meters),
             suitability,
-            now);
+            now)
+        {
+            MetersWithoutAnalysis = portfolio.Meters.Count(x =>
+                x.ProfileAnalysisStatus == ProfileAnalysisStatus.NotAnalyzed),
+            MetersWithBlockingIssues = portfolio.Meters.Count(x => x.BlockingIssueCount > 0),
+            MetersWithOpenAnomalies = portfolio.Meters.Count(x => x.OpenAnomalyCount > 0),
+            InvalidInventoryDeclarationCount = portfolio.Buildings.Count(x =>
+                invalidatedBuildingIds.Contains(x.BuildingId) &&
+                x.InventoryDeclarationStatus == "Nicht bestätigt"),
+            OpenTechnicalReviewCount = portfolio.Meters.Count(x =>
+                x.ProfileAnalysisStatus == ProfileAnalysisStatus.RequiresReview),
+            AverageGoldProgressPercentage = portfolio.Buildings.Count == 0 ? 0 :
+                (int)Math.Round(portfolio.Buildings.Average(x => x.GoldProgressPercentage))
+        };
     }
 
     async Task<ImportQualityProduct>
@@ -327,6 +384,9 @@ public sealed class EfInternalDataProductService(
             .GroupBy(x => x.ReleaseStatus)
             .Select(x => new { x.Key, Count = x.Count() })
             .ToListAsync(ct);
+        var portfolio = await snapshots.GetPortfolio(ct);
+        var buildingsBlocked = portfolio.Buildings.Count(x => x.BlockingReasons.Count > 0);
+        var metersBlocked = portfolio.Meters.Count(x => x.BlockingReasons.Count > 0);
         return new(
             total,
             successfulCount,
@@ -356,8 +416,8 @@ public sealed class EfInternalDataProductService(
                 x => x.RequiresUserDecision, ct),
             await db.CurationTasks.CountAsync(
                 x => x.Status == CurationTaskStatus.Open, ct),
-            0,
-            0,
+            buildingsBlocked,
+            metersBlocked,
             versions
                 .Where(x =>
                     x.Key == GoldProfileReleaseStatus.Released)
@@ -369,6 +429,12 @@ public sealed class EfInternalDataProductService(
             clock.GetUtcNow().UtcDateTime);
     }
 
+    private static SnapshotQuality Operational(BuildingCanonicalSnapshot value) =>
+        value.Quality with { Level = value.OverallQualityLevel,
+            CompletenessPercentage = value.GoldProgressPercentage };
+    private static SnapshotQuality Operational(MeterCanonicalSnapshot value) =>
+        value.Quality with { Level = value.QualityAssessment?.QualityLevel ??
+            value.Quality.Level };
     private static DataMaturitySummary Maturity(SnapshotQuality quality) =>
         quality.Level switch
         {

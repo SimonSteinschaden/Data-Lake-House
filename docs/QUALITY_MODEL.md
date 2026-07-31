@@ -9,6 +9,10 @@ Die verbindliche Berechnung liegt in
 `HierarchicalQualityAssessment`. React, Controller, Exporte und Berichte
 dürfen keine eigene Qualitätslogik besitzen.
 
+Die zugrunde liegenden Erklärungen, Analysen, Issues und Entscheidungen
+werden gemäß `HIERARCHICAL_QUALITY_PERSISTENCE.md` versioniert gespeichert;
+berechnete Qualitätsstufen werden nicht persistiert.
+
 ## Stufen
 
 - Bronze: Pflichtbestandteil fehlt, Inventar ist nicht bestätigt, ein
@@ -32,3 +36,7 @@ Prozentwert ist kein Qualitätsstatus.
 Änderungen an bestätigten Daten, neue untergeordnete Scopes oder neue
 Analyseprobleme müssen die aktuelle Projektion neu bewerten. Veröffentlichte
 historische Gold-Versionen bleiben unverändert.
+
+Die operative Projektion wird über
+`IHierarchicalQualityAssessmentService` batchweise in die Canonical
+Snapshots eingebracht. Nachgelagerte Verbraucher übernehmen dieses Ergebnis.

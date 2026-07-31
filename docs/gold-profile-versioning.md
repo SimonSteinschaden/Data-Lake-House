@@ -13,12 +13,19 @@ Ersteller, Zeitstempel und `xmin` gehören nicht zum Hash. Ein identischer Hash
 liefert die aktuelle Version zurück. Bei fachlicher Änderung wird die bisherige
 Version zeitlich geschlossen und eine neue Draft-Version erzeugt.
 
-Release-Status:
+Release-Status (konsolidiert, Migration `ConsolidateGoldProfileReleaseStatus`):
 
 - `Draft`: erzeugt, noch nicht produktiv verwendbar
 - `Released`: nach bestandener Gold-Readiness verwendbar
-- `Superseded`: durch eine neuere Freigabe ersetzt
-- `Revoked`: fachlich zurückgezogen
+- `Archived`: durch eine neuere Freigabe automatisch ersetzt **oder** fachlich
+  zurückgezogen; der jeweilige Grund (automatisch versus manuell) bleibt über
+  `ReleaseReason` und die `GoldProfileEvent`-Historie nachvollziehbar
+
+Freigabe und Widerruf sind auf die Rolle `EnsetAdmin` beschränkt
+(`AuthorizationPolicyNames.EnsetAdmin`, zusätzlich serverseitig in
+`GoldProfileVersionService.Change` geprüft); Mitarbeitende ohne
+Administratorrolle können weiterhin kuratieren, aber keine Version freigeben
+oder widerrufen.
 
 Erstellung, Freigabe, Ersetzung und Rücknahme werden mit Benutzer, Zeitpunkt,
 Statusübergang, Grund und SnapshotHash protokolliert. Veröffentlichte Versionen

@@ -17,6 +17,10 @@ public sealed class EntityAuditEntryConfiguration : IEntityTypeConfiguration<Ent
         builder.Property(x => x.OldValue).HasMaxLength(4000);
         builder.Property(x => x.NewValue).HasMaxLength(4000);
         builder.Property(x => x.Reason).HasMaxLength(1000);
+        builder.Property(x => x.ActorType).HasMaxLength(32);
+        builder.Property(x => x.DisplayNameSnapshot).HasMaxLength(256);
+        builder.Property(x => x.Action).HasMaxLength(128);
+        builder.HasIndex(x => x.OperationId);
         builder.HasIndex(x => new { x.EntityType, x.EntityId, x.ChangedAtUtc });
         builder.HasIndex(x => x.ChangedByUserId);
     }

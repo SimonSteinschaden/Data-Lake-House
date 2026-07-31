@@ -76,6 +76,21 @@ function DashboardContent({ portfolio, imports }: {
     { problem: "Zähler ohne Messwerte", count: portfolio.metersWithoutReadings,
       impact: "Keine Profilanalyse möglich",
       action: "Zähler anzeigen", to: "/meters" },
+    { problem: "Zähler ohne Analyse", count: portfolio.metersWithoutAnalysis,
+      impact: "Profilqualität ist noch unbewertet",
+      action: "Zähler anzeigen", to: "/meters" },
+    { problem: "Profile mit offenen Blockern", count: portfolio.metersWithBlockingIssues,
+      impact: "Zähler kann nicht Gold werden",
+      action: "Zähler anzeigen", to: "/meters" },
+    { problem: "Profile mit offenen Anomalien", count: portfolio.metersWithOpenAnomalies,
+      impact: "Ausreißer oder Sprünge sind noch nicht geklärt",
+      action: "Zähler anzeigen", to: "/meters" },
+    { problem: "Ungültige Inventarerklärungen", count: portfolio.invalidInventoryDeclarationCount,
+      impact: "Gebäudeinventar muss neu bestätigt werden",
+      action: "Gebäude anzeigen", to: "/buildings" },
+    { problem: "Offene fachliche Prüfungen", count: portfolio.openTechnicalReviewCount,
+      impact: "Profilanalysen warten auf manuelle Prüfung",
+      action: "Zähler anzeigen", to: "/meters" },
     { problem: "Offene Importprobleme", count: imports.totalOpenIssues,
       impact: "Import noch nicht vollständig geklärt",
       action: "Importhistorie öffnen", to: "/imports" },
@@ -102,6 +117,9 @@ function DashboardContent({ portfolio, imports }: {
         <DashboardKpiCard title="Durchschnittliche Gold-Reife"
           value={`${Math.round(portfolio.averageMaturity.goldMaturityPercentage)} %`}
           hint="Anteil bestätigter Gold-Felder" to="/tools/data-curation" />
+        <DashboardKpiCard title="Gold-Fortschritt im Portfolio"
+          value={`${portfolio.averageGoldProgressPercentage} %`}
+          hint="Durchschnittlicher operativer Qualitätsfortschritt" to="/buildings" />
       </div>
       {portfolio.buildingCount === 0 && <p className="cockpit-inline-state">
         Noch keine Gebäude angelegt.</p>}
@@ -162,6 +180,26 @@ function DashboardContent({ portfolio, imports }: {
           value={number(imports.totalBlockingIssues)}
           hint="Import kann fachlich nicht abgeschlossen sein" to="/imports"
           tone={imports.totalBlockingIssues > 0 ? "attention" : "positive"} />
+        <DashboardKpiCard title="Zähler ohne Analyse"
+          value={number(portfolio.metersWithoutAnalysis)}
+          hint="Profilanalyse noch nicht gestartet" to="/meters"
+          tone={portfolio.metersWithoutAnalysis > 0 ? "attention" : "positive"} />
+        <DashboardKpiCard title="Profile mit offenen Blockern"
+          value={number(portfolio.metersWithBlockingIssues)}
+          hint="Blockierende Profilprobleme offen" to="/meters"
+          tone={portfolio.metersWithBlockingIssues > 0 ? "attention" : "positive"} />
+        <DashboardKpiCard title="Profile mit offenen Anomalien"
+          value={number(portfolio.metersWithOpenAnomalies)}
+          hint="Ausreißer oder Sprünge offen" to="/meters"
+          tone={portfolio.metersWithOpenAnomalies > 0 ? "attention" : "positive"} />
+        <DashboardKpiCard title="Ungültige Inventarerklärungen"
+          value={number(portfolio.invalidInventoryDeclarationCount)}
+          hint="Gebäudeinventar erneut bestätigen" to="/buildings"
+          tone={portfolio.invalidInventoryDeclarationCount > 0 ? "attention" : "positive"} />
+        <DashboardKpiCard title="Offene fachliche Prüfungen"
+          value={number(portfolio.openTechnicalReviewCount)}
+          hint="Profilanalysen warten auf Prüfung" to="/meters"
+          tone={portfolio.openTechnicalReviewCount > 0 ? "attention" : "positive"} />
       </div>
       <div className="cockpit-panel"><h3>Priorisierte Handlungsfelder</h3>
         {qualityActions.length === 0

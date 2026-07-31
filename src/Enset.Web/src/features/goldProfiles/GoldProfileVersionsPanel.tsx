@@ -9,6 +9,7 @@ interface Version {
   validFromUtc: string;
   validToUtc: string | null;
   createdByUserId: string;
+  createdByDisplayName: string;
   snapshotHash: string;
   isCurrent: boolean;
   releaseStatus: string;
@@ -70,7 +71,7 @@ export function GoldProfileVersionsPanel({
           <td>{version.versionNumber}{version.isCurrent ? " · aktuell" : ""}</td>
           <td>{formatUiValue(version.releaseStatus)}</td>
           <td>{formatUiDateTime(version.validFromUtc)}</td>
-          <td>{version.createdByUserId}</td>
+          <td>{version.createdByDisplayName}</td>
           <td>{version.snapshotHash.slice(0, 12)}…</td>
           <td>{version.releaseStatus === "Draft" &&
             <button onClick={() => void change(version, "release")}>Freigeben</button>}

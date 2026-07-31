@@ -109,6 +109,7 @@ const navigationGroups: NavigationGroup[] = [
       {
         path: "/tools/assignments",
         label: "Zuordnungen",
+        disabled: true,
       },
     ],
   },

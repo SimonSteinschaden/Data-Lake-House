@@ -77,6 +77,7 @@ export interface PortfolioSummaryProduct {
   releasedMeterGoldProfileCount: number;
   metersWithoutReleasedGoldProfile: number;
   openCurationTaskCount: number;
+  highPriorityCurationTaskCount: number;
   readyBuildingBenchmarkCount: number;
   readyEnergyBenchmarkCount: number;
   readyNormalizedLoadProfileCount: number;
@@ -92,6 +93,12 @@ export interface PortfolioSummaryProduct {
   dataQualityWarnings: DataQualityWarning[];
   readinessSummaries: PortfolioReadinessSummary[];
   calculatedAt: string;
+  metersWithoutAnalysis: number;
+  metersWithBlockingIssues: number;
+  metersWithOpenAnomalies: number;
+  invalidInventoryDeclarationCount: number;
+  openTechnicalReviewCount: number;
+  averageGoldProgressPercentage: number;
 }
 
 export interface ImportQualityItem {

@@ -53,7 +53,10 @@ public sealed record EntityMutationResult(Guid Id, uint RowVersion, string DataO
     Guid? UpdatedByUserId, bool IsDeleted);
 public sealed record AuditHistoryItem(DateTime ChangedAtUtc, Guid ChangedByUserId,
     string ChangeType, string? FieldName, string? OldValue, string? NewValue,
-    string Source, Guid? ImportId, string? Reason);
+    string Source, Guid? ImportId, string? Reason)
+{
+    public string ChangedByDisplayName { get; init; } = "ENSET-System";
+}
 public sealed record EntityListQuery(int Page = 1, int PageSize = 50, string? Search = null,
     bool IncludeDeleted = false);
 public sealed record EnergySystemDto(Guid Id, string EnergySystemNumber, string Name,

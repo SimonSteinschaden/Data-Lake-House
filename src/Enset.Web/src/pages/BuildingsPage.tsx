@@ -17,6 +17,8 @@ import { DataProductReadinessPanel } from "../features/dataProductReadiness/Data
 import { GoldProfileVersionsPanel } from "../features/goldProfiles/GoldProfileVersionsPanel";
 import { internalDataProductService } from "../services/internalDataProductService";
 import type { BuildingSummaryProduct } from "../features/internalDataProducts/types";
+import { qualityService, type OperationalBuildingQuality } from "../services/qualityService";
+import { formatUiDateTime, formatUiValue } from "../components/ui/uiFormat";
 
 const categoryLabel: Record<string, string> = {
   Apartment: "Mehrfamilienhaus", House: "Haus", Office: "Büro", Hall: "Halle",
@@ -89,7 +91,7 @@ function List() {
       : <><div className="table-wrap"><table className="admin-table">
         <thead><tr><th>Gebäudenummer</th><th>Gebäudename</th><th>Gebäudetyp</th>
           <th>Nutzungstyp</th><th>Kunde</th><th>Zählpunkte</th><th>Gebäudezustand</th>
-          <th>Datenreife / Gold-Reife</th><th></th></tr></thead>
+          <th>Datenqualität</th><th></th></tr></thead>
         <tbody>{result.items.map((item) => <tr key={item.id}>
           <td>{item.buildingNumber}</td><td>{item.name}</td>
           <td>{value(categoryLabel, item.buildingCategory)}</td>
@@ -113,6 +115,7 @@ function Detail({ id }: { id: string }) {
   const [item, setItem] = useState<BuildingDetail>();
   const [summary, setSummary] = useState<BuildingSummaryProduct>();
   const [systems, setSystems] = useState<EnergySystem[]>([]);
+  const [quality, setQuality] = useState<OperationalBuildingQuality>();
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
   const [audit, setAudit] = useState(false);
@@ -130,6 +133,7 @@ function Detail({ id }: { id: string }) {
       setItem(building);
       setSummary(product);
       setSystems(allSystems.items.filter((x) => x.buildingId === id));
+      qualityService.building(id).then(setQuality).catch(() => setQuality(undefined));
     } catch (loadError) { setError(errorMessage(loadError)); }
   }, [id]);
   // The callback also serves explicit reload actions after mutations.
@@ -180,14 +184,14 @@ function Detail({ id }: { id: string }) {
       </button>
     </div>
     <EntityMetadataBar entity={item} />
-    {summary && <section className="detail-section"><h2>Fachliche Summary</h2>
+    {summary && <section className="detail-section"><h2>Fachliche Übersicht</h2>
       <dl className="detail-grid">
         <div><dt>Zählpunkte</dt><dd>{summary.meterCount}</dd></div>
         <div><dt>Jahresverbrauch</dt><dd>{summary.annualConsumption == null
           ? "Nicht verfügbar" : `${summary.annualConsumption} ${summary.unit ?? ""}`}</dd></div>
         <div><dt>Jahreserzeugung</dt><dd>{summary.annualGeneration == null
           ? "Nicht verfügbar" : `${summary.annualGeneration} ${summary.unit ?? ""}`}</dd></div>
-        <div><dt>Gold-Vollständigkeit</dt>
+        <div><dt>Voraussetzung für Gold</dt>
           <dd>{summary.goldAssessment.goldCompletenessPercentage} %</dd></div>
         <div><dt>Offene Kurationsaufgaben</dt><dd>{summary.openCurationTaskCount}</dd></div>
       </dl>
@@ -215,22 +219,47 @@ function Detail({ id }: { id: string }) {
     </div>{item.meters.length === 0 ? <PageState>Keine Zählpunkte zugeordnet.</PageState>
       : <div className="table-wrap"><table className="admin-table"><thead><tr>
         <th>Zählpunktnummer</th><th>Energieträger</th><th>Richtung</th><th>Einheit</th>
-        <th>Datenreife</th><th></th></tr></thead><tbody>{item.meters.map((meter) => <tr key={meter.id}>
-          <td>{meter.meterNumber}</td><td>{meter.medium}</td><td>{meter.direction}</td>
-          <td>{meter.unit}</td><td>{meter.dataMaturity}</td>
-          <td><Link to={`/meters/${meter.id}`}>Öffnen</Link></td>
-        </tr>)}</tbody></table></div>}</section>
+        <th>Qualitätsstatus</th><th>Analysezustand</th><th>Vollständigkeit</th>
+        <th>Offene Probleme</th><th>Letzte Analyse</th><th>Nächste Aktion</th><th></th></tr></thead>
+        <tbody>{item.meters.map((meter) => {
+          const meterQuality = quality?.meterAssessments.find((x) => x.meterId === meter.id);
+          return <tr key={meter.id}>
+            <td>{meter.meterNumber}</td><td>{meter.medium}</td><td>{meter.direction}</td>
+            <td>{meter.unit}</td>
+            <td>{meterQuality
+              ? <span className={`quality-badge quality-badge--${meterQuality.qualityLevel.toLowerCase()}`}>
+                {meterQuality.qualityLevel}</span>
+              : meter.dataMaturity}</td>
+            <td>{formatUiValue(meterQuality?.profileAnalysisStatus)}</td>
+            <td>{meterQuality?.completenessPercentage == null ? "–" : `${meterQuality.completenessPercentage} %`}</td>
+            <td>{meterQuality?.openIssueCount ?? "–"}</td>
+            <td>{formatUiDateTime(meterQuality?.lastAnalyzedAtUtc)}</td>
+            <td>{meterQuality?.nextActions[0] ?? "–"}</td>
+            <td><Link to={`/meters/${meter.id}`}>Öffnen</Link></td>
+          </tr>;
+        })}</tbody></table></div>}</section>
     <section className="detail-section"><div className="section-heading"><h2>Anlagen</h2>
       <button className="primary-button" onClick={() => setNewSystem(true)}>Anlage anlegen</button>
     </div>{systems.length === 0 ? <PageState>Keine Anlagen zugeordnet.</PageState>
       : <div className="table-wrap"><table className="admin-table"><thead><tr>
-        <th>Bezeichnung</th><th>Anlagentyp</th><th>Leistung</th><th>Betriebszustand</th><th></th>
-      </tr></thead><tbody>{systems.map((system) => <tr key={system.id}>
-        <td>{system.name}</td><td>{system.type}</td>
-        <td>{system.ratedPowerKw == null ? "Nicht angegeben" : `${system.ratedPowerKw} kW`}</td>
-        <td>{system.decommissionedAt ? "Außer Betrieb" : system.commissionedAt ? "In Betrieb" : "Nicht angegeben"}</td>
-        <td><button onClick={() => setSystemForm(system)}>Öffnen</button></td>
-      </tr>)}</tbody></table></div>}</section>
+        <th>Bezeichnung</th><th>Anlagentyp</th><th>Leistung</th><th>Betriebszustand</th>
+        <th>Qualitätsstatus</th><th>Fehlende Angaben</th><th>Bestätigungsstatus</th>
+        <th>Nächste Aktion</th><th></th>
+      </tr></thead><tbody>{systems.map((system) => {
+        const systemQuality = quality?.energySystemAssessments.find((x) => x.energySystemId === system.id);
+        return <tr key={system.id}>
+          <td>{system.name}</td><td>{system.type}</td>
+          <td>{system.ratedPowerKw == null ? "Nicht angegeben" : `${system.ratedPowerKw} kW`}</td>
+          <td>{system.decommissionedAt ? "Außer Betrieb" : system.commissionedAt ? "In Betrieb" : "Nicht angegeben"}</td>
+          <td>{systemQuality &&
+            <span className={`quality-badge quality-badge--${systemQuality.qualityLevel.toLowerCase()}`}>
+              {systemQuality.qualityLevel}</span>}</td>
+          <td>{systemQuality?.missingRequirements.length ? systemQuality.missingRequirements.join(", ") : "–"}</td>
+          <td>{systemQuality?.confirmationStatus ?? "–"}</td>
+          <td>{systemQuality?.nextActions[0] ?? "–"}</td>
+          <td><button onClick={() => setSystemForm(system)}>Öffnen</button></td>
+        </tr>;
+      })}</tbody></table></div>}</section>
     <p><Link className="table-link" to={`/buildings/${id}/energy`}>Objektanalyse öffnen</Link></p>
     {editing && <BuildingForm initial={model} entityId={id} onClose={() => setEditing(false)}
       onReload={async () => { setEditing(false); await load(); }}

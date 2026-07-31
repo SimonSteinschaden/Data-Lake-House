@@ -38,6 +38,10 @@ public sealed record BuildingSummaryDto(Guid Id, string BuildingNumber, string N
     public string? Municipality { get; init; }
     public decimal? ConditionedFloorArea { get; init; }
     public int? ConstructionYear { get; init; }
+    public int BronzeCount { get; init; }
+    public int SilverCount { get; init; }
+    public int GoldCount { get; init; }
+    public IReadOnlyList<string> BlockingReasons { get; init; } = [];
 }
 
 public sealed record BuildingCustomerDto(Guid CustomerId, string CustomerNumber,
@@ -62,6 +66,14 @@ public sealed record BuildingDetailDto(Guid Id, string BuildingNumber, string Na
     public string? MunicipalityId { get; init; }
     public string? Municipality { get; init; }
     public decimal? ConditionedFloorArea { get; init; }
+    public int GoldProgressPercentage { get; init; }
+    public int BronzeCount { get; init; }
+    public int SilverCount { get; init; }
+    public int GoldCount { get; init; }
+    public string InventoryDeclarationStatus { get; init; } = "Nicht bestätigt";
+    public IReadOnlyList<string> BlockingReasons { get; init; } = [];
+    public IReadOnlyList<string> Warnings { get; init; } = [];
+    public IReadOnlyList<string> NextActions { get; init; } = [];
 }
 
 public sealed record MeterSummaryDto(Guid Id, string MeterNumber, string Name,
@@ -78,6 +90,12 @@ public sealed record MeterSummaryDto(Guid Id, string MeterNumber, string Name,
     public string AnnualValueStatus { get; init; } = "NotAvailable";
     public string? AnnualValueUnit { get; init; }
     public int? AnnualValueReferenceYear { get; init; }
+    public string ProfileAnalysisStatus { get; init; } = "NotAnalyzed";
+    public int OpenIssueCount { get; init; }
+    public int BlockingIssueCount { get; init; }
+    public DateTime? LastAnalyzedAtUtc { get; init; }
+    public IReadOnlyList<string> BlockingReasons { get; init; } = [];
+    public IReadOnlyList<string> NextActions { get; init; } = [];
 }
 
 public sealed record MeterDetailDto(Guid Id, string MeterNumber, string Name,
@@ -96,6 +114,12 @@ public sealed record MeterDetailDto(Guid Id, string MeterNumber, string Name,
     public string AnnualValueStatus { get; init; } = "NotAvailable";
     public string? AnnualValueUnit { get; init; }
     public int? AnnualValueReferenceYear { get; init; }
+    public string ProfileAnalysisStatus { get; init; } = "NotAnalyzed";
+    public int OpenIssueCount { get; init; }
+    public int BlockingIssueCount { get; init; }
+    public DateTime? LastAnalyzedAtUtc { get; init; }
+    public IReadOnlyList<string> BlockingReasons { get; init; } = [];
+    public IReadOnlyList<string> NextActions { get; init; } = [];
     public long MeasurementCount => ReadingCount;
     public DateTime? PeriodStart => FirstReadingAt;
     public DateTime? PeriodEnd => LastReadingAt;

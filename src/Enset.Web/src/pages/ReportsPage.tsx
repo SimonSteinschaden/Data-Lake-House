@@ -43,14 +43,34 @@ export function ReportsPage() {
     try {
       await reportService.create({
         type, buildingId,
-        fromUtc: `${from}T00:00:00Z`,
-        toUtc: `${to}T00:00:00Z`,
+        fromUtc: new Date(from).toISOString(),
+        toUtc: new Date(to).toISOString(),
         recipient,
       });
       setError("");
       await load();
     } catch {
       setError("Bericht konnte nicht erzeugt werden.");
+    }
+  };
+
+  const release = async (report: ReportInstance) => {
+    const releasedBy = window.prompt("Freigegeben durch:");
+    if (!releasedBy) return;
+    try {
+      await reportService.release(report.reportId, releasedBy);
+      await load();
+    } catch {
+      setError("Bericht konnte nicht freigegeben werden.");
+    }
+  };
+
+  const archive = async (report: ReportInstance) => {
+    try {
+      await reportService.archive(report.reportId);
+      await load();
+    } catch {
+      setError("Bericht konnte nicht archiviert werden.");
     }
   };
 
@@ -76,15 +96,19 @@ export function ReportsPage() {
     <Card title="Berichtsliste">
       {reports.length === 0 ? <p>Noch keine Berichte vorhanden.</p> :
         <table><thead><tr><th>Bericht</th><th>Gebäude</th><th>Zeitraum</th>
-          <th>Version</th><th>Qualität</th><th>Status</th><th>Export</th></tr></thead>
+          <th>Version</th><th>Qualität</th><th>Status</th><th>Export</th><th></th></tr></thead>
           <tbody>{reports.map((report) => <tr key={report.reportId}>
             <td>{definitions.find((x) => x.type === report.type)?.title ?? report.type}</td>
             <td>{report.buildingName}</td>
-            <td>{new Date(report.fromUtc).toLocaleDateString("de-AT")}–{new Date(report.toUtc).toLocaleDateString("de-AT")}</td>
             <td>{report.version}</td><td>{formatUiValue(report.qualityLevel)}</td><td>{formatUiValue(report.releaseStatus)}</td>
             <td>{["pdf", "xlsx", "json"].map((format) =>
               <button key={format} type="button"
                 onClick={() => void reportService.download(report, format)}>{format.toUpperCase()}</button>)}</td>
+            <td>{report.releaseStatus === "Draft" &&
+              <button type="button" onClick={() => void release(report)}>Freigeben</button>}
+              {" "}{report.releaseStatus === "Released" &&
+              <button type="button" onClick={() => void archive(report)}>Archivieren</button>}
+            </td>
           </tr>)}</tbody></table>}
     </Card>
   </section>;

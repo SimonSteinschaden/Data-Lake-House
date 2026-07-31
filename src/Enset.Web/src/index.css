@@ -48,6 +48,41 @@
 .quality-badge--silver { color: var(--quality-silver); }
 .quality-badge--gold { color: var(--quality-gold); }
 
+.quality-badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.quality-badge-info {
+  color: var(--enset-muted);
+  font-size: 0.85rem;
+}
+
+.quality-detail-popover {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--enset-border);
+  border-radius: var(--radius-md);
+  background: var(--enset-canvas);
+}
+
+.quality-detail-popover h3,
+.quality-detail-popover h4 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.quality-detail-popover ul {
+  margin: 0 0 0.5rem;
+  padding-left: 1.1rem;
+}
+
 * {
   box-sizing: border-box;
 }

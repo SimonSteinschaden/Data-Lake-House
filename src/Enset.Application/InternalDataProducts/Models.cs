@@ -45,7 +45,15 @@ public sealed record BuildingSummaryProduct(
     ReadinessSummary NormalizedLoadProfileReadiness,
     ReadinessSummary NormalizedGenerationProfileReadiness)
 {
-    public string QualityLevel => GoldAssessment.MaturityLevel.ToString();
+    public string? OperationalQualityLevel { get; init; }
+    public int GoldProgressPercentage { get; init; }
+    public int BronzeCount { get; init; }
+    public int SilverCount { get; init; }
+    public int GoldCount { get; init; }
+    public IReadOnlyList<string> BlockingReasons { get; init; } = [];
+    public IReadOnlyList<string> QualityNextActions { get; init; } = [];
+    public string QualityLevel => OperationalQualityLevel ??
+        GoldAssessment.MaturityLevel.ToString();
     public IReadOnlyDictionary<string, ReadinessSummary> Suitability =>
         new Dictionary<string, ReadinessSummary>
         {
@@ -77,9 +85,15 @@ public sealed record MeterSummaryProduct(
     public string? Quantity { get; init; }
     public int? IntervalSeconds { get; init; }
     public string AnnualValueStatus { get; init; } = "NotAvailable";
-    public string QualityLevel =>
+    public string? OperationalQualityLevel { get; init; }
+    public string? ProfileAnalysisStatus { get; init; }
+    public int BlockingIssueCount { get; init; }
+    public IReadOnlyList<string> BlockingReasons { get; init; } = [];
+    public IReadOnlyList<string> QualityNextActions { get; init; } = [];
+    public string QualityLevel => OperationalQualityLevel ??
+        (
         Maturity.GoldMaturity > 0 ? "Gold" :
-        Maturity.SilverMaturity > 0 ? "Silver" : "Bronze";
+        Maturity.SilverMaturity > 0 ? "Silver" : "Bronze");
     public IReadOnlyDictionary<string, ReadinessSummary> Suitability =>
         new Dictionary<string, ReadinessSummary>
         {
@@ -101,9 +115,10 @@ public sealed record CustomerSummaryProduct(
     IReadOnlyList<DataQualityWarning> DataQualityWarnings,
     IReadOnlyDictionary<string, ReadinessSummary> DataProductReadinessSummary)
 {
-    public string QualityLevel =>
-        AverageMaturity.GoldMaturity > 0 ? "Gold" :
-        AverageMaturity.SilverMaturity > 0 ? "Silver" : "Bronze";
+    public string? OperationalQualityLevel { get; init; }
+    public string QualityLevel => OperationalQualityLevel ??
+        (AverageMaturity.GoldMaturity > 0 ? "Gold" :
+        AverageMaturity.SilverMaturity > 0 ? "Silver" : "Bronze");
     public IReadOnlyDictionary<string, ReadinessSummary> Suitability =>
         DataProductReadinessSummary;
 }
@@ -134,6 +149,12 @@ public sealed record PortfolioSummaryProduct(
             ["silver"] = AverageMaturity.SilverMaturity,
             ["gold"] = AverageMaturity.GoldMaturity
         };
+    public int MetersWithoutAnalysis { get; init; }
+    public int MetersWithBlockingIssues { get; init; }
+    public int MetersWithOpenAnomalies { get; init; }
+    public int InvalidInventoryDeclarationCount { get; init; }
+    public int OpenTechnicalReviewCount { get; init; }
+    public int AverageGoldProgressPercentage { get; init; }
 }
 
 public sealed record ImportQualityItem(

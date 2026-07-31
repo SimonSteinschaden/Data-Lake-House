@@ -17,8 +17,8 @@ export function EnergySystemForm({ initial, entityId, onClose, onSaved }: { init
         <option key={option.value} value={option.value}>{option.label}</option>)}
     </select></FormField>
     <FormField label="Leistung (kW)" error={errors.ratedPowerKw}><input type="number" step="any" value={model.ratedPowerKw??""} onChange={e=>set("ratedPowerKw",e.target.value===""?null:Number(e.target.value))}/></FormField>
-    <FormField label="Inbetriebnahme" error={errors.commissionedAt}><input type="datetime-local" value={model.commissionedAt?.slice(0,16)??""} onChange={e=>set("commissionedAt",e.target.value?new Date(e.target.value).toISOString():null)}/></FormField>
-    <FormField label="Stilllegung" error={errors.decommissionedAt}><input type="datetime-local" value={model.decommissionedAt?.slice(0,16)??""} onChange={e=>set("decommissionedAt",e.target.value?new Date(e.target.value).toISOString():null)}/></FormField>
+    <FormField label="Inbetriebnahme" error={errors.commissionedAt}><input type="date" value={model.commissionedAt?.slice(0,16)??""} onChange={e=>set("commissionedAt",e.target.value?new Date(e.target.value).toISOString():null)}/></FormField>
+    <FormField label="Stilllegung" error={errors.decommissionedAt}><input type="date" value={model.decommissionedAt?.slice(0,16)??""} onChange={e=>set("decommissionedAt",e.target.value?new Date(e.target.value).toISOString():null)}/></FormField>
     <footer className="form-actions"><button type="button" onClick={close}>Abbrechen</button><button className="primary-button" disabled={busy}>{busy?"Speichert …":"Speichern"}</button></footer>
   </form></Dialog>;
 }

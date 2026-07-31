@@ -1,6 +1,9 @@
 using Enset.Domain.Curation;using Enset.Domain.GoldProfiles;
 namespace Enset.Application.GoldProfiles;
-public sealed record GoldProfileVersionDto(Guid Id,string EntityType,Guid EntityId,int VersionNumber,string ProfileType,DateTime ValidFromUtc,DateTime? ValidToUtc,DateTime CreatedAtUtc,Guid CreatedByUserId,long SourceCurationRevision,string SnapshotHash,bool IsCurrent,GoldProfileReleaseStatus ReleaseStatus,string? ReleaseReason,uint RowVersion,string SnapshotJson);
+public sealed record GoldProfileVersionDto(Guid Id,string EntityType,Guid EntityId,int VersionNumber,string ProfileType,DateTime ValidFromUtc,DateTime? ValidToUtc,DateTime CreatedAtUtc,Guid CreatedByUserId,long SourceCurationRevision,string SnapshotHash,bool IsCurrent,GoldProfileReleaseStatus ReleaseStatus,string? ReleaseReason,uint RowVersion,string SnapshotJson)
+{
+    public string CreatedByDisplayName { get; init; } = "Unbekannt";
+}
 public interface IGoldProfileVersionService{
  Task<IReadOnlyList<GoldProfileVersionDto>> GetVersions(string type,Guid id,CancellationToken ct);Task<GoldProfileVersionDto?> Get(string type,Guid id,Guid versionId,CancellationToken ct);Task<GoldProfileVersionDto?> GetCurrent(string type,Guid id,CancellationToken ct);Task<GoldProfileVersionDto> Create(string type,Guid id,CancellationToken ct);Task<GoldProfileVersionDto> Release(string type,Guid id,Guid versionId,uint rowVersion,string? reason,CancellationToken ct);Task<GoldProfileVersionDto> Revoke(string type,Guid id,Guid versionId,uint rowVersion,string reason,CancellationToken ct);
 }

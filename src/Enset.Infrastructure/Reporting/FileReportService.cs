@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using ClosedXML.Excel;
 using Enset.Application.ObjectAnalytics;
+using Enset.Application.Quality;
 using Enset.Application.Reporting;
 
 namespace Enset.Infrastructure.Reporting;
@@ -10,6 +11,7 @@ namespace Enset.Infrastructure.Reporting;
 public sealed class FileReportService(
     string rootPath,
     IObjectAnalyticsService analytics,
+    IHierarchicalQualityAssessmentService assessments,
     TimeProvider timeProvider)
     : IReportService
 {
@@ -53,35 +55,49 @@ public sealed class FileReportService(
             request.BuildingId,
             new ObjectSearchQuery(
                 null, null, null, null, null,
-                request.FromUtc.ToUniversalTime(),
-                request.ToUtc.ToUniversalTime()),
+                request.FromUtc, request.ToUtc),
             cancellationToken) ??
             throw new KeyNotFoundException(
                 $"Building {request.BuildingId} was not found.");
+        var quality = (await assessments.AssessBuildings(
+            [request.BuildingId], cancellationToken))
+            .GetValueOrDefault(request.BuildingId);
         await WriteLock.WaitAsync(cancellationToken);
         try
         {
             var existing = await List(cancellationToken);
             var version = existing.Where(x =>
                     x.BuildingId == request.BuildingId &&
-                    x.Type == request.Type &&
-                    x.FromUtc == request.FromUtc.ToUniversalTime() &&
-                    x.ToUtc == request.ToUtc.ToUniversalTime())
+                    x.Type == request.Type)
                 .Select(x => x.Version).DefaultIfEmpty().Max() + 1;
             var instance = new ReportInstance(
                 Guid.NewGuid(),
                 request.Type,
                 request.BuildingId,
                 product.BuildingName,
-                request.FromUtc.ToUniversalTime(),
-                request.ToUtc.ToUniversalTime(),
+                request.FromUtc,
+                request.ToUtc,
                 version,
                 timeProvider.GetUtcNow().UtcDateTime,
                 request.Recipient.Trim(),
                 ReportReleaseStatus.Draft,
                 product.Quality.Level.ToString(),
                 Suitability(product),
-                product);
+                product)
+            {
+                GoldProgressPercentage = quality?.Assessment.GoldProgress.Percentage ?? 0,
+                BronzeCount = quality?.Assessment.GoldProgress.BronzeCount ?? 0,
+                SilverCount = quality?.Assessment.GoldProgress.SilverCount ?? 0,
+                GoldCount = quality?.Assessment.GoldProgress.GoldCount ?? 0,
+                InventoryDeclarationStatus = quality?.InventoryDeclarationStatus ?? "Nicht bestätigt",
+                AnalysisVersions = quality?.MeterAssessments
+                    .Where(x => x.AnalysisVersion != null)
+                    .Select(x => x.AnalysisVersion!).Distinct().ToArray() ?? [],
+                OpenIssueCount = quality?.MeterAssessments.Sum(x => x.OpenIssueCount) ?? 0,
+                BlockingReasons = quality?.Assessment.BlockingReasons ?? [],
+                ConfirmationStatus = quality?.Assessment.OverallQualityLevel.ToString() == "Gold"
+                    ? "Bestätigt" : "Nicht bestätigt"
+            };
             await using var stream = new FileStream(
                 PathFor(instance.ReportId),
                 FileMode.CreateNew,
@@ -109,6 +125,48 @@ public sealed class FileReportService(
         await using var stream = File.OpenRead(path);
         return await JsonSerializer.DeserializeAsync<ReportInstance>(
             stream, json, cancellationToken);
+    }
+
+    public Task<ReportInstance?> Release(
+        Guid reportId, string releasedBy, CancellationToken cancellationToken) =>
+        ChangeStatus(reportId, ReportReleaseStatus.Released, releasedBy, cancellationToken);
+
+    public Task<ReportInstance?> Archive(
+        Guid reportId, CancellationToken cancellationToken) =>
+        ChangeStatus(reportId, ReportReleaseStatus.Archived, null, cancellationToken);
+
+    private async Task<ReportInstance?> ChangeStatus(
+        Guid reportId, ReportReleaseStatus status, string? releasedBy,
+        CancellationToken cancellationToken)
+    {
+        await WriteLock.WaitAsync(cancellationToken);
+        try
+        {
+            var report = await Get(reportId, cancellationToken);
+            if (report is null)
+                return null;
+            var updated = report with
+            {
+                ReleaseStatus = status,
+                ReleasedBy = status == ReportReleaseStatus.Released ? releasedBy : report.ReleasedBy,
+                ReleasedAtUtc = status == ReportReleaseStatus.Released
+                    ? timeProvider.GetUtcNow().UtcDateTime : report.ReleasedAtUtc
+            };
+            await using var stream = new FileStream(
+                PathFor(reportId),
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                81920,
+                FileOptions.Asynchronous);
+            await JsonSerializer.SerializeAsync(
+                stream, updated, json, cancellationToken);
+            return updated;
+        }
+        finally
+        {
+            WriteLock.Release();
+        }
     }
 
     public async Task<RenderedReport?> Export(
@@ -213,8 +271,6 @@ public sealed class FileReportService(
     {
         yield return new("Title", Title(report.Type));
         yield return new("Object", report.BuildingName);
-        yield return new("Period",
-            $"{report.FromUtc:yyyy-MM-dd} – {report.ToUtc:yyyy-MM-dd}");
         yield return new("Version", report.Version.ToString());
         yield return new("Created", report.CreatedAtUtc.ToString("O"));
         yield return new("Recipient", report.Recipient);

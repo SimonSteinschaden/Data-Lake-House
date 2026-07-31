@@ -16,6 +16,8 @@ using Enset.Application.Curation;
 using Enset.Infrastructure.Curation;
 using Enset.Application.GoldProfiles;
 using Enset.Infrastructure.GoldProfiles;
+using Enset.Application.Quality;
+using Enset.Infrastructure.Quality;
 using Enset.Application.InternalDataProducts;
 using Enset.Application.CanonicalSnapshots;
 using Enset.Infrastructure.CanonicalSnapshots;
@@ -85,6 +87,9 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<ICurationService, EfCurationService>();
         services.AddScoped<IGoldProfileVersionService, GoldProfileVersionService>();
         services.AddScoped<IDataProductReadinessService, DataProductReadinessService>();
+        services.AddScoped<IQualityPersistenceService, EfQualityPersistenceService>();
+        services.AddScoped<IHierarchicalQualityAssessmentService, EfHierarchicalQualityAssessmentService>();
+        services.AddScoped<IQualityInvalidationService, EfQualityInvalidationService>();
         services.AddScoped<EfInternalDataProductService>();
         services.AddScoped<ICanonicalSnapshotReader,
             EfCanonicalSnapshotReader>();

@@ -50,7 +50,20 @@ public sealed record ReportInstance(
     ReportReleaseStatus ReleaseStatus,
     string QualityLevel,
     string Suitability,
-    ObjectAnalyticsProduct Product);
+    ObjectAnalyticsProduct Product)
+{
+    public int GoldProgressPercentage { get; init; }
+    public int BronzeCount { get; init; }
+    public int SilverCount { get; init; }
+    public int GoldCount { get; init; }
+    public string InventoryDeclarationStatus { get; init; } = "Nicht bestätigt";
+    public IReadOnlyList<string> AnalysisVersions { get; init; } = [];
+    public int OpenIssueCount { get; init; }
+    public IReadOnlyList<string> BlockingReasons { get; init; } = [];
+    public string ConfirmationStatus { get; init; } = "Nicht bestätigt";
+    public string? ReleasedBy { get; init; }
+    public DateTime? ReleasedAtUtc { get; init; }
+}
 
 public sealed record RenderedReport(
     string FileName,
@@ -71,5 +84,12 @@ public interface IReportService
     Task<RenderedReport?> Export(
         Guid reportId,
         string format,
+        CancellationToken cancellationToken);
+    Task<ReportInstance?> Release(
+        Guid reportId,
+        string releasedBy,
+        CancellationToken cancellationToken);
+    Task<ReportInstance?> Archive(
+        Guid reportId,
         CancellationToken cancellationToken);
 }

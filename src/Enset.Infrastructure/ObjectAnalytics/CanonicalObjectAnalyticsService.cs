@@ -10,6 +10,13 @@ public sealed class CanonicalObjectAnalyticsService(
     TimeProvider timeProvider)
     : IObjectAnalyticsService
 {
+    private static SnapshotQuality OperationalQuality(
+        BuildingCanonicalSnapshot building) =>
+        building.Quality with
+        {
+            Level = building.OverallQualityLevel,
+            CompletenessPercentage = building.GoldProgressPercentage
+        };
     public async Task<ObjectSearchResult> Search(
         ObjectSearchQuery query,
         CancellationToken cancellationToken)
@@ -49,7 +56,7 @@ public sealed class CanonicalObjectAnalyticsService(
                         StringComparison.OrdinalIgnoreCase)) &&
                    (string.IsNullOrWhiteSpace(query.QualityLevel) ||
                     string.Equals(
-                        building.Quality.Level.ToString(),
+                        building.OverallQualityLevel.ToString(),
                         query.QualityLevel,
                         StringComparison.OrdinalIgnoreCase)) &&
                    (string.IsNullOrWhiteSpace(query.EnergyCarrier) ||
@@ -76,7 +83,7 @@ public sealed class CanonicalObjectAnalyticsService(
                     building.MunicipalityName,
                     Address(building),
                     meters.Select(x => x.MeterNumber).ToArray(),
-                    building.Quality,
+                    OperationalQuality(building),
                     building.Suitability);
             }).ToArray();
         return new(items, filtered.Length, query.Page, query.PageSize);
@@ -162,7 +169,7 @@ public sealed class CanonicalObjectAnalyticsService(
             building.Name,
             query.FromUtc,
             query.ToUtc,
-            building.Quality,
+            OperationalQuality(building),
             building.Suitability,
             Value(total, "kWh", building, "Meter Consumption Summary",
                 "Sum of valid interval energy consumption."),
@@ -227,7 +234,7 @@ public sealed class CanonicalObjectAnalyticsService(
         string source,
         string rule) =>
         new(value, unit, value.HasValue ? "Available" : "NotAvailable",
-            source, rule, building.Quality, building.Suitability);
+            source, rule, OperationalQuality(building), building.Suitability);
 
     private static AnalyticsValue Unavailable(
         string unit,
@@ -331,7 +338,7 @@ public sealed class CanonicalObjectAnalyticsService(
         IReadOnlyList<MeterCanonicalSnapshot> meters)
     {
         var result = new List<AnalyticsWarning>();
-        if (building.Quality.Level == DataMaturityLevel.Bronze)
+        if (building.OverallQualityLevel == DataMaturityLevel.Bronze)
             result.Add(new("LOW_QUALITY", "Warning",
                 "Canonical building quality is Bronze.",
                 "Warn when SnapshotQuality.Level is Bronze."));
@@ -392,8 +399,8 @@ public sealed class CanonicalObjectAnalyticsService(
                 x.Readings.CompletenessPercentage >= 95),
                 meters.Any(x => x.Readings.MeasurementCount > 0)),
             Indicator("Stammdaten",
-                building.Quality.CompletenessPercentage >= 90,
-                building.Quality.CompletenessPercentage > 0),
+                building.GoldProgressPercentage >= 90,
+                building.GoldProgressPercentage > 0),
             Indicator("Jahreswerte", meters.Any(x =>
                 x.Readings.AnnualValueStatus ==
                 AnnualValueStatus.CompleteYear),

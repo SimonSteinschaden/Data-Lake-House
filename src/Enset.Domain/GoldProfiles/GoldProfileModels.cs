@@ -1,5 +1,5 @@
 namespace Enset.Domain.GoldProfiles;
-public enum GoldProfileReleaseStatus { Draft, Released, Superseded, Revoked }
+public enum GoldProfileReleaseStatus { Draft, Released, Archived }
 public sealed class GoldProfileVersion {
  public Guid Id{get;set;}=Guid.NewGuid();public string EntityType{get;set;}="";public Guid EntityId{get;set;}public int VersionNumber{get;set;}public string ProfileType{get;set;}="";
  public DateTime ValidFromUtc{get;set;}public DateTime? ValidToUtc{get;set;}public DateTime CreatedAtUtc{get;set;}public Guid CreatedByUserId{get;set;}public long SourceCurationRevision{get;set;}

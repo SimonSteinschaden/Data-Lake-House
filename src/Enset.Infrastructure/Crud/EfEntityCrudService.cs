@@ -8,6 +8,8 @@ using Enset.Domain.Data;
 using Enset.Domain.Curation;
 using Enset.Domain.Geography;
 using Enset.Infrastructure.Persistence;
+using Enset.Application.Quality;
+using Enset.Infrastructure.Quality;
 using Microsoft.EntityFrameworkCore;
 
 namespace Enset.Infrastructure.Crud;
@@ -15,10 +17,14 @@ namespace Enset.Infrastructure.Crud;
 public sealed class EfEntityCrudService(
     EnsetDbContext db,
     IDataAccessScope? scope = null,
-    IBuildingNumberGenerator? buildingNumbers = null) : IEntityCrudService
+    IBuildingNumberGenerator? buildingNumbers = null,
+    IQualityInvalidationService? qualityInvalidation = null,
+    ICurrentUserContext? currentUser = null) : IEntityCrudService
 {
     private readonly IBuildingNumberGenerator _buildingNumbers =
         buildingNumbers ?? new EfBuildingNumberGenerator(db);
+    private readonly IQualityInvalidationService _qualityInvalidation =
+        qualityInvalidation ?? new EfQualityInvalidationService(db, currentUser ?? new CurrentUserContext());
     public async Task<EntityMutationResult> CreateCustomerAsync(CustomerWriteModel m, CancellationToken ct)
     {
         Required((nameof(m.CustomerNumber), m.CustomerNumber), (nameof(m.Name), m.Name));
@@ -119,6 +125,8 @@ public sealed class EfEntityCrudService(
             ChangeReason = "Manuelle Änderung" });
         await Save(ct);
         await SetBuildingState(e.Id, m.BuildingState, ct);
+        await _qualityInvalidation.InvalidateBuildingConfirmations(
+            id, "Gebäudestammdaten wurden geändert.", ct);
         return Result(e);
     }
     public async Task<EntityMutationResult> DeleteBuildingAsync(Guid id, uint v, CancellationToken ct)
@@ -149,7 +157,10 @@ public sealed class EfEntityCrudService(
             Direction = Parse<MeterDirection>(m.Direction, nameof(m.Direction)), Type = Parse<MeterType>(m.Type, nameof(m.Type)),
             Description = Trim(m.Description), ExternalIdentifier = Trim(m.ExternalIdentifier),
             AnnualValue = m.AnnualValue, AnnualValueOrigin = m.AnnualValue.HasValue ? "Manual" : null };
-        db.Meters.Add(e); await Save(ct); return Result(e);
+        db.Meters.Add(e); await Save(ct);
+        await _qualityInvalidation.InvalidateBuildingInventory(
+            m.BuildingId, "Ein neuer Zählpunkt wurde angelegt.", ct);
+        return Result(e);
     }
     public async Task<EntityMutationResult> UpdateMeterAsync(Guid id, MeterWriteModel m, CancellationToken ct)
     {
@@ -166,7 +177,12 @@ public sealed class EfEntityCrudService(
         e.Type = Parse<MeterType>(m.Type, nameof(m.Type)); e.Description = Trim(m.Description);
         e.ExternalIdentifier = Trim(m.ExternalIdentifier); e.AnnualValue = m.AnnualValue;
         e.AnnualValueOrigin = m.AnnualValue.HasValue ? "Manual" : null;
-        Manual(e); await Save(ct); return Result(e);
+        Manual(e); await Save(ct);
+        await _qualityInvalidation.InvalidateMeterAnalysis(
+            id, "Zählpunktstammdaten wurden geändert.", ct);
+        await _qualityInvalidation.InvalidateBuildingInventory(
+            m.BuildingId, "Ein Zählpunkt wurde geändert.", ct);
+        return Result(e);
     }
     public async Task<EntityMutationResult> DeleteMeterAsync(Guid id, uint v, CancellationToken ct)
     {
@@ -174,7 +190,14 @@ public sealed class EfEntityCrudService(
         Concurrency(e, v);
         if (await db.MeterReadings.AnyAsync(x => x.MeterId == id, ct))
             throw new CrudConflictException("Der Zählpunkt besitzt Messwerte und kann nur fachlich deaktiviert werden.");
-        Delete(e); e.IsActive = false; await Save(ct); return Result(e);
+        var buildingId = e.BuildingId;
+        Delete(e); e.IsActive = false; await Save(ct);
+        await _qualityInvalidation.InvalidateMeterAnalysis(
+            id, "Der Zählpunkt wurde entfernt.", ct);
+        if (buildingId.HasValue)
+            await _qualityInvalidation.InvalidateBuildingInventory(
+                buildingId.Value, "Ein Zählpunkt wurde entfernt.", ct);
+        return Result(e);
     }
     public Task<EntityMutationResult> RestoreMeterAsync(Guid id, uint v, CancellationToken ct) =>
         Restore(Meters(true), id, v, "Zählpunkt", ct);
@@ -191,7 +214,10 @@ public sealed class EfEntityCrudService(
             CommissionedAt = m.CommissionedAt, DecommissionedAt = m.DecommissionedAt };
         db.EnergySystems.Add(e); db.EnergySystemBuildingAssignments.Add(new EnergySystemBuildingAssignment
             { EnergySystem = e, BuildingId = m.BuildingId, Role = EnergySystemBuildingRole.LocatedAt });
-        await Save(ct); return Result(e);
+        await Save(ct);
+        await _qualityInvalidation.InvalidateBuildingInventory(
+            m.BuildingId, "Eine neue Anlage wurde angelegt.", ct);
+        return Result(e);
     }
     public async Task<EntityMutationResult> UpdateEnergySystemAsync(Guid id, EnergySystemWriteModel m, CancellationToken ct)
     {
@@ -212,14 +238,24 @@ public sealed class EfEntityCrudService(
         e.Name = m.Name.Trim(); e.Type = Parse<EnergySystemType>(m.Type, nameof(m.Type));
         e.RatedPowerKw = m.RatedPowerKw; e.CommissionedAt = m.CommissionedAt;
         e.DecommissionedAt = m.DecommissionedAt; Manual(e);
-        await Save(ct); return Result(e);
+        await Save(ct);
+        await _qualityInvalidation.InvalidateBuildingInventory(
+            m.BuildingId, "Anlagendaten oder Zuordnung wurden geändert.", ct);
+        return Result(e);
     }
     public async Task<EntityMutationResult> DeleteEnergySystemAsync(Guid id, uint v, CancellationToken ct)
     {
-        var e = await EnergySystems().Include(x => x.Meters).SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Anlage");
+        var e = await EnergySystems().Include(x => x.Meters).Include(x => x.BuildingAssignments)
+            .SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Anlage");
         Concurrency(e, v);
         if (e.Meters.Count != 0) throw new CrudConflictException("Die Anlage ist Zählpunkten zugeordnet und kann nicht gelöscht werden.");
-        Delete(e); await Save(ct); return Result(e);
+        var buildingIds = e.BuildingAssignments.Where(x => x.ValidTo == null)
+            .Select(x => x.BuildingId).Distinct().ToArray();
+        Delete(e); await Save(ct);
+        foreach (var buildingId in buildingIds)
+            await _qualityInvalidation.InvalidateBuildingInventory(
+                buildingId, "Eine Anlage wurde entfernt.", ct);
+        return Result(e);
     }
     public Task<EntityMutationResult> RestoreEnergySystemAsync(Guid id, uint v, CancellationToken ct) =>
         Restore(EnergySystems(true), id, v, "Anlage", ct);
@@ -233,7 +269,10 @@ public sealed class EfEntityCrudService(
         var e = new MeterReading { MeterId = meter.Id, Timestamp = m.Timestamp.ToUniversalTime(), Value = m.Value,
             ReadingType = Parse<MeterReadingType>(m.ReadingType, nameof(m.ReadingType)),
             QualityFlag = Parse<DataQuality>(m.QualityFlag, nameof(m.QualityFlag)), IntervalSeconds = m.IntervalSeconds };
-        db.MeterReadings.Add(e); await Save(ct); return Result(e);
+        db.MeterReadings.Add(e); await Save(ct);
+        await _qualityInvalidation.InvalidateMeterAnalysis(
+            m.MeterId, "Neue Messwerte wurden gespeichert.", ct);
+        return Result(e);
     }
     public async Task<EntityMutationResult> UpdateMeterReadingAsync(Guid id, MeterReadingWriteModel m, CancellationToken ct)
     {
@@ -242,12 +281,18 @@ public sealed class EfEntityCrudService(
         if (e.ReadingType != Parse<MeterReadingType>(m.ReadingType, nameof(m.ReadingType)))
             throw new CrudConflictException("Der Messwerttyp kann nicht stillschweigend geändert werden.");
         e.Value = m.Value; e.QualityFlag = Parse<DataQuality>(m.QualityFlag, nameof(m.QualityFlag)); Manual(e);
-        await Save(ct); return Result(e);
+        await Save(ct);
+        await _qualityInvalidation.InvalidateMeterAnalysis(
+            e.MeterId, "Ein Messwert wurde geändert.", ct);
+        return Result(e);
     }
     public async Task<EntityMutationResult> DeleteMeterReadingAsync(Guid id, uint v, string? reason, CancellationToken ct)
     {
         var e = await MeterReadings().SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Messwert");
-        Concurrency(e, v); Delete(e); await Save(ct); return Result(e);
+        Concurrency(e, v); Delete(e); await Save(ct);
+        await _qualityInvalidation.InvalidateMeterAnalysis(
+            e.MeterId, "Ein Messwert wurde entfernt.", ct);
+        return Result(e);
     }
     public async Task<Enset.Application.ReadModel.PagedResult<EnergySystemDto>> GetEnergySystemsAsync(
         EntityListQuery request, CancellationToken ct)
@@ -307,11 +352,19 @@ public sealed class EfEntityCrudService(
             _ => false
         };
         if (!visible) throw Missing("Entität");
-        return await db.EntityAuditEntries.AsNoTracking().Where(x => x.EntityType == type && x.EntityId == id)
-            .OrderBy(x => x.ChangedAtUtc).ThenBy(x => x.Id)
-            .Select(x => new AuditHistoryItem(x.ChangedAtUtc, x.ChangedByUserId, x.ChangeType.ToString(),
-                x.FieldName, x.OldValue, x.NewValue, x.Source.ToString(), x.ImportId, x.Reason))
-            .ToListAsync(ct);
+        var entries = await db.EntityAuditEntries.AsNoTracking().Where(x => x.EntityType == type && x.EntityId == id)
+            .OrderBy(x => x.ChangedAtUtc).ThenBy(x => x.Id).ToListAsync(ct);
+        var userIds = entries.Where(x => x.Source == LastModifiedSource.User)
+            .Select(x => x.ChangedByUserId).Distinct().ToArray();
+        var names = await db.ApplicationUsers.AsNoTracking()
+            .Where(x => userIds.Contains(x.Id)).ToDictionaryAsync(x => x.Id, x => x.DisplayName, ct);
+        return entries.Select(x => new AuditHistoryItem(x.ChangedAtUtc, x.ChangedByUserId, x.ChangeType.ToString(),
+            x.FieldName, x.OldValue, x.NewValue, x.Source.ToString(), x.ImportId, x.Reason)
+        {
+            ChangedByDisplayName = x.Source == LastModifiedSource.System ? "ENSET-System"
+                : x.Source == LastModifiedSource.Import ? "Import"
+                : x.DisplayNameSnapshot ?? names.GetValueOrDefault(x.ChangedByUserId) ?? "Unbekannt"
+        }).ToArray();
     }
 
     private async Task Save(CancellationToken ct)

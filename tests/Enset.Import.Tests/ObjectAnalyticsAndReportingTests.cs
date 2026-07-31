@@ -57,7 +57,7 @@ public sealed class ObjectAnalyticsAndReportingTests
             var analytics = new CanonicalObjectAnalyticsService(
                 new SnapshotReader(Portfolio()), TimeProvider.System);
             var reports = new FileReportService(
-                root, analytics, TimeProvider.System);
+                root, analytics, new StubAssessments(), TimeProvider.System);
             var request = new CreateReportRequest(
                 ReportType.ObjectEnergy,
                 BuildingId,
@@ -192,5 +192,30 @@ public sealed class ObjectAnalyticsAndReportingTests
             Guid id, CancellationToken cancellationToken) =>
             Task.FromResult(portfolio.Meters.SingleOrDefault(
                 x => x.MeterId == id));
+        public Task<IReadOnlyList<EnergySystemCanonicalSnapshot>> GetEnergySystems(
+            IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<EnergySystemCanonicalSnapshot>>(
+                portfolio.EnergySystems.Where(x => ids.Contains(x.EnergySystemId)).ToArray());
+        public Task<EnergySystemCanonicalSnapshot?> GetEnergySystem(
+            Guid id, CancellationToken cancellationToken) =>
+            Task.FromResult(portfolio.EnergySystems.SingleOrDefault(
+                x => x.EnergySystemId == id));
+    }
+
+    private sealed class StubAssessments : Enset.Application.Quality.IHierarchicalQualityAssessmentService
+    {
+        public Task<IReadOnlyDictionary<Guid, Enset.Application.Quality.OperationalBuildingQualityAssessment>>
+            AssessBuildings(IReadOnlyCollection<Guid> ids, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyDictionary<Guid,
+                Enset.Application.Quality.OperationalBuildingQualityAssessment>>(
+                new Dictionary<Guid, Enset.Application.Quality.OperationalBuildingQualityAssessment>());
+        public Task<IReadOnlyDictionary<Guid, Enset.Application.Quality.MeterQualityAssessment>>
+            AssessMeters(IReadOnlyCollection<Guid> ids, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, Enset.Application.Quality.MeterQualityAssessment>>(
+                new Dictionary<Guid, Enset.Application.Quality.MeterQualityAssessment>());
+        public Task<IReadOnlyDictionary<Guid, Enset.Application.Quality.EnergySystemQualityAssessment>>
+            AssessEnergySystems(IReadOnlyCollection<Guid> ids, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, Enset.Application.Quality.EnergySystemQualityAssessment>>(
+                new Dictionary<Guid, Enset.Application.Quality.EnergySystemQualityAssessment>());
     }
 }

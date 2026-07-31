@@ -11,3 +11,6 @@
 
 Kunden dürfen Daten liefern und korrigieren, aber keine fachlichen
 Bestätigungen, Gold-Versionen oder Veröffentlichungen vornehmen.
+
+Persistierte Analyse- und Kurationsdaten sind Eingaben der späteren
+operativen Bewertung, aber selbst keine Gold-Freigabe.

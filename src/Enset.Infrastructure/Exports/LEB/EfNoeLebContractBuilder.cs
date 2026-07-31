@@ -168,13 +168,13 @@ public sealed class EfNoeLebContractBuilder(
                 "Building",
                 x.BuildingId,
                 x.BuildingNumber,
-                x.Quality.Level.ToString(),
+                x.OverallQualityLevel.ToString(),
                 x.Suitability.Leb))
             .Concat(meters.Select(x => new LebExportAssessment(
                 "Meter",
                 x.MeterId,
                 x.MeterNumber,
-                x.Quality.Level.ToString(),
+                (x.QualityAssessment?.QualityLevel ?? x.Quality.Level).ToString(),
                 x.Suitability.Leb)))
             .ToArray();
         var snapshotCreatedAt = buildings

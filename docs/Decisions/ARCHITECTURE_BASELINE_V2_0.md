@@ -725,6 +725,32 @@ Ziel:
 - Validate, CSV und Excel verwenden dieselbe Canonical Export Projection;
 - LEB Suitability ersetzt pauschale Gold-/Ready-Annahmen.
 
+### Hierarchisches Qualitätsmodell – Phase 1/2 (orthogonal zu Phase A–D)
+
+**Status:** Phase 1 (Persistenz) und Phase 2 (Integration) abgeschlossen.
+
+Dieses Vorhaben ist unabhängig von der Phase-A–D-Zählung dieser Baseline und
+betrifft die Bronze-/Silver-/Gold-Bewertung von Gebäuden, Zählpunkten und
+Anlagen (siehe `docs/QUALITY_MODEL.md`,
+`docs/HIERARCHICAL_QUALITY_PERSISTENCE.md`,
+`docs/HIERARCHICAL_QUALITY_INTEGRATION.md`,
+`docs/Decisions/ADR_HIERARCHICAL_QUALITY_MODEL.md`). Ergebnisse:
+
+- persistierte Fakten (`BuildingInventoryDeclaration`, `MeterProfileAnalysis`,
+  `MeterProfileIssue`, `MeterProfileCurationDecision`) mit Audit,
+  Versionierung, `IsCurrent` und Postgres-`xmin`;
+- zentraler `IHierarchicalQualityAssessmentService`, additiv in Canonical
+  Snapshots, Internal Data Products, APIs, Gebäudedetail, Zählpunktdetail,
+  Datenprüfung, Dashboard und Reports integriert;
+- automatische Invalidierung bei Änderungen an Gebäuden, Zählpunkten,
+  Anlagen und Messwerten;
+- keine zweite Bronze-/Silver-/Gold-Berechnung außerhalb der zentralen
+  Assessment-Klassen.
+
+Bekanntes offenes Risiko: der Portfolio-Reader (Abschnitt 8.6/10) bleibt ein
+Skalierungsrisiko bei sehr großen Portfolios (siehe
+`docs/HIERARCHICAL_QUALITY_INTEGRATION.md`, Abschnitt Performance).
+
 ## 16. Risiken und offene Punkte
 
 ### P1

@@ -35,3 +35,17 @@ dorthin um.
 Weitere Entscheidungstypen (mehrdeutige Einheiten, Energieträger,
 Verbrauchs-/Erzeugungstyp, Dubletten und Importkonflikte) werden als weitere
 `CurationTask`-Regeln ergänzt, nicht als allgemeine Fehlerlisten.
+
+## Zählpunkt-Profilprobleme (separater Entscheidungspfad)
+
+Offene Profilprobleme eines Zählpunkts (`MeterProfileIssue`) sind fachlich
+und technisch von `CurationTask` getrennt und werden nicht auf dieser Seite
+bearbeitet. Dafür existiert `/tools/data-review/meter-issues?meterId=…`
+(`MeterIssueReviewPage`), erreichbar über die Profilqualität im
+Zählpunktdetail oder über die Datenqualitätswarnungen. Sie deckt alle neun
+`ProfileDecisionType`-Werte ab (`ConfirmAsCorrect`, `CorrectValue`,
+`MarkInvalid`, `AcceptGap`, `AddManualValue`, `GenerateEstimatedValue`,
+`MarkForObservation`, `IgnoreWithReason`, `Reopen`), erfordert je Entscheidung
+eine Begründung sowie `xmin`-Concurrency und nutzt denselben
+`EnsetEmployee`-Autorisierungsschutz wie die Datenprüfung. Siehe
+`docs/HIERARCHICAL_QUALITY_INTEGRATION.md`.

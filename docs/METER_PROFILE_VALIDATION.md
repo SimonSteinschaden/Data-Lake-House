@@ -13,3 +13,10 @@ Sprünge, Ausreißer und fehlende Perioden.
 Ersatzwerte dürfen nie stillschweigend entstehen. Methode, Referenz,
 Confidence, Urheber, Begründung und QualityFlag müssen auditierbar sein.
 Unbestätigte Ersatzwerte können kein Gold ermöglichen.
+
+Analyseversionen, Issues und Entscheidungen bleiben unveränderlich
+historisiert. Eine fehlgeschlagene oder abgebrochene Analyse verdrängt keine
+bereits aktuelle bestätigte Analyse.
+
+Neue oder geänderte Messwerte markieren die aktuelle Analyse als veraltet.
+Bis zu einer neuen Analyse bleibt der Zählpunkt operativ Bronze.

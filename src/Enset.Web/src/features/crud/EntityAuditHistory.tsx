@@ -85,7 +85,7 @@ export function EntityAuditHistory({
                 <small>
                   {new Date(item.changedAtUtc).toLocaleString("de-AT")}
                   {" · "}
-                  {item.changedByUserId}
+                  {item.changedByDisplayName}
                   {" · "}
                   {item.source}
                 </small>

@@ -17,3 +17,12 @@ Berechtigung nicht.
 Alle Verbraucher verwenden dasselbe Assessment. Neue Scopes und geänderte
 bestätigte Werte führen zu einer Neubewertung der operativen Projektion.
 Historische freigegebene Versionen werden nicht rückwirkend verändert.
+
+Die Phase-1-Persistenz speichert ausschließlich reproduzierbare Eingaben
+und Auditdaten. Ein partieller Unique-Index schützt die jeweilige
+`IsCurrent`-Semantik; historische Datensätze werden durch restriktive
+Fremdschlüssel vor Kaskadenlöschung geschützt.
+
+Die produktive Integration erfolgt ausschließlich additiv über Canonical
+Snapshots. Controller, React-Komponenten, Reports und Exporte besitzen keine
+eigene Bronze-/Silver-/Gold-Regel.

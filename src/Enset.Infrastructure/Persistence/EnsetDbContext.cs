@@ -14,6 +14,7 @@ using Enset.Domain.Common;
 using Enset.Domain.Curation;
 using Enset.Domain.Associations;
 using Enset.Domain.GoldProfiles;
+using Enset.Domain.Quality;
 using Enset.Application.Authorization;
 
 using Enset.Infrastructure.Imports.Persistence.Entities;
@@ -110,6 +111,10 @@ public class EnsetDbContext : DbContext
     public DbSet<CuratedFieldValue> CuratedFieldValues => Set<CuratedFieldValue>();
     public DbSet<GoldProfileVersion> GoldProfileVersions => Set<GoldProfileVersion>();
     public DbSet<GoldProfileEvent> GoldProfileEvents => Set<GoldProfileEvent>();
+    public DbSet<BuildingInventoryDeclaration> BuildingInventoryDeclarations => Set<BuildingInventoryDeclaration>();
+    public DbSet<MeterProfileAnalysis> MeterProfileAnalyses => Set<MeterProfileAnalysis>();
+    public DbSet<MeterProfileIssue> MeterProfileIssues => Set<MeterProfileIssue>();
+    public DbSet<MeterProfileCurationDecision> MeterProfileCurationDecisions => Set<MeterProfileCurationDecision>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

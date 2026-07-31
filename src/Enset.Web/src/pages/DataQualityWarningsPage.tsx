@@ -119,6 +119,7 @@ export function DataQualityWarningsPage() {
                     <th>Empfohlene Maßnahme</th>
                     <th>Status</th>
                     <th>Zeitpunkt</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -138,6 +139,10 @@ export function DataQualityWarningsPage() {
                       <td>{warning.recommendation}</td>
                       <td>{warning.status}</td>
                       <td>{formatDate(warning.occurredAt)}</td>
+                      <td>{warning.meterId &&
+                        <Link to={`/tools/data-review/meter-issues?meterId=${warning.meterId}`}>
+                          Datenprüfung öffnen
+                        </Link>}</td>
                     </tr>
                   ))}
                 </tbody>

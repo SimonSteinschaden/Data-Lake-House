@@ -2,6 +2,8 @@ using Enset.Domain.Curation;
 using Enset.Domain.Data;
 using Enset.Domain.Energy;
 using Enset.Domain.GoldProfiles;
+using Enset.Domain.Quality;
+using Enset.Application.Quality;
 
 namespace Enset.Application.CanonicalSnapshots;
 
@@ -118,6 +120,27 @@ public sealed record BuildingCanonicalSnapshot(
     public string? MainRegion { get; init; }
     public BuildingGoldAssessment GoldAssessment { get; init; } =
         BuildingGoldDefinition.Evaluate(null, null, null, null);
+    public OperationalBuildingQualityAssessment? QualityAssessment { get; init; }
+    public DataMaturityLevel BuildingCoreQualityLevel =>
+        QualityAssessment?.Assessment.BuildingCoreQuality ?? GoldAssessment.MaturityLevel;
+    public DataMaturityLevel OverallQualityLevel =>
+        QualityAssessment?.Assessment.OverallQualityLevel ?? GoldAssessment.MaturityLevel;
+    public int GoldProgressPercentage => QualityAssessment?.Assessment.GoldProgress.Percentage ?? 0;
+    public int BronzeCount => QualityAssessment?.Assessment.GoldProgress.BronzeCount ?? 0;
+    public int SilverCount => QualityAssessment?.Assessment.GoldProgress.SilverCount ?? 0;
+    public int GoldCount => QualityAssessment?.Assessment.GoldProgress.GoldCount ?? 0;
+    public string InventoryDeclarationStatus => QualityAssessment?.InventoryDeclarationStatus ?? "Nicht bestätigt";
+    public AnnualEnergyStatus AnnualConsumptionStatus =>
+        QualityAssessment?.Assessment.AnnualConsumptionStatus ?? AnnualEnergyStatus.NotAvailable;
+    public AnnualEnergyStatus AnnualProductionStatus =>
+        QualityAssessment?.Assessment.AnnualProductionStatus ?? AnnualEnergyStatus.NotAvailable;
+    public IReadOnlyList<ScopeQuality> MeterQualitySummaries =>
+        QualityAssessment?.Assessment.MeterQualities ?? [];
+    public IReadOnlyList<ScopeQuality> EnergySystemQualitySummaries =>
+        QualityAssessment?.Assessment.EnergySystemQualities ?? [];
+    public IReadOnlyList<string> BlockingReasons => QualityAssessment?.Assessment.BlockingReasons ?? [];
+    public IReadOnlyList<string> Warnings => QualityAssessment?.Assessment.Warnings ?? [];
+    public IReadOnlyList<string> NextActions => QualityAssessment?.NextActions ?? [];
 }
 
 public sealed record MeterCanonicalSnapshot(
@@ -146,6 +169,22 @@ public sealed record MeterCanonicalSnapshot(
     public DateTime? ValidFrom { get; init; }
     public DateTime? ValidTo { get; init; }
     public IReadOnlyList<CanonicalMeterReading> ReadingValues { get; init; } = [];
+    public MeterQualityAssessment? QualityAssessment { get; init; }
+    public DataMaturityLevel QualityLevel =>
+        QualityAssessment?.QualityLevel ?? Quality.Level;
+    public ProfileAnalysisStatus ProfileAnalysisStatus =>
+        QualityAssessment?.ProfileAnalysisStatus ?? Enset.Domain.Quality.ProfileAnalysisStatus.NotAnalyzed;
+    public Guid? CurrentAnalysisId => QualityAssessment?.CurrentAnalysisId;
+    public string? AnalysisVersion => QualityAssessment?.AnalysisVersion;
+    public decimal? CompletenessPercentage => QualityAssessment?.CompletenessPercentage;
+    public int OpenIssueCount => QualityAssessment?.OpenIssueCount ?? 0;
+    public int BlockingIssueCount => QualityAssessment?.BlockingIssueCount ?? 0;
+    public int OpenAnomalyCount => QualityAssessment?.OpenAnomalyCount ?? 0;
+    public DateTime? LastAnalyzedAtUtc => QualityAssessment?.LastAnalyzedAtUtc;
+    public string ConfirmationStatus => QualityAssessment?.ConfirmationStatus ?? "Nicht bestätigt";
+    public IReadOnlyList<string> BlockingReasons => QualityAssessment?.BlockingReasons ?? [];
+    public IReadOnlyList<string> Warnings => QualityAssessment?.Warnings ?? [];
+    public IReadOnlyList<string> NextActions => QualityAssessment?.NextActions ?? [];
 }
 
 public sealed record EnergySystemCanonicalSnapshot(
@@ -162,6 +201,14 @@ public sealed record EnergySystemCanonicalSnapshot(
 {
     public DateTime? ValidFrom { get; init; }
     public DateTime? ValidTo { get; init; }
+    public EnergySystemQualityAssessment? QualityAssessment { get; init; }
+    public DataMaturityLevel QualityLevel =>
+        QualityAssessment?.QualityLevel ?? Quality.Level;
+    public string ConfirmationStatus => QualityAssessment?.ConfirmationStatus ?? "Nicht bestätigt";
+    public IReadOnlyList<string> MissingRequirements => QualityAssessment?.MissingRequirements ?? [];
+    public IReadOnlyList<string> BlockingReasons => QualityAssessment?.BlockingReasons ?? [];
+    public IReadOnlyList<string> Warnings => QualityAssessment?.Warnings ?? [];
+    public IReadOnlyList<string> NextActions => QualityAssessment?.NextActions ?? [];
 }
 
 public sealed record CanonicalSnapshotSet(
@@ -186,6 +233,11 @@ public interface ICanonicalSnapshotReader
     Task<BuildingCanonicalSnapshot?> GetBuilding(
         Guid id, CancellationToken cancellationToken);
     Task<MeterCanonicalSnapshot?> GetMeter(
+        Guid id, CancellationToken cancellationToken);
+    Task<IReadOnlyList<EnergySystemCanonicalSnapshot>> GetEnergySystems(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken);
+    Task<EnergySystemCanonicalSnapshot?> GetEnergySystem(
         Guid id, CancellationToken cancellationToken);
     Task<CanonicalSnapshotSet> GetPortfolio(
         CancellationToken cancellationToken);

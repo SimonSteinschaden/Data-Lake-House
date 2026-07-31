@@ -5,6 +5,8 @@ using Enset.Domain.Curation;
 using Enset.Domain.Data;
 using Enset.Domain.Energy;
 using Enset.Domain.GoldProfiles;
+using Enset.Application.Quality;
+using Enset.Infrastructure.Quality;
 using Enset.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,8 +15,11 @@ namespace Enset.Infrastructure.CanonicalSnapshots;
 public sealed class EfCanonicalSnapshotReader(
     EnsetDbContext db,
     IDataAccessScope scope,
-    TimeProvider clock) : ICanonicalSnapshotReader
+    TimeProvider clock,
+    IHierarchicalQualityAssessmentService? qualityAssessments = null) : ICanonicalSnapshotReader
 {
+    private readonly IHierarchicalQualityAssessmentService _qualityAssessments =
+        qualityAssessments ?? new EfHierarchicalQualityAssessmentService(db);
     public const int PortfolioQueryBudget = 12;
 
     public async Task<CustomerCanonicalSnapshot?> GetCustomer(
@@ -84,6 +89,7 @@ public sealed class EfCanonicalSnapshotReader(
             .ToListAsync(ct);
         var allCurated = await Fields("Building", idSet, ct);
         var versions = await Versions("Building", idSet, ct);
+        var operationalQuality = await _qualityAssessments.AssessBuildings(ids, ct);
         return buildings.Select(building =>
         {
         var curated = allCurated.GetValueOrDefault(
@@ -187,7 +193,8 @@ public sealed class EfCanonicalSnapshotReader(
             MainRegion = version?.Address?.Municipality?.Regions
                 .Select(x => x.Name)
                 .FirstOrDefault(),
-            GoldAssessment = goldAssessment
+            GoldAssessment = goldAssessment,
+            QualityAssessment = operationalQuality.GetValueOrDefault(building.Id)
         };
         }).ToArray();
     }
@@ -236,6 +243,7 @@ public sealed class EfCanonicalSnapshotReader(
             "MeteringPoint",
             idSet,
             ct);
+        var operationalQuality = await _qualityAssessments.AssessMeters(ids, ct);
         return rows.Select(row =>
         {
         var curated = allCurated.GetValueOrDefault(
@@ -359,6 +367,7 @@ public sealed class EfCanonicalSnapshotReader(
             MeterType = row.Meter.Type.ToString(),
             ValidFrom = row.Meter.CommissionedAt,
             ValidTo = row.Meter.DecommissionedAt,
+            QualityAssessment = operationalQuality.GetValueOrDefault(row.Meter.Id),
             ReadingValues = readings.Select(x =>
                 new CanonicalMeterReading(
                     x.Timestamp,
@@ -375,26 +384,18 @@ public sealed class EfCanonicalSnapshotReader(
         }).ToArray();
     }
 
-    public async Task<CanonicalSnapshotSet> GetPortfolio(
+    public async Task<EnergySystemCanonicalSnapshot?> GetEnergySystem(
+        Guid id, CancellationToken ct) =>
+        (await GetEnergySystems([id], ct)).SingleOrDefault();
+
+    public async Task<IReadOnlyList<EnergySystemCanonicalSnapshot>> GetEnergySystems(
+        IReadOnlyCollection<Guid> ids,
         CancellationToken ct)
     {
-        var customerIds = await scope.ApplyCustomerScope(db.Customers)
-            .AsNoTracking()
-            .Select(x => x.Id)
-            .ToListAsync(ct);
-        var buildingIds = await scope.ApplyBuildingScope(db.Buildings)
-            .AsNoTracking()
-            .Select(x => x.Id)
-            .ToListAsync(ct);
-        var meterIds = await scope.ApplyMeterScope(db.Meters)
-            .AsNoTracking()
-            .Select(x => x.Id)
-            .ToListAsync(ct);
-        var customers = await GetCustomers(customerIds, ct);
-        var buildings = await GetBuildings(buildingIds, ct);
-        var meters = await GetMeters(meterIds, ct);
-
+        if (ids.Count == 0) return [];
+        var idSet = ids.ToHashSet();
         var systems = await db.EnergySystems.AsNoTracking()
+            .Where(x => idSet.Contains(x.Id))
             .Select(x => new
             {
                 x.Id,
@@ -436,6 +437,36 @@ public sealed class EfCanonicalSnapshotReader(
                 ValidTo = x.DecommissionedAt
             };
         }).ToArray();
+        var energyQuality = await _qualityAssessments.AssessEnergySystems(
+            energySystems.Select(x => x.EnergySystemId).ToArray(), ct);
+        return energySystems.Select(x => x with
+        {
+            QualityAssessment = energyQuality.GetValueOrDefault(x.EnergySystemId)
+        }).ToArray();
+    }
+
+    public async Task<CanonicalSnapshotSet> GetPortfolio(
+        CancellationToken ct)
+    {
+        var customerIds = await scope.ApplyCustomerScope(db.Customers)
+            .AsNoTracking()
+            .Select(x => x.Id)
+            .ToListAsync(ct);
+        var buildingIds = await scope.ApplyBuildingScope(db.Buildings)
+            .AsNoTracking()
+            .Select(x => x.Id)
+            .ToListAsync(ct);
+        var meterIds = await scope.ApplyMeterScope(db.Meters)
+            .AsNoTracking()
+            .Select(x => x.Id)
+            .ToListAsync(ct);
+        var energySystemIds = await db.EnergySystems.AsNoTracking()
+            .Select(x => x.Id)
+            .ToListAsync(ct);
+        var customers = await GetCustomers(customerIds, ct);
+        var buildings = await GetBuildings(buildingIds, ct);
+        var meters = await GetMeters(meterIds, ct);
+        var energySystems = await GetEnergySystems(energySystemIds, ct);
         return new(customers, buildings, meters, energySystems);
     }
 

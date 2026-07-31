@@ -15,6 +15,7 @@ import { BuildingEnergyPage } from "../pages/BuildingEnergyPage";
 import { MetersPage } from "../pages/MetersPage";
 import { PlaceholderPage } from "../pages/PlaceholderPage";
 import { CurationCenterPage } from "../pages/CurationCenterPage";
+import { MeterIssueReviewPage } from "../pages/MeterIssueReviewPage";
 import { ReportsPage } from "../pages/ReportsPage";
 import { DataQualityPage } from "../pages/DataQualityPage";
 import { AssociationsPage } from "../pages/AssociationsPage";
@@ -102,6 +103,7 @@ export function AppRouter() {
             element={<DataQualityWarningsPage />}
           />
           <Route path="data-review" element={<CurationCenterPage />} />
+          <Route path="data-review/meter-issues" element={<MeterIssueReviewPage />} />
           <Route path="data-curation" element={<Navigate to="/tools/data-review" replace />} />
           <Route path="curation" element={<Navigate to="/tools/data-review" replace />} />
           <Route path="assignments" element={<AssociationsPage />} />

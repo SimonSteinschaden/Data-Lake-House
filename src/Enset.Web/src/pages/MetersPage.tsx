@@ -13,6 +13,7 @@ import { meterReadingService } from "../services/meterReadingService";
 import type { MeterReading, MeterReadingWriteModel } from "../features/meterReadings/types";
 import { MeterReadingForm } from "../features/meterReadings/MeterReadingForm";
 import { CurationReadinessPanel } from "../features/curation/CurationReadinessPanel";
+import { MeterQualityPanel } from "../features/curation/MeterQualityPanel";
 import { DataProductReadinessPanel } from "../features/dataProductReadiness/DataProductReadinessPanel";
 import { GoldProfileVersionsPanel } from "../features/goldProfiles/GoldProfileVersionsPanel";
 import { internalDataProductService } from "../services/internalDataProductService";
@@ -207,6 +208,7 @@ function Detail({ id }: { id: string }) {
       </ul>
     </section>
     <CurationReadinessPanel entityType="MeteringPoint" id={id} />
+    <MeterQualityPanel meterId={id} />
     <GoldProfileVersionsPanel entityType="MeteringPoint" entityId={id} />
     <DataProductReadinessPanel scopeType="MeteringPoint" scopeId={id} />
     <section className="detail-section"><div className="section-heading"><h2>Messwerte</h2>

@@ -37,4 +37,10 @@ public sealed class EntityAuditEntry
     public LastModifiedSource Source { get; set; }
     public Guid? ImportId { get; set; }
     public string? Reason { get; set; }
+    public Guid OperationId { get; set; }
+    public string? ActorType { get; set; }
+    public string? DisplayNameSnapshot { get; set; }
+    public string? Action { get; set; }
+    public Guid? RelatedAnalysisId { get; set; }
+    public Guid? RelatedIssueId { get; set; }
 }

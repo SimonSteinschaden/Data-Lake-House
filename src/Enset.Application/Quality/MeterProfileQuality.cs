@@ -5,7 +5,7 @@ public enum MeterProfileAnalysisStatus
     NotAnalyzed, AnalysisCompleted, RequiresReview, Curated, Confirmed
 }
 
-public sealed record MeterProfileIssue(
+public sealed record MeterProfileAnalysisIssue(
     string Code, string Severity, DateTime? Timestamp, string Message);
 
 public sealed record MeterProfileAnalysisResult(
@@ -15,7 +15,7 @@ public sealed record MeterProfileAnalysisResult(
     long BlockingIssueCount, long WarningCount, string AnalysisVersion,
     DateTime ExecutedAtUtc, Guid? ExecutedByUserId,
     MeterProfileAnalysisStatus Status, string Summary,
-    IReadOnlyList<MeterProfileIssue> DetailIssues);
+    IReadOnlyList<MeterProfileAnalysisIssue> DetailIssues);
 
 public static class MeterProfileQuality
 {

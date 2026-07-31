@@ -498,6 +498,14 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Action")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ActorType")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("ChangeType")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -508,6 +516,10 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("ChangedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("DisplayNameSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<Guid>("EntityId")
                         .HasColumnType("uuid");
@@ -532,9 +544,18 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Reason")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("RelatedAnalysisId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("RelatedIssueId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -544,6 +565,8 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ChangedByUserId");
+
+                    b.HasIndex("OperationId");
 
                     b.HasIndex("EntityType", "EntityId", "ChangedAtUtc");
 
@@ -2324,6 +2347,372 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("Enset.Domain.Quality.BuildingInventoryDeclaration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BuildingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("ConfirmedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConfirmedByDisplayNameSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("ConfirmedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("EnergySystemInventoryComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("InvalidatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("InvalidatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("InvalidationReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("MeterInventoryComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NoRelevantEnergySystemsConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuildingId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_BuildingInventoryDeclarations_Current")
+                        .HasFilter("\"IsCurrent\" = TRUE");
+
+                    b.HasIndex("BuildingId", "VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("BuildingInventoryDeclarations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_BuildingInventoryDeclarations_VersionNumber", "\"VersionNumber\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Enset.Domain.Quality.MeterProfileAnalysis", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("ActualReadingCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AnalysisStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("AnalysisVersion")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<long>("AnomalyCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("BlockingIssueCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("CompletenessPercentage")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("DetectedIntervalSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DetectedUnit")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("ExecutedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExecutedByActorType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ExecutedByDisplayNameSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("ExecutedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("ExpectedReadingCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("GapCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MeterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("PeriodFromUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("PeriodToUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTime?>("SupersededAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("WarningCount")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnalysisStatus");
+
+                    b.HasIndex("MeterId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_MeterProfileAnalyses_Current")
+                        .HasFilter("\"IsCurrent\" = TRUE");
+
+                    b.HasIndex("MeterId", "VersionNumber")
+                        .IsUnique();
+
+                    b.HasIndex("PeriodFromUtc", "PeriodToUtc");
+
+                    b.ToTable("MeterProfileAnalyses", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MeterProfileAnalyses_Completeness", "\"CompletenessPercentage\" >= 0 AND \"CompletenessPercentage\" <= 100");
+
+                            t.HasCheckConstraint("CK_MeterProfileAnalyses_Period", "\"PeriodFromUtc\" < \"PeriodToUtc\"");
+
+                            t.HasCheckConstraint("CK_MeterProfileAnalyses_VersionNumber", "\"VersionNumber\" > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Enset.Domain.Quality.MeterProfileCurationDecision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int?>("ConfidencePercent")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("DecidedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DecidedByDisplayNameSnapshot")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("DecidedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DecisionType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("GeneratedValueMethod")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("IsFinal")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("MeterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MeterProfileAnalysisId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MeterProfileIssueId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NewValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("PreviousValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid?>("SupersedesDecisionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DecidedAtUtc");
+
+                    b.HasIndex("DecidedByUserId");
+
+                    b.HasIndex("MeterId");
+
+                    b.HasIndex("MeterProfileAnalysisId");
+
+                    b.HasIndex("MeterProfileIssueId");
+
+                    b.HasIndex("SupersedesDecisionId");
+
+                    b.ToTable("MeterProfileCurationDecisions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MeterProfileCurationDecisions_Confidence", "\"ConfidencePercent\" IS NULL OR (\"ConfidencePercent\" >= 0 AND \"ConfidencePercent\" <= 100)");
+                        });
+                });
+
+            modelBuilder.Entity("Enset.Domain.Quality.MeterProfileIssue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExpectedValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<bool>("IsBlocking")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("MeterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MeterProfileAnalysisId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OriginalValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("ResolutionStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime?>("ResolvedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<long?>("SourceRowNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TechnicalDetails")
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<DateTime?>("TimestampFromUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("TimestampToUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsBlocking");
+
+                    b.HasIndex("MeterId");
+
+                    b.HasIndex("MeterProfileAnalysisId");
+
+                    b.HasIndex("ResolutionStatus");
+
+                    b.HasIndex("Severity");
+
+                    b.HasIndex("MeterProfileAnalysisId", "ResolutionStatus");
+
+                    b.ToTable("MeterProfileIssues", (string)null);
+                });
+
             modelBuilder.Entity("Enset.Domain.Users.ApplicationUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3321,6 +3710,65 @@ namespace Enset.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("Enset.Domain.Quality.BuildingInventoryDeclaration", b =>
+                {
+                    b.HasOne("Enset.Domain.Buildings.Building", null)
+                        .WithMany()
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enset.Domain.Quality.MeterProfileAnalysis", b =>
+                {
+                    b.HasOne("Enset.Domain.Energy.Meter", null)
+                        .WithMany()
+                        .HasForeignKey("MeterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Enset.Domain.Quality.MeterProfileCurationDecision", b =>
+                {
+                    b.HasOne("Enset.Domain.Energy.Meter", null)
+                        .WithMany()
+                        .HasForeignKey("MeterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enset.Domain.Quality.MeterProfileAnalysis", null)
+                        .WithMany()
+                        .HasForeignKey("MeterProfileAnalysisId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enset.Domain.Quality.MeterProfileIssue", null)
+                        .WithMany()
+                        .HasForeignKey("MeterProfileIssueId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enset.Domain.Quality.MeterProfileCurationDecision", null)
+                        .WithMany()
+                        .HasForeignKey("SupersedesDecisionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("Enset.Domain.Quality.MeterProfileIssue", b =>
+                {
+                    b.HasOne("Enset.Domain.Energy.Meter", null)
+                        .WithMany()
+                        .HasForeignKey("MeterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Enset.Domain.Quality.MeterProfileAnalysis", null)
+                        .WithMany()
+                        .HasForeignKey("MeterProfileAnalysisId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Enset.Domain.Users.UserCustomerAssignment", b =>

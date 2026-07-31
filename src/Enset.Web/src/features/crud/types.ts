@@ -15,6 +15,7 @@ export interface EntityMutationResult extends EntityMetadata {
 export interface AuditHistoryItem {
   changedAtUtc: string;
   changedByUserId: string;
+  changedByDisplayName: string;
   changeType: string;
   fieldName: string | null;
   oldValue: string | null;

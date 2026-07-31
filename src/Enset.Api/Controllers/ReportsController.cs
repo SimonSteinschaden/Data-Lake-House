@@ -51,4 +51,25 @@ public sealed class ReportsController(IReportService reports)
             ? NotFound()
             : File(result.Content, result.ContentType, result.FileName);
     }
+
+    [HttpPost("{reportId:guid}/release"), Authorize(Policy = AuthorizationPolicyNames.EnsetAdmin)]
+    public async Task<ActionResult<ReportInstance>> Release(
+        Guid reportId,
+        [FromBody] ReleaseReportRequest request,
+        CancellationToken cancellationToken)
+    {
+        var report = await reports.Release(reportId, request.ReleasedBy, cancellationToken);
+        return report is null ? NotFound() : Ok(report);
+    }
+
+    [HttpPost("{reportId:guid}/archive"), Authorize(Policy = AuthorizationPolicyNames.EnsetAdmin)]
+    public async Task<ActionResult<ReportInstance>> Archive(
+        Guid reportId,
+        CancellationToken cancellationToken)
+    {
+        var report = await reports.Archive(reportId, cancellationToken);
+        return report is null ? NotFound() : Ok(report);
+    }
 }
+
+public sealed record ReleaseReportRequest(string ReleasedBy);

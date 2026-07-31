@@ -47,6 +47,23 @@ public sealed class HierarchicalQualityAssessmentTests
     }
 
     [Fact]
+    public void Silver_child_produces_warning_not_blocker()
+    {
+        var result = HierarchicalQualityAssessment.Evaluate(Input(
+            meterLevel: DataMaturityLevel.Silver));
+        Assert.Contains(result.Warnings, w => w.Contains("Silver-Status"));
+        Assert.DoesNotContain(result.BlockingReasons, b => b.Contains("Silver-Status"));
+    }
+
+    [Fact]
+    public void Bronze_child_produces_blocker_not_warning()
+    {
+        var result = HierarchicalQualityAssessment.Evaluate(Input(
+            meterLevel: DataMaturityLevel.Bronze));
+        Assert.Contains(result.BlockingReasons, b => b.Contains("Bronze-Status"));
+    }
+
+    [Fact]
     public void Progress_exposes_absolute_distribution()
     {
         var progress = HierarchicalQualityAssessment.Progress(

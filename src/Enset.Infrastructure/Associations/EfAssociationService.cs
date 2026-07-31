@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Enset.Application.Associations;
+using Enset.Application.Quality;
 using Enset.Domain.Associations;
 using Enset.Domain.Common;
 using Enset.Domain.Customers;
@@ -9,7 +10,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Enset.Infrastructure.Associations;
 
-public sealed class EfAssociationService(EnsetDbContext db, TimeProvider timeProvider) : IAssociationService
+public sealed class EfAssociationService(
+    EnsetDbContext db,
+    TimeProvider timeProvider,
+    IQualityInvalidationService? qualityInvalidation = null) : IAssociationService
 {
     public const string CustomerBuilding = "customer-building";
     public const string BuildingMeter = "building-meter";
@@ -198,6 +202,11 @@ public sealed class EfAssociationService(EnsetDbContext db, TimeProvider timePro
             Audit(operation,userId,request.AssociationType,p.SourceId,p.TargetId,"Created",null,p,request.Reason);created++;
         }
         await db.SaveChangesAsync(ct);await tx.CommitAsync(ct);
+        if (qualityInvalidation is not null &&
+            request.AssociationType is BuildingMeter or BuildingEnergySystem)
+            foreach (var buildingId in preview.ProposedAssignments.Select(x => x.SourceId).Distinct())
+                await qualityInvalidation.InvalidateBuildingInventory(
+                    buildingId, "Eine qualitätsrelevante Zuordnung wurde geändert.", ct);
         return new(operation,created,0,0,skipped,preview.Warnings);
     }
 
@@ -231,7 +240,13 @@ public sealed class EfAssociationService(EnsetDbContext db, TimeProvider timePro
                 case CustomerProject:{var x=await db.CustomerProjectAssignments.FindAsync([id],ct);if(x==null)continue;var before=new{x.ValidTo,x.IsPrimary};x.ValidTo=end;x.IsPrimary=false;Audit(op,userId,request.AssociationType,x.CustomerId,x.ProjectId,"Ended",before,new{x.ValidTo,x.IsPrimary},request.Reason);break;}
             }ended++;
         }
-        await db.SaveChangesAsync(ct);await tx.CommitAsync(ct);return new(op,0,0,ended,0,preview.Warnings);
+        await db.SaveChangesAsync(ct);await tx.CommitAsync(ct);
+        if (qualityInvalidation is not null &&
+            request.AssociationType is BuildingMeter or BuildingEnergySystem)
+            foreach (var buildingId in preview.ExistingAssignments.Select(x => x.SourceId).Distinct())
+                await qualityInvalidation.InvalidateBuildingInventory(
+                    buildingId, "Eine qualitätsrelevante Zuordnung wurde entfernt.", ct);
+        return new(op,0,0,ended,0,preview.Warnings);
     }
 
     public async Task<AssociationCommandResponse> SetPrimary(SetPrimaryAssociationRequest request, Guid userId, CancellationToken ct)

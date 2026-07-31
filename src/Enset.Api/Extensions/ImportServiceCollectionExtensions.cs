@@ -111,6 +111,9 @@ public static class ImportServiceCollectionExtensions
                 sp.GetRequiredService<
                     Enset.Application.ObjectAnalytics
                         .IObjectAnalyticsService>(),
+                sp.GetRequiredService<
+                    Enset.Application.Quality
+                        .IHierarchicalQualityAssessmentService>(),
                 sp.GetRequiredService<TimeProvider>()));
 
         return services;

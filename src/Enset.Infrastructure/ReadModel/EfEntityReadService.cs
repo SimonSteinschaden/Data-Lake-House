@@ -214,17 +214,21 @@ public sealed class EfEntityReadService(
                 portfolio.Meters.Count(x =>
                     x.BuildingId == building.BuildingId),
                 building.BuildingState,
-                building.GoldAssessment.MaturityLevel.ToString(),
-                building.GoldAssessment.GoldCompletenessPercentage,
+                building.OverallQualityLevel.ToString(),
+                building.GoldProgressPercentage,
                 false)
             {
-                QualityLevel = building.GoldAssessment.MaturityLevel.ToString(),
+                QualityLevel = building.OverallQualityLevel.ToString(),
                 PostalCode = building.PostalCode,
                 City = building.City,
                 MunicipalityId = building.MunicipalityId,
                 Municipality = building.MunicipalityName,
                 ConditionedFloorArea = building.ConditionedFloorArea,
-                ConstructionYear = building.ConstructionYear
+                ConstructionYear = building.ConstructionYear,
+                BronzeCount = building.BronzeCount,
+                SilverCount = building.SilverCount,
+                GoldCount = building.GoldCount,
+                BlockingReasons = building.BlockingReasons
             });
         return Page(projected, request.Page, request.PageSize);
     }
@@ -296,7 +300,8 @@ public sealed class EfEntityReadService(
                 x.Medium?.ToString() ?? "Unknown",
                 x.Direction?.ToString() ?? "Unknown",
                 x.Unit?.ToString() ?? "Unknown",
-                x.Quality.Level.ToString(),
+                x.QualityAssessment?.QualityLevel.ToString() ??
+                    x.Quality.Level.ToString(),
                 x.IsActive)).ToArray(),
             metadata.DataOrigin,
             metadata.CreatedAt,
@@ -317,10 +322,18 @@ public sealed class EfEntityReadService(
             building.Street,
             building.HouseNumber)
         {
-            QualityLevel = building.GoldAssessment.MaturityLevel.ToString(),
+            QualityLevel = building.OverallQualityLevel.ToString(),
             MunicipalityId = building.MunicipalityId,
             Municipality = building.MunicipalityName,
-            ConditionedFloorArea = building.ConditionedFloorArea
+            ConditionedFloorArea = building.ConditionedFloorArea,
+            GoldProgressPercentage = building.GoldProgressPercentage,
+            BronzeCount = building.BronzeCount,
+            SilverCount = building.SilverCount,
+            GoldCount = building.GoldCount,
+            InventoryDeclarationStatus = building.InventoryDeclarationStatus,
+            BlockingReasons = building.BlockingReasons,
+            Warnings = building.Warnings,
+            NextActions = building.NextActions
         };
     }
 
@@ -439,12 +452,18 @@ public sealed class EfEntityReadService(
             readings.AnnualValueStatus.ToString(),
             readings.IntervalSeconds)
         {
-            QualityLevel = meter.Quality.Level.ToString(),
+            QualityLevel = meter.QualityAssessment?.QualityLevel.ToString() ??
+                meter.Quality.Level.ToString(),
             ReadingType = readings.ReadingType?.ToString(),
             AnnualValueStatus = readings.AnnualValueStatus.ToString(),
             AnnualValueUnit = readings.Unit?.ToString(),
-            AnnualValueReferenceYear =
-                readings.AnnualValueReferenceYear
+            AnnualValueReferenceYear = readings.AnnualValueReferenceYear,
+            ProfileAnalysisStatus = meter.QualityAssessment?.ProfileAnalysisStatus.ToString() ?? "NotAnalyzed",
+            OpenIssueCount = meter.QualityAssessment?.OpenIssueCount ?? 0,
+            BlockingIssueCount = meter.QualityAssessment?.BlockingIssueCount ?? 0,
+            LastAnalyzedAtUtc = meter.QualityAssessment?.LastAnalyzedAtUtc,
+            BlockingReasons = meter.QualityAssessment?.BlockingReasons ?? [],
+            NextActions = meter.QualityAssessment?.NextActions ?? []
         };
     }
 
@@ -541,18 +560,25 @@ public sealed class EfEntityReadService(
             readings.MeasurementCount,
             readings.PeriodStart,
             readings.PeriodEnd,
-            meter.Quality.Level.ToString(),
+            meter.QualityAssessment?.QualityLevel.ToString() ??
+                meter.Quality.Level.ToString(),
             meter.Quality.CompletenessPercentage,
             false)
         {
-            QualityLevel = meter.Quality.Level.ToString(),
+            QualityLevel = meter.QualityAssessment?.QualityLevel.ToString() ??
+                meter.Quality.Level.ToString(),
             Quantity = meter.Quantity?.ToString(),
             ReadingType = readings.ReadingType?.ToString(),
             IntervalSeconds = readings.IntervalSeconds,
             AnnualValueStatus = readings.AnnualValueStatus.ToString(),
             AnnualValueUnit = readings.Unit?.ToString(),
-            AnnualValueReferenceYear =
-                readings.AnnualValueReferenceYear
+            AnnualValueReferenceYear = readings.AnnualValueReferenceYear,
+            ProfileAnalysisStatus = meter.QualityAssessment?.ProfileAnalysisStatus.ToString() ?? "NotAnalyzed",
+            OpenIssueCount = meter.QualityAssessment?.OpenIssueCount ?? 0,
+            BlockingIssueCount = meter.QualityAssessment?.BlockingIssueCount ?? 0,
+            LastAnalyzedAtUtc = meter.QualityAssessment?.LastAnalyzedAtUtc,
+            BlockingReasons = meter.QualityAssessment?.BlockingReasons ?? [],
+            NextActions = meter.QualityAssessment?.NextActions ?? []
         };
     }
 

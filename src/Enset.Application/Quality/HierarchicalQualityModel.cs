@@ -76,6 +76,15 @@ public static class HierarchicalQualityAssessment
         if (input.HasOpenBlockingIssues)
             blockers.Add("Es bestehen offene blockierende Qualitätsprobleme.");
 
+        var warnings = requirements
+            .Where(x => x.State == QualityRequirementState.Complete)
+            .Select(x => $"{x.Label} ist vorhanden, aber noch nicht fachlich bestätigt.")
+            .Concat(input.Meters.Where(x => x.Level == DataMaturityLevel.Silver)
+                .Select(x => $"Zählpunkt {x.ScopeId} besitzt Silver-Status."))
+            .Concat(input.EnergySystems.Where(x => x.Level == DataMaturityLevel.Silver)
+                .Select(x => $"Anlage {x.ScopeId} besitzt Silver-Status."))
+            .ToList();
+
         var allRequirementsConfirmed = requirements.All(
             x => x.State == QualityRequirementState.Confirmed);
         var allChildrenGold = input.Meters.Count > 0 &&
@@ -95,7 +104,7 @@ public static class HierarchicalQualityAssessment
         return new(core, input.Meters, input.EnergySystems,
             input.MeterInventoryComplete, input.EnergySystemInventoryComplete,
             input.AnnualConsumptionStatus, input.AnnualProductionStatus,
-            blockers, [], overall, Progress(progressRequirements));
+            blockers, warnings, overall, Progress(progressRequirements));
     }
 
     public static QualityProgress Progress(

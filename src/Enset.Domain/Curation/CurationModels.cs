@@ -23,7 +23,7 @@ public enum CurationSource
     System
 }
 
-public enum BenchmarkState { Existing, Improved, Planned, Target, Unknown }
+public enum BuildingState { Existing, Improved, Planned, Target, Unknown }
 
 public sealed class CurationTask
 {

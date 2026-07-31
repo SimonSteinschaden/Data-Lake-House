@@ -5,7 +5,8 @@ namespace Enset.Application.Crud;
 public sealed class CrudCommandHandler(
     IEntityCrudService service,
     IValidator<CustomerWriteModel> customerValidator,
-    IValidator<BuildingWriteModel> buildingValidator,
+    IValidator<BuildingCreateRequest> buildingCreateValidator,
+    IValidator<BuildingUpdateRequest> buildingUpdateValidator,
     IValidator<MeterWriteModel> meterValidator,
     IValidator<EnergySystemWriteModel> energySystemValidator,
     IValidator<MeterReadingWriteModel> readingValidator)
@@ -17,9 +18,9 @@ public sealed class CrudCommandHandler(
     public Task<EntityMutationResult> Handle(DeleteCustomerCommand c, CancellationToken ct) => service.DeleteCustomerAsync(c.Id, c.RowVersion, ct);
     public Task<EntityMutationResult> Handle(RestoreCustomerCommand c, CancellationToken ct) => service.RestoreCustomerAsync(c.Id, c.RowVersion, ct);
     public async Task<EntityMutationResult> Handle(CreateBuildingCommand c, CancellationToken ct)
-    { await Validate(buildingValidator, c.Model, ct); return await service.CreateBuildingAsync(c.Model, ct); }
+    { await Validate(buildingCreateValidator, c.Model, ct); return await service.CreateBuildingAsync(c.Model, ct); }
     public async Task<EntityMutationResult> Handle(UpdateBuildingCommand c, CancellationToken ct)
-    { await Validate(buildingValidator, c.Model, ct); return await service.UpdateBuildingAsync(c.Id, c.Model, ct); }
+    { await Validate(buildingUpdateValidator, c.Model, ct); return await service.UpdateBuildingAsync(c.Id, c.Model, ct); }
     public Task<EntityMutationResult> Handle(DeleteBuildingCommand c, CancellationToken ct) => service.DeleteBuildingAsync(c.Id, c.RowVersion, ct);
     public Task<EntityMutationResult> Handle(RestoreBuildingCommand c, CancellationToken ct) => service.RestoreBuildingAsync(c.Id, c.RowVersion, ct);
     public async Task<EntityMutationResult> Handle(CreateMeteringPointCommand c, CancellationToken ct)

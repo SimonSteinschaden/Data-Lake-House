@@ -9,7 +9,7 @@ export function MainLayout() {
       <header className="main-layout__header">
         <div className="main-layout__brand">
           <span className="main-layout__brand-name">ENSET</span>
-          <span className="main-layout__brand-product">Data Platform</span>
+          <span className="main-layout__brand-product">Datenplattform</span>
         </div>
 
         <div className="main-layout__header-actions">

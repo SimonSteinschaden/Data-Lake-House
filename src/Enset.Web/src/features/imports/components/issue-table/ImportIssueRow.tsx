@@ -65,7 +65,7 @@ export function ImportIssueRow({
         <strong>{issue.type}</strong>
         {issue.matchingIssueCount > 1 && (
           <div>
-            {issue.matchingIssueCount.toLocaleString("de-AT")} betroffene Issues
+            {issue.matchingIssueCount.toLocaleString("de-AT")} betroffene Prüfhinweise
           </div>
         )}
         {issue.numberFormatPattern !== "None" && (
@@ -103,27 +103,27 @@ export function ImportIssueRow({
                         typeof scope)}
                     >
                       {issue.supportedScopes.includes("SingleIssue") && (
-                        <option value="SingleIssue">Nur dieses Issue</option>
+                        <option value="SingleIssue">Nur diesen Prüfhinweis</option>
                       )}
                       {issue.supportedScopes.includes(
                         "MatchingIssuesInCurrentImport",
                       ) && (
                         <option value="MatchingIssuesInCurrentImport">
-                          Alle passenden Issues
+                          Alle passenden Prüfhinweise
                         </option>
                       )}
                       {issue.supportedScopes.includes(
                         "MatchingIssueTypeInCurrentImport",
                       ) && (
                         <option value="MatchingIssueTypeInCurrentImport">
-                          Alle kompatiblen {issue.type}-Issues
+                          Alle kompatiblen Prüfhinweise vom Typ {issue.type}
                         </option>
                       )}
                     </select>
                   </label>
                   <div>
                     Diese Entscheidung wird auf{" "}
-                    {affectedIssueCount.toLocaleString("de-AT")} Issues angewendet.
+                    {affectedIssueCount.toLocaleString("de-AT")} Prüfhinweise angewendet.
                   </div>
                   <button
                     type="button"

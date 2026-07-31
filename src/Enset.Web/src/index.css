@@ -12,6 +12,9 @@
   --enset-surface: #ffffff;
   --enset-canvas: #f7f8fa;
   --enset-beige: #d6c5a7;
+  --quality-bronze: #9a5f2e;
+  --quality-silver: #667085;
+  --quality-gold: #a66f00;
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
@@ -29,6 +32,21 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
+
+.quality-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: var(--enset-surface);
+  font-weight: 700;
+}
+
+.quality-badge--bronze { color: var(--quality-bronze); }
+.quality-badge--silver { color: var(--quality-silver); }
+.quality-badge--gold { color: var(--quality-gold); }
 
 * {
   box-sizing: border-box;
@@ -108,6 +126,42 @@ button[type="submit"]:hover:not(:disabled) {
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+.crud-field__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.crud-field__gold-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.3rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid #c58b16;
+  border-radius: 999px;
+  color: #75500b;
+  background: #fff5d8;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.crud-field--gold select,
+.crud-field--gold input {
+  border-color: #c58b16;
+  box-shadow: inset 3px 0 0 #d6a52f;
+}
+
+.crud-field--gold select:focus,
+.crud-field--gold input:focus {
+  border-color: var(--enset-petrol);
+  box-shadow:
+    inset 3px 0 0 #d6a52f,
+    0 0 0 3px rgb(22 104 115 / 14%);
 }
 
 ::selection { background: rgb(200 16 46 / 18%); }

@@ -769,7 +769,7 @@
             },
             "System.Security.Cryptography.Xml": {
               "target": "Package",
-              "version": "[9.0.15, )"
+              "version": "[9.0.18, )"
             }
           },
           "imports": [

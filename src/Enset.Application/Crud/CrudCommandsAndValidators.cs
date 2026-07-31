@@ -6,8 +6,8 @@ public sealed record CreateCustomerCommand(CustomerWriteModel Model);
 public sealed record UpdateCustomerCommand(Guid Id, CustomerWriteModel Model);
 public sealed record DeleteCustomerCommand(Guid Id, uint RowVersion);
 public sealed record RestoreCustomerCommand(Guid Id, uint RowVersion);
-public sealed record CreateBuildingCommand(BuildingWriteModel Model);
-public sealed record UpdateBuildingCommand(Guid Id, BuildingWriteModel Model);
+public sealed record CreateBuildingCommand(BuildingCreateRequest Model);
+public sealed record UpdateBuildingCommand(Guid Id, BuildingUpdateRequest Model);
 public sealed record DeleteBuildingCommand(Guid Id, uint RowVersion);
 public sealed record RestoreBuildingCommand(Guid Id, uint RowVersion);
 public sealed record CreateMeteringPointCommand(MeterWriteModel Model);
@@ -52,12 +52,12 @@ public sealed class CustomerWriteModelValidator : AbstractValidator<CustomerWrit
         RuleFor(x => x.City).MaximumLength(128);
     }
 }
-public sealed class BuildingWriteModelValidator : AbstractValidator<BuildingWriteModel>
+public abstract class BuildingMutationModelValidator<T> : AbstractValidator<T>
+    where T : IBuildingMutationModel
 {
-    public BuildingWriteModelValidator()
+    protected BuildingMutationModelValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(256);
-        RuleFor(x => x.BuildingNumber).NotEmpty().MaximumLength(64);
         RuleFor(x => x.CustomerId).NotEmpty();
         RuleFor(x => x.GrossFloorAreaM2).GreaterThanOrEqualTo(0).When(x => x.GrossFloorAreaM2.HasValue);
         RuleFor(x => x.HeatedFloorAreaM2).GreaterThanOrEqualTo(0).When(x => x.HeatedFloorAreaM2.HasValue);
@@ -65,12 +65,23 @@ public sealed class BuildingWriteModelValidator : AbstractValidator<BuildingWrit
         RuleFor(x => x.YearOfLastMajorRenovation).InclusiveBetween(1700, DateTime.UtcNow.Year + 1)
             .When(x => x.YearOfLastMajorRenovation.HasValue);
         RuleFor(x => x.ExternalIdentifier).MaximumLength(128);
-        RuleFor(x => x.PostalCode).MaximumLength(32);
+        RuleFor(x => x.PostalCode)
+            .Matches(@"^\d{4}$")
+            .WithMessage("Die PLZ muss aus genau vier Ziffern bestehen.")
+            .When(x => !string.IsNullOrWhiteSpace(x.PostalCode));
         RuleFor(x => x.City).MaximumLength(128);
         RuleFor(x => x.Street).MaximumLength(256);
         RuleFor(x => x.HouseNumber).MaximumLength(32);
-        RuleFor(x => x.Latitude).InclusiveBetween(-90, 90).When(x => x.Latitude.HasValue);
-        RuleFor(x => x.Longitude).InclusiveBetween(-180, 180).When(x => x.Longitude.HasValue);
+    }
+}
+public sealed class BuildingCreateRequestValidator :
+    BuildingMutationModelValidator<BuildingCreateRequest>;
+public sealed class BuildingUpdateRequestValidator :
+    BuildingMutationModelValidator<BuildingUpdateRequest>
+{
+    public BuildingUpdateRequestValidator()
+    {
+        RuleFor(x => x.RowVersion).NotEmpty();
     }
 }
 public sealed class MeterWriteModelValidator : AbstractValidator<MeterWriteModel>

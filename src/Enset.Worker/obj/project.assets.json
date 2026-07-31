@@ -460,7 +460,7 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
-      "System.Security.Cryptography.Pkcs/9.0.15": {
+      "System.Security.Cryptography.Pkcs/9.0.18": {
         "type": "package",
         "compile": {
           "lib/net9.0/System.Security.Cryptography.Pkcs.dll": {
@@ -482,10 +482,10 @@
           }
         }
       },
-      "System.Security.Cryptography.Xml/9.0.15": {
+      "System.Security.Cryptography.Xml/9.0.18": {
         "type": "package",
         "dependencies": {
-          "System.Security.Cryptography.Pkcs": "9.0.15"
+          "System.Security.Cryptography.Pkcs": "9.0.18"
         },
         "compile": {
           "lib/net9.0/System.Security.Cryptography.Xml.dll": {
@@ -535,7 +535,7 @@
           "Microsoft.EntityFrameworkCore": "10.0.4",
           "Microsoft.Extensions.Hosting.Abstractions": "10.0.4",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.3",
-          "System.Security.Cryptography.Xml": "9.0.15"
+          "System.Security.Cryptography.Xml": "9.0.18"
         },
         "compile": {
           "bin/placeholder/Enset.Infrastructure.dll": {}
@@ -1236,10 +1236,10 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.Security.Cryptography.Pkcs/9.0.15": {
-      "sha512": "ZqPer8QiXxMHnXbgaJkWlD6kit8biD09lWmYP2NM+pfoaGwLneVCa4WnOVUJnAoZQrNKO/zryC68H2+G8xQbNA==",
+    "System.Security.Cryptography.Pkcs/9.0.18": {
+      "sha512": "NKMKhUdLGNZryY9GXXTF5dXyP6S37EYXhiA2JYvwshJbd4DRq07IOS9it8Opi9atadvv5rlNkD76Mio+5Oo2aQ==",
       "type": "package",
-      "path": "system.security.cryptography.pkcs/9.0.15",
+      "path": "system.security.cryptography.pkcs/9.0.18",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1264,15 +1264,15 @@
         "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.xml",
         "runtimes/win/lib/net9.0/System.Security.Cryptography.Pkcs.dll",
         "runtimes/win/lib/net9.0/System.Security.Cryptography.Pkcs.xml",
-        "system.security.cryptography.pkcs.9.0.15.nupkg.sha512",
+        "system.security.cryptography.pkcs.9.0.18.nupkg.sha512",
         "system.security.cryptography.pkcs.nuspec",
         "useSharedDesignerContext.txt"
       ]
     },
-    "System.Security.Cryptography.Xml/9.0.15": {
-      "sha512": "/DqMTgJ0lcxaLGNc5pHls1dCqQVbPRQwweTp79bwqw8T8+2V1NodLfAr8RlS8Q4W0qs5HzA6dcW2jHIQf1n95g==",
+    "System.Security.Cryptography.Xml/9.0.18": {
+      "sha512": "UoE37brJoIJPMds6wqDaweVrORmdM3XDPGLRU01Mg6Koh3SjgogSfz4+zDsriaEluHMRCx/Qc7yeEw7F9QMcJA==",
       "type": "package",
-      "path": "system.security.cryptography.xml/9.0.15",
+      "path": "system.security.cryptography.xml/9.0.18",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
@@ -1291,7 +1291,7 @@
         "lib/net9.0/System.Security.Cryptography.Xml.xml",
         "lib/netstandard2.0/System.Security.Cryptography.Xml.dll",
         "lib/netstandard2.0/System.Security.Cryptography.Xml.xml",
-        "system.security.cryptography.xml.9.0.15.nupkg.sha512",
+        "system.security.cryptography.xml.9.0.18.nupkg.sha512",
         "system.security.cryptography.xml.nuspec",
         "useSharedDesignerContext.txt"
       ]
@@ -1671,57 +1671,5 @@
         }
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-23rf-6693-g89p.",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-8q5v-6pqq-x66h.",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-cvvh-rhrc-wg4q.",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-g8r8-53c2-pm3f.",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-mmjf-rqrv-855v.",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  }
 }

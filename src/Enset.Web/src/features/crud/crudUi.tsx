@@ -19,6 +19,22 @@ export function fieldErrors(error: unknown): Record<string, string> {
 
 export function formError(error: unknown): string {
   if (error instanceof ApiError && error.status === 409) return concurrencyMessage;
+  if (error instanceof ApiError) {
+    const labels: Record<string, string> = {
+      PostalCode: "PLZ",
+      BuildingNumber: "Gebäudenummer",
+      Name: "Gebäudename",
+      CustomerId: "Kundenzuordnung",
+      BuildingCategory: "Gebäudetyp",
+      PrimaryUseType: "Nutzungstyp",
+      BuildingState: "Gebäudezustand",
+    };
+    const details = Object.entries(error.problem?.errors ?? {})
+      .flatMap(([field, messages]) => messages.map(message =>
+        `${labels[field] ?? field}: ${message}`));
+    const summary = error.problem?.detail ?? error.problem?.title ?? error.message;
+    return details.length > 0 ? `${summary} ${details.join(" ")}` : summary;
+  }
   return error instanceof Error ? error.message : "Die Aktion ist fehlgeschlagen.";
 }
 
@@ -41,7 +57,7 @@ export function EntityMetadataBar({ entity }: { entity: EntityMetadata }) {
   return (
     <div className="entity-meta">
       <span>Herkunft: <strong>{provenanceLabel(entity.dataOrigin)}</strong></span>
-      <span>Zuletzt geändert: <strong>{new Date(changedAt).toLocaleString("de-DE")}</strong></span>
+      <span>Zuletzt geändert: <strong>{new Date(changedAt).toLocaleString("de-AT")}</strong></span>
       <span>Bearbeiter: <strong>{changedBy ?? "System"}</strong></span>
       {entity.isDeleted && <span className="entity-inactive">Deaktiviert</span>}
     </div>
@@ -49,11 +65,22 @@ export function EntityMetadataBar({ entity }: { entity: EntityMetadata }) {
 }
 
 export function FormField({
-  label, error, children,
-}: { label: string; error?: string; children: ReactNode }) {
+  label, error, children, goldRelevant = false,
+}: {
+  label: string;
+  error?: string;
+  children: ReactNode;
+  goldRelevant?: boolean;
+}) {
   return (
-    <label className="crud-field">
-      <span>{label}</span>
+    <label className={`crud-field${goldRelevant ? " crud-field--gold" : ""}`}>
+      <span className="crud-field__label">
+        {label}
+        {goldRelevant && <span className="crud-field__gold-badge"
+          title="Dieses optionale Feld fließt in die fachliche Gold-Bewertung ein.">
+          Gold-relevant
+        </span>}
+      </span>
       {children}
       {error && <small role="alert">{error}</small>}
     </label>

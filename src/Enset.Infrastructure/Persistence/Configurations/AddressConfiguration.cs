@@ -15,9 +15,6 @@ public class AddressConfiguration : IEntityTypeConfiguration<Address>
         builder.Property(x => x.HouseNumber).HasMaxLength(32);
         builder.Property(x => x.AddressAddition).HasMaxLength(128);
         builder.Property(x => x.City).HasMaxLength(128);
-        builder.Property(x => x.Latitude).HasPrecision(9, 6);
-        builder.Property(x => x.Longitude).HasPrecision(9, 6);
-
         builder.HasOne(x => x.Country)
             .WithMany(x => x.Addresses)
             .HasForeignKey(x => x.CountryId)

@@ -16,8 +16,8 @@ const routeLabels: Record<string, string> = {
   documents: "Dokumente",
   analysis: "Analyse",
   object: "Objektanalyse",
-  reports: "Reports",
-  "data-products": "Data Products",
+  reports: "Berichte",
+  "data-products": "Datenprodukte",
   tools: "Werkzeuge",
   "data-quality": "Datenqualität",
   assignments: "Zuordnungen",
@@ -44,14 +44,14 @@ function createBreadcrumbs(pathname: string): BreadcrumbItem[] {
   if (segments.length === 0) {
     return [
       {
-        label: "Management Dashboard",
+        label: "Management-Dashboard",
       },
     ];
   }
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      label: "Management Dashboard",
+      label: "Management-Dashboard",
       path: "/",
     },
   ];
@@ -79,7 +79,7 @@ export function PageBreadcrumbs() {
   return (
     <nav
       className="page-breadcrumbs"
-      aria-label="Breadcrumb"
+      aria-label="Brotkrümelnavigation"
     >
       <ol className="page-breadcrumbs__list">
         {breadcrumbs.map((item, index) => {

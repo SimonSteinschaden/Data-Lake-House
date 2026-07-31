@@ -1,4 +1,4 @@
-@startuml
+@startuml Import Pipeline
 title Import Pipeline - API und Application
 actor User
 participant ImportsController

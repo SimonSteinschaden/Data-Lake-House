@@ -70,12 +70,12 @@ function DashboardContent({ portfolio, imports }: {
     { problem: "Offene Kurationsaufgaben", count: portfolio.openCurationTaskCount,
       impact: "Fachliche Freigaben können blockiert sein",
       action: "Datenkurationscenter öffnen", to: "/tools/data-curation" },
-    { problem: "Objekte ohne Zählpunkte", count: portfolio.buildingsWithoutMeters,
+    { problem: "Gebäude ohne Zähler", count: portfolio.buildingsWithoutMeters,
       impact: "Keine Energiezuordnung möglich",
-      action: "Objekte anzeigen", to: "/buildings" },
-    { problem: "Zählpunkte ohne Messwerte", count: portfolio.metersWithoutReadings,
+      action: "Gebäude anzeigen", to: "/buildings" },
+    { problem: "Zähler ohne Messwerte", count: portfolio.metersWithoutReadings,
       impact: "Keine Profilanalyse möglich",
-      action: "Zählpunkte anzeigen", to: "/meters" },
+      action: "Zähler anzeigen", to: "/meters" },
     { problem: "Offene Importprobleme", count: imports.totalOpenIssues,
       impact: "Import noch nicht vollständig geklärt",
       action: "Importhistorie öffnen", to: "/imports" },
@@ -87,9 +87,9 @@ function DashboardContent({ portfolio, imports }: {
       <div className="cockpit-kpi-grid">
         <DashboardKpiCard title="Kunden" value={number(portfolio.customerCount)}
           hint={`${number(portfolio.activeCustomerCount)} aktiv`} to="/customers" />
-        <DashboardKpiCard title="Objekte" value={number(portfolio.buildingCount)}
+        <DashboardKpiCard title="Gebäude" value={number(portfolio.buildingCount)}
           hint={`${number(portfolio.activeBuildingCount)} aktiv`} to="/buildings" />
-        <DashboardKpiCard title="Zählpunkte" value={number(portfolio.meterCount)}
+        <DashboardKpiCard title="Zähler" value={number(portfolio.meterCount)}
           hint={`${number(portfolio.activeMeterCount)} aktiv`} to="/meters" />
         <DashboardKpiCard title="Building-Gold-Profile"
           value={number(portfolio.releasedBuildingGoldProfileCount)}
@@ -104,9 +104,9 @@ function DashboardContent({ portfolio, imports }: {
           hint="Anteil bestätigter Gold-Felder" to="/tools/data-curation" />
       </div>
       {portfolio.buildingCount === 0 && <p className="cockpit-inline-state">
-        Noch keine Objekte angelegt.</p>}
+        Noch keine Gebäude angelegt.</p>}
       {portfolio.meterCount === 0 && <p className="cockpit-inline-state">
-        Noch keine Zählpunkte vorhanden.</p>}
+        Noch keine Zähler vorhanden.</p>}
       {portfolio.releasedBuildingGoldProfileCount === 0 &&
         portfolio.releasedMeterGoldProfileCount === 0 &&
         <p className="cockpit-inline-state">Es wurden noch keine Gold-Profile freigegeben.</p>}
@@ -123,7 +123,7 @@ function DashboardContent({ portfolio, imports }: {
               key={`${item.energyCarrier}-${item.direction}-${item.unit}`}
               title={`${carrier(item.energyCarrier)} · ${direction(item.direction)}`}
               value={`${number(item.annualValue)} ${item.unit}`}
-              hint={`${number(item.meterCount)} zugehörige Zählpunkte`} />)}
+              hint={`${number(item.meterCount)} zugehörige Zähler`} />)}
         </div>
         <div className="cockpit-panel"><EnergySummaryChart items={portfolio.energySummaries} /></div>
         <div className="cockpit-panel"><h3>Energiedaten im Detail</h3>
@@ -150,7 +150,7 @@ function DashboardContent({ portfolio, imports }: {
           value={number(portfolio.metersWithoutReleasedGoldProfile)}
           hint="Messprofil noch nicht fachlich freigegeben" to="/meters"
           tone={portfolio.metersWithoutReleasedGoldProfile > 0 ? "attention" : "positive"} />
-        <DashboardKpiCard title="Zählpunkte ohne Messwerte"
+        <DashboardKpiCard title="Zähler ohne Messwerte"
           value={number(portfolio.metersWithoutReadings)}
           hint="Noch kein Messprofil vorhanden" to="/meters"
           tone={portfolio.metersWithoutReadings > 0 ? "attention" : "positive"} />
@@ -169,7 +169,7 @@ function DashboardContent({ portfolio, imports }: {
           : <DataQualityActionList items={qualityActions} />}</div>
     </DashboardSection>
 
-    <DashboardSection id="readiness" title="Data-Product-Readiness"
+    <DashboardSection id="readiness" title="Datenprodukt-Reife"
       description="Bewertung der Voraussetzungen – keine Benchmark- oder Profilergebnisse.">
       {portfolio.readinessSummaries.length === 0
         ? <EmptyDashboardState message="Die Voraussetzungen wurden noch nicht bewertet." />

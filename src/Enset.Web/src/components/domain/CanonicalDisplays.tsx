@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { formatUiValue } from "../ui/uiFormat";
 
 export const EmptyValueDisplay = ({ value }: { value?: ReactNode | null }) =>
   value === null || value === undefined || value === "" ? <>–</> : <>{value}</>;
@@ -37,7 +38,7 @@ export function MeterDisplay({
 
 export function QualityLevelBadge({ level }: { level?: string | null }) {
   return <span className={`quality-level quality-level--${level?.toLowerCase() || "missing"}`}>
-    {level || "–"}
+    {formatUiValue(level)}
   </span>;
 }
 

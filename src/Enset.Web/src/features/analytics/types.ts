@@ -12,8 +12,6 @@ export interface RegionalBuildingDistributionItem {
   district: string | null;
   municipality: string | null;
   postalCode: string | null;
-  latitude: number | null;
-  longitude: number | null;
   buildingCount: number;
   customerCount: number;
   meterCount: number;

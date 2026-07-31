@@ -149,7 +149,7 @@ export function ImportFeature() {
           isApplyingResolutions: false,
           resolutionError:
             refreshedReport.readinessMessage ??
-            `${refreshedReport.blockingOpenIssueCount} Issues noch ungelöst.`,
+            `${refreshedReport.blockingOpenIssueCount} Prüfhinweise noch unbearbeitet.`,
           currentStep: "resolution",
         }));
         return;
@@ -187,7 +187,7 @@ export function ImportFeature() {
     if (!draft || draft.resolutionAction === "None") {
       setState(current => ({
         ...current,
-        resolutionError: "Bitte zuerst eine Entscheidung für diese Issue-Gruppe wählen.",
+        resolutionError: "Bitte zuerst eine Entscheidung für diese Gruppe von Prüfhinweisen wählen.",
       }));
       return;
     }
@@ -213,14 +213,14 @@ export function ImportFeature() {
         isApplyingResolutions: false,
         resolutionNotice:
           `${result.resolvedIssueCount.toLocaleString("de-AT")} von ` +
-          `${result.matchedIssueCount.toLocaleString("de-AT")} gleichartigen Issues gelöst.` +
+          `${result.matchedIssueCount.toLocaleString("de-AT")} gleichartige Prüfhinweise bearbeitet.` +
           (result.failedIssueCount > 0
             ? ` ${result.failedIssueCount.toLocaleString("de-AT")} Werte konnten nicht interpretiert werden.`
             : "") +
           (result.skippedIssueCount > 0
-            ? ` ${result.skippedIssueCount.toLocaleString("de-AT")} nicht kompatible Issues wurden übersprungen.`
+            ? ` ${result.skippedIssueCount.toLocaleString("de-AT")} nicht kompatible Prüfhinweise wurden übersprungen.`
             : "") +
-          ` ${result.remainingBlockingIssueCount.toLocaleString("de-AT")} blockierende Issues verbleiben.`,
+          ` ${result.remainingBlockingIssueCount.toLocaleString("de-AT")} blockierende Prüfhinweise verbleiben.`,
       }));
     } catch (error: unknown) {
       setState(current => ({
@@ -265,7 +265,7 @@ export function ImportFeature() {
             `Der Import wurde mit Status '${progress.status}' beendet.`);
       } else if (commit.report.status !== "Committed") {
         throw new Error(
-          `Der Server meldet nach dem Commit den Status '${commit.report.status}'.`,
+          `Der Server meldet nach der Übernahme den Status „${commit.report.status}“.`,
         );
       }
       const report = await importService.getImportReport(state.importId);
@@ -328,7 +328,7 @@ export function ImportFeature() {
       {targetMeterId && <div className="detail-section">
         <strong>Vorausgewählter Zählpunkt:</strong>{" "}
         {targetMeterNumber ?? "Unbekannte Zählpunktnummer"}. Die Zuordnung wird im
-        Importreport gespeichert und erst mit Ihrer Commit-Bestätigung übernommen.{" "}
+        Importbericht gespeichert und erst mit Ihrer Bestätigung übernommen.{" "}
         <Link to={`/meters/${targetMeterId}`}>Zurück zum Zählpunkt</Link>
       </div>}
 

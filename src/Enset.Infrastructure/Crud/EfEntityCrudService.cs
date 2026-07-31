@@ -12,8 +12,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Enset.Infrastructure.Crud;
 
-public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? scope = null) : IEntityCrudService
+public sealed class EfEntityCrudService(
+    EnsetDbContext db,
+    IDataAccessScope? scope = null,
+    IBuildingNumberGenerator? buildingNumbers = null) : IEntityCrudService
 {
+    private readonly IBuildingNumberGenerator _buildingNumbers =
+        buildingNumbers ?? new EfBuildingNumberGenerator(db);
     public async Task<EntityMutationResult> CreateCustomerAsync(CustomerWriteModel m, CancellationToken ct)
     {
         Required((nameof(m.CustomerNumber), m.CustomerNumber), (nameof(m.Name), m.Name));
@@ -57,14 +62,12 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
     public Task<EntityMutationResult> RestoreCustomerAsync(Guid id, uint v, CancellationToken ct) =>
         Restore(Customers(true), id, v, "Kunde", ct);
 
-    public async Task<EntityMutationResult> CreateBuildingAsync(BuildingWriteModel m, CancellationToken ct)
+    public async Task<EntityMutationResult> CreateBuildingAsync(BuildingCreateRequest m, CancellationToken ct)
     {
-        Required((nameof(m.BuildingNumber), m.BuildingNumber), (nameof(m.Name), m.Name));
-        if (await db.Buildings.AnyAsync(x => x.BuildingNumber == m.BuildingNumber.Trim(), ct))
-            throw new CrudConflictException("Ein Gebäude mit dieser Gebäudenummer existiert bereits.");
+        Required((nameof(m.Name), m.Name));
         if (m.CustomerId.HasValue && !await Customers().AnyAsync(x => x.Id == m.CustomerId, ct))
             throw Invalid(nameof(m.CustomerId), "Der angegebene Kunde existiert nicht.");
-        var e = new Building { BuildingNumber = m.BuildingNumber.Trim(), Name = m.Name.Trim(),
+        var e = new Building { BuildingNumber = await _buildingNumbers.NextAsync(ct), Name = m.Name.Trim(),
             ExternalIdentifier = Trim(m.ExternalIdentifier) };
         db.Buildings.Add(e);
         if (HasBuildingVersionData(m))
@@ -72,7 +75,6 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
             var address = await BuildAddress(m, ct);
             e.Versions.Add(new BuildingVersion { VersionNumber = 1, ValidFrom = DateTime.UtcNow,
                 GrossFloorAreaM2 = m.GrossFloorAreaM2, YearOfConstruction = m.YearOfConstruction,
-                Latitude = m.Latitude, Longitude = m.Longitude,
                 BuildingCategory = ParseOptional(m.BuildingCategory, BuildingCategory.Other, nameof(m.BuildingCategory)),
                 PrimaryUseType = ParseOptional(m.PrimaryUseType, PrimaryUseType.Mixed, nameof(m.PrimaryUseType)),
                 HeatedFloorAreaM2 = m.HeatedFloorAreaM2,
@@ -82,20 +84,18 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
         if (m.CustomerId.HasValue) db.CustomerBuildingAssignments.Add(new CustomerBuildingAssignment {
             CustomerId = m.CustomerId.Value, Building = e, ValidFrom = DateTime.UtcNow, IsPrimary = true });
         await Save(ct);
-        await SetBenchmarkState(e.Id, m.BenchmarkState, ct);
+        await SetBuildingState(e.Id, m.BuildingState, ct);
         return Result(e);
     }
-    public async Task<EntityMutationResult> UpdateBuildingAsync(Guid id, BuildingWriteModel m, CancellationToken ct)
+    public async Task<EntityMutationResult> UpdateBuildingAsync(Guid id, BuildingUpdateRequest m, CancellationToken ct)
     {
-        Required((nameof(m.BuildingNumber), m.BuildingNumber), (nameof(m.Name), m.Name));
+        Required((nameof(m.Name), m.Name));
         var e = await Buildings().Include(x => x.CustomerAssignments)
             .SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw Missing("Gebäude");
         Concurrency(e, m.RowVersion);
-        if (await db.Buildings.AnyAsync(x => x.Id != id && x.BuildingNumber == m.BuildingNumber.Trim(), ct))
-            throw new CrudConflictException("Ein Gebäude mit dieser Gebäudenummer existiert bereits.");
         if (m.CustomerId.HasValue && !await Customers().AnyAsync(x => x.Id == m.CustomerId, ct))
             throw Invalid(nameof(m.CustomerId), "Der angegebene Kunde existiert nicht.");
-        e.BuildingNumber = m.BuildingNumber.Trim(); e.Name = m.Name.Trim();
+        e.Name = m.Name.Trim();
         e.ExternalIdentifier = Trim(m.ExternalIdentifier); Manual(e);
         var assignment = e.CustomerAssignments.FirstOrDefault(x => x.ValidTo == null && x.IsPrimary);
         if (assignment?.CustomerId != m.CustomerId)
@@ -112,14 +112,13 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
         db.BuildingVersions.Add(new BuildingVersion { BuildingId = id,
             VersionNumber = (previous?.VersionNumber ?? 0) + 1, ValidFrom = DateTime.UtcNow,
             GrossFloorAreaM2 = m.GrossFloorAreaM2, YearOfConstruction = m.YearOfConstruction,
-            Latitude = previous?.Latitude, Longitude = previous?.Longitude,
             BuildingCategory = ParseOptional(m.BuildingCategory, BuildingCategory.Other, nameof(m.BuildingCategory)),
             PrimaryUseType = ParseOptional(m.PrimaryUseType, PrimaryUseType.Mixed, nameof(m.PrimaryUseType)),
             HeatedFloorAreaM2 = m.HeatedFloorAreaM2,
             YearOfLastMajorRenovation = m.YearOfLastMajorRenovation, Address = address,
             ChangeReason = "Manuelle Änderung" });
         await Save(ct);
-        await SetBenchmarkState(e.Id, m.BenchmarkState, ct);
+        await SetBuildingState(e.Id, m.BuildingState, ct);
         return Result(e);
     }
     public async Task<EntityMutationResult> DeleteBuildingAsync(Guid id, uint v, CancellationToken ct)
@@ -334,13 +333,13 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
     private static CrudValidationException Invalid(string field, string message) => new(new Dictionary<string, string[]> { [field] = [message] });
     private static CrudNotFoundException Missing(string label) => new($"{label} wurde nicht gefunden.");
     private static string? Trim(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    private static bool HasBuildingVersionData(BuildingWriteModel m) =>
+    private static bool HasBuildingVersionData(IBuildingMutationModel m) =>
         m.GrossFloorAreaM2.HasValue || m.YearOfConstruction.HasValue ||
         m.HeatedFloorAreaM2.HasValue || m.YearOfLastMajorRenovation.HasValue ||
         !string.IsNullOrWhiteSpace(m.BuildingCategory) || !string.IsNullOrWhiteSpace(m.PrimaryUseType) ||
         !string.IsNullOrWhiteSpace(m.PostalCode) || !string.IsNullOrWhiteSpace(m.City) ||
         !string.IsNullOrWhiteSpace(m.Street) || !string.IsNullOrWhiteSpace(m.HouseNumber);
-    private async Task<Address?> BuildAddress(BuildingWriteModel m, CancellationToken ct)
+    private async Task<Address?> BuildAddress(IBuildingMutationModel m, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(m.PostalCode) && string.IsNullOrWhiteSpace(m.City) &&
             string.IsNullOrWhiteSpace(m.Street) && string.IsNullOrWhiteSpace(m.HouseNumber))
@@ -364,23 +363,31 @@ public sealed class EfEntityCrudService(EnsetDbContext db, IDataAccessScope? sco
         return new Address { CountryId = country.Id, PostalCodeArea = area,
             Street = Trim(m.Street), HouseNumber = Trim(m.HouseNumber) };
     }
-    private async Task SetBenchmarkState(Guid buildingId, string? value, CancellationToken ct)
+    private async Task SetBuildingState(Guid buildingId, string? value, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(value)) return;
-        var state = Parse<BenchmarkState>(value, nameof(BuildingWriteModel.BenchmarkState));
         var now = DateTime.UtcNow;
         var current = await db.CuratedFieldValues.Where(x => x.EntityType == "Building" &&
-            x.EntityId == buildingId && x.FieldName == "BenchmarkState" && x.ValidToUtc == null)
+            x.EntityId == buildingId &&
+            x.FieldName == "BuildingState" &&
+            x.ValidToUtc == null)
             .ToListAsync(ct);
-        if (current.Count == 1 && current[0].NormalizedValue == state.ToString()) return;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            foreach (var old in current) old.ValidToUtc = now;
+            if (current.Count > 0) await Save(ct);
+            return;
+        }
+        var state = Parse<BuildingState>(value, nameof(IBuildingMutationModel.BuildingState));
+        if (current.Count == 1 && current[0].NormalizedValue == state.ToString())
+            return;
         foreach (var old in current) old.ValidToUtc = now;
         db.CuratedFieldValues.Add(new CuratedFieldValue { EntityType = "Building",
-            EntityId = buildingId, FieldName = "BenchmarkState",
+            EntityId = buildingId, FieldName = "BuildingState",
             OriginalValue = current.FirstOrDefault()?.CuratedValue,
             CuratedValue = state.ToString(), NormalizedValue = state.ToString(),
             Source = CurationSource.User, MaturityLevel = DataMaturityLevel.Silver,
-            ConfidencePercent = 100, Confirmed = false, ConfirmedByUserId = Guid.Empty,
-            ConfirmedAtUtc = now, ValidFromUtc = now });
+            ConfidencePercent = 100, Confirmed = false,
+            ValidFromUtc = now });
         await Save(ct);
     }
     private void Concurrency(BaseEntity e, uint version)

@@ -74,7 +74,7 @@ export function ResolutionStep({
       <div>
         <h3>Importprobleme prüfen</h3>
         <p className="import-wizard__hint">
-          Entscheidungspflichtige Issues müssen gelöst werden, bevor der
+          Entscheidungspflichtige Prüfhinweise müssen bearbeitet werden, bevor der
           Import freigegeben werden kann.
         </p>
       </div>
@@ -82,7 +82,7 @@ export function ResolutionStep({
       <div className="import-wizard__resolution-summary">
         <div>
           <strong>{totalIssueCount}</strong>
-          <span>Issues insgesamt</span>
+          <span>Prüfhinweise insgesamt</span>
         </div>
 
         <div>
@@ -103,8 +103,8 @@ export function ResolutionStep({
 
       {hasMissingOpenIssueDetails ? (
       <div className="import-wizard__error" role="alert">
-        Der Server meldet {openIssueCount} offene Issues, hat jedoch keine
-        zugehörigen Issue-Details geliefert.
+        Der Server meldet {openIssueCount} offene Prüfhinweise, hat jedoch keine
+        zugehörigen Details geliefert.
       </div>
           ) : (
             <ImportIssueTable
@@ -117,7 +117,7 @@ export function ResolutionStep({
 
       {hasMoreIssues && (
         <p className="import-wizard__hint">
-          {visibleIssues.length.toLocaleString("de-AT")} repräsentative Issues von{" "}
+          {visibleIssues.length.toLocaleString("de-AT")} repräsentative Prüfhinweise von{" "}
           {(issueCount ?? issues.length).toLocaleString("de-AT")} werden angezeigt.
           Gruppenentscheidungen werden serverseitig auf alle Treffer angewendet.
         </p>

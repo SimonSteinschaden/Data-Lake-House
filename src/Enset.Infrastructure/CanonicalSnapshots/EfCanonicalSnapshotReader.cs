@@ -113,6 +113,16 @@ public sealed class EfCanonicalSnapshotReader(
             "City",
             version?.Address?.City ??
             version?.Address?.Municipality?.Name);
+        var buildingState = Field("BuildingState", null);
+        var confirmations = curated.ToDictionary(
+            entry => entry.Key,
+            entry => entry.Value.Confirmed);
+        var goldAssessment = BuildingGoldDefinition.Evaluate(
+            buildingType,
+            usageType,
+            buildingState,
+            postalCode,
+            confirmations);
         var conditioned = Decimal(
             Field(
                 "ConditionedFloorAreaM2",
@@ -137,7 +147,7 @@ public sealed class EfCanonicalSnapshotReader(
             customer?.Name,
             buildingType,
             usageType,
-            Field("BuildingState", null),
+            buildingState,
             Field("Street", version?.Address?.Street),
             Field("HouseNumber", version?.Address?.HouseNumber),
             postalCode,
@@ -176,7 +186,8 @@ public sealed class EfCanonicalSnapshotReader(
                 version?.Address?.Municipality?.Code,
             MainRegion = version?.Address?.Municipality?.Regions
                 .Select(x => x.Name)
-                .FirstOrDefault()
+                .FirstOrDefault(),
+            GoldAssessment = goldAssessment
         };
         }).ToArray();
     }
@@ -438,8 +449,7 @@ public sealed class EfCanonicalSnapshotReader(
             .Where(x =>
                 x.EntityType == entity &&
                 ids.Contains(x.EntityId) &&
-                x.ValidToUtc == null &&
-                x.Confirmed)
+                x.ValidToUtc == null)
             .ToListAsync(ct))
         .GroupBy(x => x.EntityId)
         .ToDictionary(

@@ -1,4 +1,4 @@
-@startuml
+@startuml DataProduct Architecture
 title Data Product Engine
 class DataProductDefinition
 class DataProductDefinitionScope

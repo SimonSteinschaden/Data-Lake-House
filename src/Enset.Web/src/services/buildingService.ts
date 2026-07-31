@@ -3,7 +3,9 @@ import type {
   BuildingDetail,
   BuildingListQuery,
   BuildingSummary,
-  BuildingWriteModel,
+  BuildingFormModel,
+  BuildingCreateRequest,
+  BuildingUpdateRequest,
 } from "../features/buildings/types";
 import type { EntityMutationResult } from "../features/crud/types";
 import type { PagedResult } from "../types/paging";
@@ -35,11 +37,15 @@ export const buildingService = {
       `/api/v1/buildings/${encodeURIComponent(buildingId)}?includeDeleted=true`, { signal },
     );
   },
-  create(model: BuildingWriteModel) {
-    return apiPost<EntityMutationResult, BuildingWriteModel>("/api/v1/buildings", model);
+  create(model: BuildingFormModel) {
+    const { rowVersion, ...request } = model;
+    void rowVersion;
+    return apiPost<EntityMutationResult, BuildingCreateRequest>("/api/v1/buildings", request);
   },
-  update(id: string, model: BuildingWriteModel) {
-    return apiPut<EntityMutationResult, BuildingWriteModel>(`/api/v1/buildings/${encodeURIComponent(id)}`, model);
+  update(id: string, model: BuildingFormModel) {
+    const request: BuildingUpdateRequest = model;
+    return apiPut<EntityMutationResult, BuildingUpdateRequest>(
+      `/api/v1/buildings/${encodeURIComponent(id)}`, request);
   },
   remove(id: string, rowVersion: number) {
     return apiDelete<EntityMutationResult>(`/api/v1/buildings/${encodeURIComponent(id)}?rowVersion=${rowVersion}`);

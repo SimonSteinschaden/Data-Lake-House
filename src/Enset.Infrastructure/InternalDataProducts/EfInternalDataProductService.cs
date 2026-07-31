@@ -62,6 +62,7 @@ public sealed class EfInternalDataProductService(
             Period(meters),
             energy,
             Maturity(building.Quality),
+            building.GoldAssessment,
             0,
             Warnings(meters),
             Gold(building.Version),

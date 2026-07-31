@@ -4,13 +4,38 @@ public sealed record CustomerWriteModel(string CustomerNumber, string Name, stri
     string? LegalName, string? Email, string? Phone, string CountryCode, uint RowVersion = 0,
     string? ContactPerson = null, string? Street = null, string? HouseNumber = null,
     string? PostalCode = null, string? City = null);
-public sealed record BuildingWriteModel(string BuildingNumber, string Name,
+public interface IBuildingMutationModel
+{
+    string Name { get; }
+    string? ExternalIdentifier { get; }
+    Guid? CustomerId { get; }
+    decimal? GrossFloorAreaM2 { get; }
+    int? YearOfConstruction { get; }
+    string? BuildingCategory { get; }
+    string? PrimaryUseType { get; }
+    decimal? HeatedFloorAreaM2 { get; }
+    int? YearOfLastMajorRenovation { get; }
+    string? BuildingState { get; }
+    string? PostalCode { get; }
+    string? City { get; }
+    string? Street { get; }
+    string? HouseNumber { get; }
+}
+
+public sealed record BuildingCreateRequest(string Name,
     string? ExternalIdentifier, Guid? CustomerId, decimal? GrossFloorAreaM2 = null,
-    int? YearOfConstruction = null, decimal? Latitude = null, decimal? Longitude = null,
-    uint RowVersion = 0, string? BuildingCategory = null, string? PrimaryUseType = null,
+    int? YearOfConstruction = null,
+    string? BuildingCategory = null, string? PrimaryUseType = null,
     decimal? HeatedFloorAreaM2 = null, int? YearOfLastMajorRenovation = null,
-    string? BenchmarkState = null, string? PostalCode = null, string? City = null,
-    string? Street = null, string? HouseNumber = null);
+    string? BuildingState = null, string? PostalCode = null, string? City = null,
+    string? Street = null, string? HouseNumber = null) : IBuildingMutationModel;
+public sealed record BuildingUpdateRequest(string Name,
+    string? ExternalIdentifier, Guid? CustomerId, uint RowVersion,
+    decimal? GrossFloorAreaM2 = null, int? YearOfConstruction = null,
+    string? BuildingCategory = null, string? PrimaryUseType = null,
+    decimal? HeatedFloorAreaM2 = null, int? YearOfLastMajorRenovation = null,
+    string? BuildingState = null, string? PostalCode = null, string? City = null,
+    string? Street = null, string? HouseNumber = null) : IBuildingMutationModel;
 public sealed record MeterWriteModel(string MeterNumber, string Name, Guid BuildingId,
     string Medium, string Quantity, string Unit, string Direction, string Type,
     Guid? EnergySystemId, uint RowVersion = 0, string? Description = null,
@@ -45,8 +70,8 @@ public interface IEntityCrudService
     Task<EntityMutationResult> UpdateCustomerAsync(Guid id, CustomerWriteModel model, CancellationToken ct);
     Task<EntityMutationResult> DeleteCustomerAsync(Guid id, uint rowVersion, CancellationToken ct);
     Task<EntityMutationResult> RestoreCustomerAsync(Guid id, uint rowVersion, CancellationToken ct);
-    Task<EntityMutationResult> CreateBuildingAsync(BuildingWriteModel model, CancellationToken ct);
-    Task<EntityMutationResult> UpdateBuildingAsync(Guid id, BuildingWriteModel model, CancellationToken ct);
+    Task<EntityMutationResult> CreateBuildingAsync(BuildingCreateRequest model, CancellationToken ct);
+    Task<EntityMutationResult> UpdateBuildingAsync(Guid id, BuildingUpdateRequest model, CancellationToken ct);
     Task<EntityMutationResult> DeleteBuildingAsync(Guid id, uint rowVersion, CancellationToken ct);
     Task<EntityMutationResult> RestoreBuildingAsync(Guid id, uint rowVersion, CancellationToken ct);
     Task<EntityMutationResult> CreateMeterAsync(MeterWriteModel model, CancellationToken ct);
@@ -65,6 +90,11 @@ public interface IEntityCrudService
     Task<ReadModel.PagedResult<MeterReadingDto>> GetMeterReadingsAsync(Guid? meterId, EntityListQuery query, CancellationToken ct);
     Task<MeterReadingDto?> GetMeterReadingAsync(Guid id, bool includeDeleted, CancellationToken ct);
     Task<IReadOnlyList<AuditHistoryItem>> GetAuditHistoryAsync(string entityType, Guid entityId, CancellationToken ct);
+}
+
+public interface IBuildingNumberGenerator
+{
+    Task<string> NextAsync(CancellationToken cancellationToken);
 }
 
 public sealed class CrudValidationException(

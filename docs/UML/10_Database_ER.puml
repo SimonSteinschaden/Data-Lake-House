@@ -1,4 +1,4 @@
-@startuml
+@startuml Database
 title PostgreSQL ER - EnsetDbContext 1.0 RC
 hide methods
 entity Customers { * Id : uuid <<PK>> }

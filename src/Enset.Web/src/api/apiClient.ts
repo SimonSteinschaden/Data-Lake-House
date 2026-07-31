@@ -1,11 +1,12 @@
 import { ApiError, type ApiProblem } from "./apiError";
 import { authenticatedFetch } from "./authenticatedFetch";
 
-const isJsonResponse = (response: Response): boolean =>
-  response.headers
-    .get("content-type")
-    ?.toLowerCase()
-    .includes("application/json") ?? false;
+const isJsonResponse = (response: Response): boolean => {
+  const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+  return contentType.includes("application/json") ||
+    contentType.includes("application/problem+json") ||
+    contentType.includes("+json");
+};
 
 const readProblemDetails = async (
   response: Response,

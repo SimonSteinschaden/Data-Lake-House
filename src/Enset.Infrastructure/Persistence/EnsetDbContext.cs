@@ -115,6 +115,8 @@ public class EnsetDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.HasSequence<long>("BuildingNumberSequence");
+
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(EnsetDbContext).Assembly);
 

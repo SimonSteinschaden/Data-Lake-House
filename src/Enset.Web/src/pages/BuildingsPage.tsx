@@ -4,7 +4,7 @@ import { AdminPageHeader, PageState, Pagination } from "../components/admin/Admi
 import { displayNumber, errorMessage } from "../components/admin/adminFormat";
 import "../components/admin/admin.css";
 import { buildingService } from "../services/buildingService";
-import type { BuildingDetail, BuildingSummary, BuildingWriteModel } from "../features/buildings/types";
+import type { BuildingDetail, BuildingSummary, BuildingFormModel } from "../features/buildings/types";
 import type { PagedResult } from "../types/paging";
 import { BuildingForm } from "../features/buildings/BuildingForm";
 import { ConfirmDialog, EntityMetadataBar, formError } from "../features/crud/crudUi";
@@ -37,12 +37,12 @@ export function BuildingsPage() {
   return buildingId ? <Detail id={buildingId} /> : <List />;
 }
 
-const blank = (customerId: string | null): BuildingWriteModel => ({
-  buildingNumber: "", name: "", externalIdentifier: null, customerId,
+const blank = (customerId: string | null): BuildingFormModel => ({
+  name: "", externalIdentifier: null, customerId,
   grossFloorAreaM2: null, heatedFloorAreaM2: null, yearOfConstruction: null,
   yearOfLastMajorRenovation: null, buildingCategory: null, primaryUseType: null,
-  benchmarkState: null, postalCode: null, city: null, street: null, houseNumber: null,
-  latitude: null, longitude: null, rowVersion: 0,
+  buildingState: null, postalCode: null, city: null, street: null, houseNumber: null,
+  rowVersion: 0,
 });
 
 function List() {
@@ -73,9 +73,9 @@ function List() {
       return next;
     });
   return <section className="admin-page">
-    <AdminPageHeader title="Objekte" description="Gebäudestammdaten, Zuordnungen und Datenreife" />
+    <AdminPageHeader title="Gebäude" description="Gebäudestammdaten, Zuordnungen und Datenreife" />
     <div className="detail-actions">
-      <button className="primary-button" onClick={() => setCreating(true)}>Objekt anlegen</button>
+      <button className="primary-button" onClick={() => setCreating(true)}>Gebäude anlegen</button>
     </div>
     <form className="list-toolbar" onSubmit={(event) => {
       event.preventDefault(); update({ search: search.trim(), page: "1" });
@@ -85,9 +85,9 @@ function List() {
     </form>
     {error ? <PageState>{error}</PageState> : !result
       ? <PageState>Daten werden geladen …</PageState>
-      : result.items.length === 0 ? <PageState>Keine Objekte gefunden.</PageState>
+      : result.items.length === 0 ? <PageState>Keine Gebäude gefunden.</PageState>
       : <><div className="table-wrap"><table className="admin-table">
-        <thead><tr><th>Gebäudenummer</th><th>Objektname</th><th>Gebäudetyp</th>
+        <thead><tr><th>Gebäudenummer</th><th>Gebäudename</th><th>Gebäudetyp</th>
           <th>Nutzungstyp</th><th>Kunde</th><th>Zählpunkte</th><th>Gebäudezustand</th>
           <th>Datenreife / Gold-Reife</th><th></th></tr></thead>
         <tbody>{result.items.map((item) => <tr key={item.id}>
@@ -97,7 +97,7 @@ function List() {
           <td>{item.customerName
             ? <>{item.customerNumber} · {item.customerName}</> : "Nicht zugeordnet"}</td>
           <td>{displayNumber(item.meterCount)}</td>
-          <td>{value(stateLabel, item.benchmarkState)}</td>
+          <td>{value(stateLabel, item.buildingState)}</td>
           <td>{item.dataMaturity} · {item.goldReadinessPercent} %</td>
           <td><Link className="table-link" to={`/buildings/${item.id}`}>Öffnen</Link></td>
         </tr>)}</tbody>
@@ -139,16 +139,16 @@ function Detail({ id }: { id: string }) {
   if (!item) return <section className="admin-page"><PageState>Daten werden geladen …</PageState></section>;
 
   const primaryCustomer = item.customers.find((x) => x.isPrimary) ?? item.customers[0];
-  const model: BuildingWriteModel = {
-    buildingNumber: item.buildingNumber, name: item.name,
+  const model: BuildingFormModel = {
+    name: item.name,
     externalIdentifier: item.externalIdentifier, customerId: primaryCustomer?.customerId ?? null,
     grossFloorAreaM2: item.grossFloorAreaM2, heatedFloorAreaM2: item.heatedFloorAreaM2,
     yearOfConstruction: item.yearOfConstruction,
     yearOfLastMajorRenovation: item.yearOfLastMajorRenovation,
     buildingCategory: item.buildingCategory, primaryUseType: item.primaryUseType,
-    benchmarkState: item.benchmarkState === "Unknown" ? null : item.benchmarkState,
+    buildingState: item.buildingState === "Unknown" ? null : item.buildingState,
     postalCode: item.postalCode, city: item.city, street: item.street,
-    houseNumber: item.houseNumber, latitude: item.latitude, longitude: item.longitude,
+    houseNumber: item.houseNumber,
     rowVersion: item.rowVersion,
   };
   const blankSystem: EnergySystemWriteModel = {
@@ -167,7 +167,7 @@ function Detail({ id }: { id: string }) {
   };
   const address = [item.street, item.houseNumber].filter(Boolean).join(" ");
   return <section className="admin-page">
-    <Link className="back-link" to="/buildings">← Objekte</Link>
+    <Link className="back-link" to="/buildings">← Gebäude</Link>
     <AdminPageHeader title={item.name} description={`Gebäudenummer ${item.buildingNumber}`} />
     {primaryCustomer && <p><Link to={`/customers/${primaryCustomer.customerId}`}>
       {primaryCustomer.customerNumber} · {primaryCustomer.customerName}</Link></p>}
@@ -187,14 +187,16 @@ function Detail({ id }: { id: string }) {
           ? "Nicht verfügbar" : `${summary.annualConsumption} ${summary.unit ?? ""}`}</dd></div>
         <div><dt>Jahreserzeugung</dt><dd>{summary.annualGeneration == null
           ? "Nicht verfügbar" : `${summary.annualGeneration} ${summary.unit ?? ""}`}</dd></div>
-        <div><dt>Gold-Reife</dt><dd>{summary.maturity.goldMaturityPercentage} %</dd></div>
-        <div><dt>Offene Curation Tasks</dt><dd>{summary.openCurationTaskCount}</dd></div>
+        <div><dt>Gold-Vollständigkeit</dt>
+          <dd>{summary.goldAssessment.goldCompletenessPercentage} %</dd></div>
+        <div><dt>Offene Kurationsaufgaben</dt><dd>{summary.openCurationTaskCount}</dd></div>
       </dl>
     </section>}
     <section className="detail-section"><h2>Stammdaten</h2><dl className="detail-grid">
+      <div><dt>Gebäudenummer</dt><dd>{item.buildingNumber}</dd></div>
       <div><dt>Gebäudetyp</dt><dd>{value(categoryLabel, item.buildingCategory)}</dd></div>
       <div><dt>Nutzungstyp</dt><dd>{value(useLabel, item.primaryUseType)}</dd></div>
-      <div><dt>Gebäudezustand</dt><dd>{value(stateLabel, item.benchmarkState)}</dd></div>
+      <div><dt>Gebäudezustand</dt><dd>{value(stateLabel, item.buildingState)}</dd></div>
       <div><dt>Bruttogrundfläche</dt><dd>{item.grossFloorAreaM2 ?? "Nicht angegeben"} m²</dd></div>
       <div><dt>Beheizte Fläche</dt><dd>{item.heatedFloorAreaM2 ?? "Nicht angegeben"} m²</dd></div>
       <div><dt>Baujahr</dt><dd>{item.yearOfConstruction ?? "Nicht angegeben"}</dd></div>
@@ -204,8 +206,9 @@ function Detail({ id }: { id: string }) {
       <div><dt>Adresse</dt><dd>{address || "Nicht angegeben"}</dd></div>
       <div><dt>Externe ID</dt><dd>{item.externalIdentifier ?? "Nicht angegeben"}</dd></div>
     </dl></section>
-    <CurationReadinessPanel entityType="Building" id={id} />
-    <GoldProfileVersionsPanel entityType="Building" entityId={id} />
+    {summary && <CurationReadinessPanel entityType="Building" id={id}
+      buildingAssessment={summary.goldAssessment} />}
+    <GoldProfileVersionsPanel entityType="Building" entityId={id} onChanged={load} />
     <DataProductReadinessPanel scopeType="Building" scopeId={id} />
     <section className="detail-section"><div className="section-heading"><h2>Zählpunkte</h2>
       <Link className="primary-button" to={`/meters?buildingId=${id}&create=true`}>Zählpunkt anlegen</Link>
@@ -233,10 +236,10 @@ function Detail({ id }: { id: string }) {
       onReload={async () => { setEditing(false); await load(); }}
       onSaved={async () => { setEditing(false); await load(); }} />}
     {audit && <EntityAuditHistory entityType="Building" entityId={id} onClose={() => setAudit(false)} />}
-    {confirm && <ConfirmDialog title={confirm === "delete" ? "Objekt deaktivieren" : "Objekt wiederherstellen"}
+    {confirm && <ConfirmDialog title={confirm === "delete" ? "Gebäude deaktivieren" : "Gebäude wiederherstellen"}
       confirmLabel={confirm === "delete" ? "Deaktivieren" : "Wiederherstellen"}
       busy={busy} error={actionError} onConfirm={() => void mutate()} onClose={() => setConfirm(undefined)}>
-      <p>Das Objekt „{item.name}“ wird {confirm === "delete"
+      <p>Das Gebäude „{item.name}“ wird {confirm === "delete"
         ? "deaktiviert. Zugeordnete Zählpunkte oder Anlagen können die Aktion blockieren."
         : "wiederhergestellt."}</p>
     </ConfirmDialog>}

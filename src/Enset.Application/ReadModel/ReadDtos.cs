@@ -28,7 +28,7 @@ public sealed record CustomerDetailDto(Guid Id, string CustomerNumber, string Na
 
 public sealed record BuildingSummaryDto(Guid Id, string BuildingNumber, string Name,
     string? BuildingCategory, string? PrimaryUseType, string? CustomerNumber,
-    string? CustomerName, int MeterCount, string BenchmarkState,
+    string? CustomerName, int MeterCount, string? BuildingState,
     string DataMaturity, int GoldReadinessPercent, bool IsDeleted)
 {
     public string QualityLevel { get; init; } = "Bronze";
@@ -53,9 +53,9 @@ public sealed record BuildingDetailDto(Guid Id, string BuildingNumber, string Na
     IReadOnlyList<BuildingMeterDto> Meters, string DataOrigin, DateTime CreatedAtUtc,
     Guid? CreatedByUserId, DateTime? UpdatedAtUtc, Guid? UpdatedByUserId,
     bool IsDeleted, uint RowVersion, decimal? GrossFloorAreaM2,
-    int? YearOfConstruction, decimal? Latitude, decimal? Longitude,
+    int? YearOfConstruction,
     string? BuildingCategory, string? PrimaryUseType, decimal? HeatedFloorAreaM2,
-    int? YearOfLastMajorRenovation, string BenchmarkState, string? PostalCode,
+    int? YearOfLastMajorRenovation, string? BuildingState, string? PostalCode,
     string? City, string? Street, string? HouseNumber)
 {
     public string QualityLevel { get; init; } = "Bronze";

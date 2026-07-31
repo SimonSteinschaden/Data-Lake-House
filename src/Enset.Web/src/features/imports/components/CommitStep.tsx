@@ -47,7 +47,7 @@ export function CommitStep({
         <div><dt>Gebäude</dt><dd>{buildingCount}</dd></div>
         <div><dt>Zähler</dt><dd>{meterCount}</dd></div>
         <div><dt>Messwerte</dt><dd>{meterReadingCount}</dd></div>
-        <div><dt>Issues</dt><dd>{issueCount}</dd></div>
+        <div><dt>Prüfhinweise</dt><dd>{issueCount}</dd></div>
         <div><dt>Serverstatus</dt><dd>{status}</dd></div>
       </dl>
 
@@ -55,7 +55,7 @@ export function CommitStep({
         <strong>Wichtiger Hinweis</strong>
         <p>
           Der Server prüft vor dem Schreiben das Write Gate. Der Wizard
-          wertet ausschließlich den zurückgegebenen ImportReport aus.
+          wertet ausschließlich den zurückgegebenen Importbericht aus.
         </p>
       </div>
 

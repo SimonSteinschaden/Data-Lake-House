@@ -127,7 +127,7 @@ public sealed class ExcelWorkbookReader : IExcelReader, IExcelWorkbookReader
             CooledFloorArea = Get(row, sheet.Headers, "CooledFloorAreaM2", "CooledFloorArea"),
             BuildingVolume = Get(row, sheet.Headers, "BuildingVolumeM3", "BuildingVolume"),
             NumberOfFloors = Get(row, sheet.Headers, "NumberOfFloors", "FloorCount"),
-            BuildingState = Get(row, sheet.Headers, "BuildingState", "BenchmarkState")
+            BuildingState = Get(row, sheet.Headers, "BuildingState")
         }).ToList();
     }
 

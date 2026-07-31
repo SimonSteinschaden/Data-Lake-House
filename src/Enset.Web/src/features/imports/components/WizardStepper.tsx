@@ -13,7 +13,7 @@ const steps: StepDefinition[] = [
   { key: "upload", label: "Datei" },
   { key: "analysis", label: "Analyse" },
   { key: "resolution", label: "Entscheidungen" },
-  { key: "commit", label: "Commit" },
+  { key: "commit", label: "Übernehmen" },
 ];
 
 export function WizardStepper({

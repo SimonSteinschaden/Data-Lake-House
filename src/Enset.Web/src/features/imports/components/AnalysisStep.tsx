@@ -47,7 +47,7 @@ export function AnalysisStep({
             variant="primary"
             onClick={onContinue}
           >
-            Issues prüfen
+            Prüfhinweise prüfen
           </Button>
         </>
       }
@@ -75,7 +75,7 @@ export function AnalysisStep({
           />
 
           <StatCard
-            title="Issues"
+            title="Prüfhinweise"
             value={issueCount}
           />
         </div>

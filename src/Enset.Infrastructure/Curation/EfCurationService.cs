@@ -1,4 +1,5 @@
 using Enset.Application.Authorization;
+using Enset.Application.CanonicalSnapshots;
 using Enset.Application.Curation;
 using Enset.Domain.Curation;
 using Enset.Domain.Energy;
@@ -11,7 +12,8 @@ public sealed class EfCurationService(
     EnsetDbContext db,
     ICurrentUserContext currentUser,
     TimeProvider timeProvider,
-    IDataAccessScope scope) : ICurationService
+    IDataAccessScope scope,
+    ICanonicalSnapshotReader snapshots) : ICurationService
 {
     public async Task<CurationTaskPage> GetTasksAsync(CurationTaskQuery request, CancellationToken ct)
     {
@@ -30,6 +32,8 @@ public sealed class EfCurationService(
         if (request.MeteringPointId.HasValue)
             query = query.Where(x => x.EntityType == "MeteringPoint" &&
                 x.EntityId == request.MeteringPointId);
+        if (request.EntityId.HasValue)
+            query = query.Where(x => x.EntityId == request.EntityId);
         if (request.CustomerId.HasValue) query = query.Where(x =>
             (x.EntityType == "Building" && db.CustomerBuildingAssignments.Any(a => a.BuildingId == x.EntityId && a.CustomerId == request.CustomerId)) ||
             (x.EntityType == "MeteringPoint" && db.Meters.Any(m => m.Id == x.EntityId && m.Building!.CustomerAssignments.Any(a => a.CustomerId == request.CustomerId))));
@@ -52,7 +56,8 @@ public sealed class EfCurationService(
     }
 
     public Task<CurationTaskDetail> AcceptAsync(Guid id, CancellationToken ct) =>
-        DecideAsync(id, CurationTaskStatus.Accepted, null, null, ct);
+        DecideAsync(id, CurationTaskStatus.Accepted, null,
+            "Fachlich bestätigt.", ct);
 
     public Task<CurationTaskDetail> RejectAsync(Guid id, string? reason, CancellationToken ct) =>
         DecideAsync(id, CurationTaskStatus.Rejected, null, reason, ct);
@@ -116,7 +121,7 @@ public sealed class EfCurationService(
         task.Source = source;
         task.DecidedAtUtc = now;
         task.DecidedByUserId = userId;
-        task.Decisions.Add(new CurationDecision
+        var decision = new CurationDecision
         {
             UserId = userId,
             DecidedAtUtc = now,
@@ -127,7 +132,9 @@ public sealed class EfCurationService(
             Source = source,
             ConfidencePercent = status == CurationTaskStatus.Customized ? 100 : task.ConfidencePercent,
             Reason = reason
-        });
+        };
+        task.Decisions.Add(decision);
+        db.Entry(decision).State = EntityState.Added;
         if (curatedValue is not null)
         {
             var previous = await db.CuratedFieldValues.SingleOrDefaultAsync(x =>
@@ -152,9 +159,8 @@ public sealed class EfCurationService(
 
     private async Task DiscoverTasksAsync(CancellationToken ct)
     {
-        var keys = await db.CurationTasks.AsNoTracking()
-            .Select(x => x.EntityType + "|" + x.EntityId + "|" + x.FieldName)
-            .ToHashSetAsync(ct);
+        var tasks = (await db.CurationTasks.ToListAsync(ct))
+            .ToDictionary(x => $"{x.EntityType}|{x.EntityId}|{x.FieldName}");
         var additions = new List<CurationTask>();
 
         var meters = await db.Meters.AsNoTracking()
@@ -163,7 +169,7 @@ public sealed class EfCurationService(
         foreach (var meter in meters)
         {
             var suggestion = SuggestMedium(meter.Name, meter.Unit.ToString(), meter.Quantity.ToString());
-            Add(additions, keys, "MeteringPoint", meter.Id,
+            Add(additions, tasks, "MeteringPoint", meter.Id,
                 $"{meter.MeterNumber} · {meter.Name}", "Medium", null,
                 suggestion.Value, suggestion.Confidence, suggestion.Reason);
         }
@@ -174,13 +180,35 @@ public sealed class EfCurationService(
         foreach (var building in buildings)
         {
             var category = SuggestBuildingCategory(building.Name);
-            Add(additions, keys, "Building", building.Id,
+            Add(additions, tasks, "Building", building.Id,
                 $"{building.BuildingNumber} · {building.Name}", "BuildingCategory",
                 null, category.Value, category.Confidence, category.Reason);
             var usage = SuggestUsage(building.Name);
-            Add(additions, keys, "Building", building.Id,
+            Add(additions, tasks, "Building", building.Id,
                 $"{building.BuildingNumber} · {building.Name}", "PrimaryUseType",
                 null, usage.Value, usage.Confidence, usage.Reason);
+        }
+
+        var canonicalBuildings = (await snapshots.GetPortfolio(ct)).Buildings;
+        foreach (var building in canonicalBuildings)
+        {
+            foreach (var field in building.GoldAssessment.GoldFieldStates
+                         .Where(item =>
+                             item.State ==
+                             BuildingGoldFieldState.PresentUnconfirmed))
+            {
+                Add(
+                    additions,
+                    tasks,
+                    "Building",
+                    building.BuildingId,
+                    $"{building.BuildingNumber} · {building.Name}",
+                    field.FieldName,
+                    field.Value,
+                    field.Value!,
+                    100,
+                    $"{field.Label} ist vorhanden und muss fachlich bestätigt werden.");
+            }
         }
 
         var customers = await db.Customers.AsNoTracking()
@@ -199,7 +227,7 @@ public sealed class EfCurationService(
             if (match is null) continue;
             var externalIdMatch = string.Equals(match.CustomerNumber,
                 building.ExternalIdentifier, StringComparison.OrdinalIgnoreCase);
-            Add(additions, keys, "Building", building.Id,
+            Add(additions, tasks, "Building", building.Id,
                 $"{building.BuildingNumber} · {building.Name}", "CustomerId", null,
                 match.Id.ToString(), externalIdMatch ? 98 : 88,
                 externalIdMatch
@@ -221,7 +249,7 @@ public sealed class EfCurationService(
                 string.Equals(building.ExternalIdentifier, system.ExternalIdentifier,
                     StringComparison.OrdinalIgnoreCase));
             if (match is null) continue;
-            Add(additions, keys, "EnergySystem", system.Id,
+            Add(additions, tasks, "EnergySystem", system.Id,
                 $"{system.EnergySystemNumber} · {system.Name}", "BuildingId", null,
                 match.Id.ToString(), 98,
                 "Die externe Anlagen-ID entspricht exakt der Gebäudenummer oder externen Gebäude-ID.");
@@ -234,40 +262,28 @@ public sealed class EfCurationService(
 
     public async Task<BuildingGoldProfile?> GetBuildingProfileAsync(Guid id, CancellationToken ct)
     {
-        var building = await scope.ApplyBuildingScope(db.Buildings).AsNoTracking()
-            .Include(x => x.CustomerAssignments).Include(x => x.Versions)
-            .ThenInclude(x => x.Address).ThenInclude(x => x!.PostalCodeArea)
-            .SingleOrDefaultAsync(x => x.Id == id, ct);
+        var building = await snapshots.GetBuilding(id, ct);
         if (building is null) return null;
         var fields = await CurrentFields("Building", id, ct);
-        var version = building.Versions.OrderByDescending(x => x.VersionNumber).FirstOrDefault();
         string? Field(string name, string? fallback = null) =>
             fields.FirstOrDefault(x => x.FieldName == name)?.NormalizedValue ?? fallback;
         decimal? DecimalField(string name, decimal? fallback = null) =>
             decimal.TryParse(Field(name), System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var value) ? value : fallback;
-        var readiness = BuildReadiness(id, "Building", fields, new[]
-        {
-            ("CustomerId", building.CustomerAssignments.FirstOrDefault()?.CustomerId.ToString()),
-            ("UsageType", Field("PrimaryUseType", version?.PrimaryUseType.ToString())),
-            ("HeatedAreaSquareMeters", DecimalField("HeatedAreaSquareMeters", version?.HeatedFloorAreaM2)?.ToString()),
-            ("PostalCode", Field("PostalCode", version?.Address?.PostalCodeArea?.Code)),
-            ("BenchmarkState", Field("BenchmarkState"))
-        });
-        var benchmark = Enum.TryParse<BenchmarkState>(Field("BenchmarkState"), true, out var state)
-            ? state : BenchmarkState.Unknown;
+        var readiness = Readiness(id, building.GoldAssessment, fields);
+        var buildingState = Enum.TryParse<BuildingState>(building.BuildingState, true, out var state)
+            ? state : BuildingState.Unknown;
         return new BuildingGoldProfile(id,
-            building.CustomerAssignments.FirstOrDefault()?.CustomerId,
-            Field("PrimaryUseType", version?.PrimaryUseType.ToString()),
-            DecimalField("HeatedAreaSquareMeters", version?.HeatedFloorAreaM2),
-            Field("PostalCode", version?.Address?.PostalCodeArea?.Code),
+            building.CustomerId,
+            building.UsageType,
+            DecimalField("HeatedAreaSquareMeters", building.HeatedArea),
+            building.PostalCode,
             DecimalField("ElectricityConsumptionKwh"), DecimalField("ProductionKwh"),
-            DecimalField("HwbKwhPerSquareMeterYear"), benchmark,
-            Field("RenovationYear", version?.YearOfLastMajorRenovation.ToString()),
-            Field("BuildingCategory", version?.BuildingCategory.ToString()),
-            Field("Address", version?.Address is null ? null :
-                $"{version.Address.Street} {version.Address.HouseNumber}".Trim()),
-            Field("ConstructionYear", version?.YearOfConstruction.ToString()),
+            DecimalField("HwbKwhPerSquareMeterYear"), buildingState,
+            Field("RenovationYear", building.RenovationYear?.ToString()),
+            building.BuildingType,
+            Field("Address", $"{building.Street} {building.HouseNumber}".Trim()),
+            Field("ConstructionYear", building.ConstructionYear?.ToString()),
             Field("EnergyCarrier"), Field("ClimateRegion"), Field("AdditionalClassification"),
             readiness.MaturityLevel, readiness.ReadinessPercent,
             readiness.BlockingIssues.Count == 0 ? "Keine blockierenden Qualitätsprobleme." :
@@ -301,8 +317,6 @@ public sealed class EfCurationService(
         var derived = readings.LongCount(x => x.QualityFlag == Enset.Domain.Data.DataQuality.Calculated);
         var readiness = BuildReadiness(id, "MeteringPoint", fields, new[]
         {
-            ("BuildingId", meter.BuildingId?.ToString()),
-            ("CustomerId", meter.Building?.CustomerAssignments.FirstOrDefault()?.CustomerId.ToString()),
             ("UsageType", Value(fields, "UsageType")),
             ("EnergyCarrier", Value(fields, "Medium", meter.Medium == MeterMedium.Unknown ? null : meter.Medium.ToString())),
             ("MeasurementType", meter.Quantity == MeterQuantity.Unknown ? null : meter.Quantity.ToString()),
@@ -317,17 +331,19 @@ public sealed class EfCurationService(
             meter.Quantity.ToString(), meter.Unit.ToString(), start, end,
             intervalSeconds / 60, expected, actual, missing, invalid, estimated, interpolated,
             expected == 0 ? 0 : Math.Round(actual * 100m / expected, 2),
-            Percent(measured), Percent(derived), null, BenchmarkState.Unknown,
+            Percent(measured), Percent(derived), null, BuildingState.Unknown,
             readiness.MaturityLevel,
             $"Fehlend: {missing}; ungültig: {invalid}; geschätzt: {estimated}; interpoliert: {interpolated}.",
             readiness.Fields);
     }
 
     public async Task<CurationReadiness?> GetBuildingReadinessAsync(Guid id, CancellationToken ct) =>
-        (await GetBuildingProfileAsync(id, ct)) is { } p
-            ? new CurationReadiness(id, p.MaturityLevel, p.DataCompleteness,
-                p.MaturityLevel == DataMaturityLevel.Gold, p.FieldMaturity,
-                p.FieldMaturity.Where(x => !x.Satisfied).Select(x => x.Explanation).ToList()) : null;
+        (await snapshots.GetBuilding(id, ct)) is { } building
+            ? Readiness(
+                id,
+                building.GoldAssessment,
+                await CurrentFields("Building", id, ct))
+            : null;
 
     public async Task<CurationReadiness?> GetMeteringPointReadinessAsync(Guid id, CancellationToken ct) =>
         (await GetMeteringPointProfileAsync(id, ct)) is { } p
@@ -369,6 +385,46 @@ public sealed class EfCurationService(
         return new CurationReadiness(id, maturity, percent, maturity == DataMaturityLevel.Gold,
             items, items.Where(x => !x.Satisfied).Select(x => x.Explanation).ToList());
     }
+
+    private static CurationReadiness Readiness(
+        Guid id,
+        BuildingGoldAssessment assessment,
+        IReadOnlyList<CuratedFieldValue> fields)
+    {
+        var items = assessment.GoldFieldStates.Select(field =>
+        {
+            var curated = fields.FirstOrDefault(value =>
+                value.FieldName == field.FieldName);
+            return new FieldReadiness(
+                field.FieldName,
+                curated?.MaturityLevel ??
+                    (field.HasValue
+                        ? DataMaturityLevel.Silver
+                        : DataMaturityLevel.Bronze),
+                false,
+                field.HasValue,
+                field.UnfulfilledReason ??
+                    $"{field.Label} ist fachlich als Gold bestätigt.",
+                field.Value,
+                curated?.Source)
+            {
+                Label = field.Label,
+                HasValue = field.HasValue,
+                IsConfirmed = field.IsConfirmed,
+                IsGoldRelevant = field.IsGoldRelevant
+            };
+        }).ToList();
+        return new CurationReadiness(
+            id,
+            assessment.MaturityLevel,
+            assessment.GoldCompletenessPercentage,
+            assessment.IsGoldReady,
+            items,
+            assessment.UnfulfilledReasons)
+        {
+            ConfirmationPercent = assessment.GoldConfirmationPercentage
+        };
+    }
     private async Task<int> CountIncompleteMeters(CancellationToken ct)
     {
         var meterIds = await scope.ApplyMeterScope(db.Meters).Select(x => x.Id).ToListAsync(ct);
@@ -378,17 +434,35 @@ public sealed class EfCurationService(
         return count;
     }
 
-    private static void Add(List<CurationTask> tasks, HashSet<string> keys,
+    private static void Add(List<CurationTask> additions,
+        IDictionary<string, CurationTask> tasks,
         string entityType, Guid entityId, string display, string field,
         string? original, string suggested, int confidence, string reason)
     {
-        if (!keys.Add($"{entityType}|{entityId}|{field}")) return;
-        tasks.Add(new CurationTask
+        var key = $"{entityType}|{entityId}|{field}";
+        var normalized = suggested.Trim();
+        if (tasks.TryGetValue(key, out var existing))
+        {
+            if (existing.SuggestedNormalizedValue == normalized)
+                return;
+            existing.EntityDisplayName = display;
+            existing.OriginalValue = original;
+            existing.SuggestedValue = suggested;
+            existing.SuggestedNormalizedValue = normalized;
+            existing.ConfidencePercent = confidence;
+            existing.Reasoning = reason;
+            existing.Status = CurationTaskStatus.Open;
+            existing.CuratedValue = null;
+            existing.DecidedAtUtc = null;
+            existing.DecidedByUserId = null;
+            return;
+        }
+        var task = new CurationTask
         {
             EntityType = entityType, EntityId = entityId,
             EntityDisplayName = display, FieldName = field,
             OriginalValue = original, SuggestedValue = suggested,
-            SuggestedNormalizedValue = suggested.Trim(),
+            SuggestedNormalizedValue = normalized,
             ConfidencePercent = confidence, Reasoning = reason,
             RuleId = field switch
             {
@@ -400,7 +474,9 @@ public sealed class EfCurationService(
                 _ => "ENSET_DETERMINISTIC_RULE"
             },
             RuleVersion = "1.0"
-        });
+        };
+        tasks[key] = task;
+        additions.Add(task);
     }
 
     public static (string Value, int Confidence, string Reason) SuggestMedium(

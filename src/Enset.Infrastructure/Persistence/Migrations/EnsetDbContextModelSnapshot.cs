@@ -22,6 +22,8 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.HasSequence("BuildingNumberSequence");
+
             modelBuilder.Entity("Enset.Domain.Analytics.BenchmarkDataset", b =>
                 {
                     b.Property<Guid>("Id")
@@ -434,14 +436,6 @@ namespace Enset.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsTemporaryBuilding")
                         .HasColumnType("boolean");
-
-                    b.Property<decimal?>("Latitude")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)");
-
-                    b.Property<decimal?>("Longitude")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)");
 
                     b.Property<decimal?>("NetFloorAreaM2")
                         .HasPrecision(18, 2)
@@ -1956,14 +1950,6 @@ namespace Enset.Infrastructure.Persistence.Migrations
                     b.Property<string>("HouseNumber")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
-
-                    b.Property<decimal?>("Latitude")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)");
-
-                    b.Property<decimal?>("Longitude")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("numeric(9,6)");
 
                     b.Property<Guid?>("MunicipalityId")
                         .HasColumnType("uuid");

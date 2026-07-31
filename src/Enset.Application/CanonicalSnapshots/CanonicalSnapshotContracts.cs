@@ -116,6 +116,8 @@ public sealed record BuildingCanonicalSnapshot(
 {
     public string? MunicipalityNumber { get; init; }
     public string? MainRegion { get; init; }
+    public BuildingGoldAssessment GoldAssessment { get; init; } =
+        BuildingGoldDefinition.Evaluate(null, null, null, null);
 }
 
 public sealed record MeterCanonicalSnapshot(

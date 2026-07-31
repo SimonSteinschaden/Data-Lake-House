@@ -1,4 +1,4 @@
-@startuml
+@startuml Domain Model
 title ENSET 1.0 RC - Domainmodell (Kern)
 hide methods
 class Customer

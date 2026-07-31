@@ -69,9 +69,9 @@ function List() {
       return next;
     });
   return <section className="admin-page">
-    <AdminPageHeader title="Zählpunkte" description="Zählpunktstammdaten, Messprofile und Datenreife" />
+    <AdminPageHeader title="Zähler" description="Zählerstammdaten, Messprofile und Datenreife" />
     <div className="detail-actions">
-      <button className="primary-button" onClick={() => setCreating(true)}>Zählpunkt anlegen</button>
+      <button className="primary-button" onClick={() => setCreating(true)}>Zähler anlegen</button>
     </div>
     <form className="list-toolbar" onSubmit={(event) => {
       event.preventDefault(); update({ search: search.trim(), page: "1" });
@@ -81,9 +81,9 @@ function List() {
     </form>
     {error ? <PageState>{error}</PageState> : !result
       ? <PageState>Daten werden geladen …</PageState>
-      : result.items.length === 0 ? <PageState>Keine Zählpunkte gefunden.</PageState>
+      : result.items.length === 0 ? <PageState>Keine Zähler gefunden.</PageState>
       : <><div className="table-wrap"><table className="admin-table"><thead><tr>
-        <th>Zählpunktnummer</th><th>Interne ID</th><th>Objekt</th><th>Kunde</th>
+        <th>Zählpunktnummer</th><th>Interne ID</th><th>Gebäude</th><th>Kunde</th>
         <th>Energieträger</th><th>Richtung</th><th>Jahreswert</th><th>Einheit</th>
         <th>Messwerte / Zeitraum</th><th>Datenreife / Gold-Reife</th><th></th>
       </tr></thead><tbody>{result.items.map((item) => <tr key={item.id}>
@@ -142,7 +142,7 @@ function Detail({ id }: { id: string }) {
   };
   const blankReading: MeterReadingWriteModel = {
     meterId: id, timestamp: new Date().toISOString(), value: 0,
-    readingType: "Manual", qualityFlag: "Valid", intervalSeconds: null, rowVersion: 0, reason: null,
+    readingType: "Instantaneous", qualityFlag: "Measured", intervalSeconds: null, rowVersion: 0, reason: null,
   };
   const mutate = async () => {
     if (!confirm) return;
@@ -156,7 +156,7 @@ function Detail({ id }: { id: string }) {
   };
   const uploadUrl = `/imports?meterId=${encodeURIComponent(id)}&meterNumber=${encodeURIComponent(item.meterNumber)}`;
   return <section className="admin-page">
-    <Link className="back-link" to="/meters">← Zählpunkte</Link>
+    <Link className="back-link" to="/meters">← Zähler</Link>
     <AdminPageHeader title={item.meterNumber}
       description={`${label(mediumLabel, item.medium)} · ${label(directionLabel, item.direction)}`} />
     {item.buildingId && <p><Link to={`/buildings/${item.buildingId}`}>
@@ -177,7 +177,7 @@ function Detail({ id }: { id: string }) {
         <div><dt>Vollständigkeit</dt><dd>{summary.completenessPercentage == null
           ? "Nicht bestimmbar" : `${summary.completenessPercentage} %`}</dd></div>
         <div><dt>Gold-Reife</dt><dd>{summary.maturity.goldMaturityPercentage} %</dd></div>
-        <div><dt>Offene Curation Tasks</dt><dd>{summary.openCurationTaskCount}</dd></div>
+        <div><dt>Offene Kurationsaufgaben</dt><dd>{summary.openCurationTaskCount}</dd></div>
       </dl>
     </section>}
     <section className="detail-section"><h2>Stammdaten</h2><dl className="detail-grid">
@@ -203,7 +203,7 @@ function Detail({ id }: { id: string }) {
       <p>CSV sowie die vorhandenen stabilen Excel-Formate werden durch die bestehende Importpipeline analysiert.</p>
       <ul><li>Mit Zeitspalte werden die Zeitstempel aus der Datei verwendet.</li>
         <li>Ohne Zeitspalte fordert der Analyseprozess Startzeit und Intervall an.</li>
-        <li>Spalten, Trennzeichen, Dezimalformat, Dubletten und ungültige Werte werden vor dem Commit geprüft.</li>
+        <li>Spalten, Trennzeichen, Dezimalformat, Dubletten und ungültige Werte werden vor der Übernahme geprüft.</li>
       </ul>
     </section>
     <CurationReadinessPanel entityType="MeteringPoint" id={id} />
@@ -232,10 +232,10 @@ function Detail({ id }: { id: string }) {
     {audit && <EntityAuditHistory entityType="MeteringPoint" entityId={id}
       onClose={() => setAudit(false)} />}
     {confirm && <ConfirmDialog title={confirm === "delete"
-      ? "Zählpunkt deaktivieren" : "Zählpunkt wiederherstellen"}
+      ? "Zähler deaktivieren" : "Zähler wiederherstellen"}
       confirmLabel={confirm === "delete" ? "Deaktivieren" : "Wiederherstellen"}
       busy={busy} error={actionError} onConfirm={() => void mutate()} onClose={() => setConfirm(undefined)}>
-      <p>Der Zählpunkt „{item.meterNumber}“ wird {confirm === "delete"
+      <p>Der Zähler „{item.meterNumber}“ wird {confirm === "delete"
         ? "deaktiviert. Vorhandene Messwerte können die Aktion blockieren." : "wiederhergestellt."}</p>
     </ConfirmDialog>}
     {readingForm !== undefined && <MeterReadingForm unit={item.unit} entityId={readingForm?.id}

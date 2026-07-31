@@ -79,6 +79,8 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IDataQualityDashboardService,
             CanonicalDataQualityDashboardService>();
         services.AddScoped<IAssociationService, EfAssociationService>();
+        services.AddScoped<IBuildingNumberGenerator,
+            EfBuildingNumberGenerator>();
         services.AddScoped<IEntityCrudService, EfEntityCrudService>();
         services.AddScoped<ICurationService, EfCurationService>();
         services.AddScoped<IGoldProfileVersionService, GoldProfileVersionService>();

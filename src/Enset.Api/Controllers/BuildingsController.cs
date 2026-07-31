@@ -38,12 +38,12 @@ public sealed class BuildingsController : ControllerBase
 
     /// <summary>Legt ein Gebäude einschließlich Kundenzuordnung an.</summary>
     [HttpPost, Authorize(Policy = AuthorizationPolicyNames.CustomerWriter)]
-    public async Task<ActionResult<EntityMutationResult>> Create(BuildingWriteModel request, CancellationToken ct)
+    public async Task<ActionResult<EntityMutationResult>> Create(BuildingCreateRequest request, CancellationToken ct)
     { var r = await _commands.Handle(new CreateBuildingCommand(request), ct);
       return CreatedAtAction(nameof(Get), new { buildingId = r.Id }, r); }
     /// <summary>Aktualisiert ein Gebäude mit xmin-Concurrency.</summary>
     [HttpPut("{buildingId:guid}"), Authorize(Policy = AuthorizationPolicyNames.CustomerWriter)]
-    public Task<EntityMutationResult> Update(Guid buildingId, BuildingWriteModel request, CancellationToken ct) =>
+    public Task<EntityMutationResult> Update(Guid buildingId, BuildingUpdateRequest request, CancellationToken ct) =>
         _commands.Handle(new UpdateBuildingCommand(buildingId, request), ct);
     /// <summary>Soft Delete; vorhandene Zählpunkte oder Anlagen blockieren.</summary>
     [HttpDelete("{buildingId:guid}"), Authorize(Policy = AuthorizationPolicyNames.CustomerAdmin)]

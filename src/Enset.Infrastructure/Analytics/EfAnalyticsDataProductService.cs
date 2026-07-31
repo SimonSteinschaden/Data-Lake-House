@@ -60,8 +60,6 @@ public sealed class EfAnalyticsDataProductService : IAnalyticsDataProductService
                 group.Key.District,
                 group.Key.Municipality,
                 group.Key.PostalCode,
-                Latitude = group.Average(x => x.Address!.Latitude),
-                Longitude = group.Average(x => x.Address!.Longitude),
                 BuildingCount = group.Select(x => x.BuildingId).Distinct().Count(),
                 CustomerCount = group.SelectMany(x => x.Building.CustomerAssignments)
                     .Where(x => x.ValidTo == null)
@@ -73,7 +71,7 @@ public sealed class EfAnalyticsDataProductService : IAnalyticsDataProductService
 
         return new(rows.Select(x => new RegionalBuildingDistributionItem(
             x.State, x.District, x.Municipality, x.PostalCode,
-            x.Latitude, x.Longitude, x.BuildingCount, x.CustomerCount, x.MeterCount))
+            x.BuildingCount, x.CustomerCount, x.MeterCount))
             .ToArray(), UtcNow);
     }
 

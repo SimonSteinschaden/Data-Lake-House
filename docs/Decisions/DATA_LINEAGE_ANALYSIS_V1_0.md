@@ -212,7 +212,7 @@ Firma und Gemeinde existiert nicht.
 | Kunde | Importreferenz; Writer erzeugt `CustomerBuildingAssignment` | Relation mit Rolle `Unknown`, `IsPrimary=false` | jeweils erste aktive Zuordnung; CRUD sortiert teils nach `IsPrimary` | Nummer und Name | ⚠ Auswahl bei mehreren nicht überall gleich; keine quelltypspezifische Darstellung |
 | Gebäudetyp | CRM `BuildingType`; LEB Quelltyp vorhanden | Writer erzeugt/aktualisiert **keine BuildingVersion** | Product liest `BuildingVersion.BuildingCategory` | Liste | ❌ Importwert geht vor DB verloren |
 | Nutzungstyp | diverse Importmodelle besitzen Werte, `BuildingImportDto` jedoch nicht | `BuildingVersion.PrimaryUseType` nur CRUD/Curation | Product liest BuildingVersion | Liste/Gold | ❌ nicht aus Import persistiert |
-| Gebäudezustand | nicht importiert | kein direktes Building-Feld; `BenchmarkState` nur `CuratedFieldValue` | Summary und CRUD lesen das Curation-Feld | Liste | ⏳ nur Curation, kein Import |
+| Gebäudezustand | Import und CRUD | `BuildingState` als kuratiertes Fachfeld | Summary und CRUD lesen dasselbe Curation-Feld | Liste | ✅ konsistent |
 | Adresse | CRM in `BuildingImportDto`; LEB teilweise in Quellzeile | Writer ignoriert alle Building-Adressfelder | BuildingVersion/Address nur CRUD | Product und UI | ❌ Importadresse geht verloren |
 | Baujahr | LEB/ältere Excelmodelle vorhanden | Writer ignoriert es; BuildingImportDto besitzt kein Baujahr | BuildingVersion/Gold/Export | Detail | ❌ vor Persistenz verloren |
 | Fläche | LEB `m2` in `BuildingExcelRow` | nicht im BuildingImportDto, keine BuildingVersion | Gold/LEB-Export erwarten Flächen | Detail/Readiness | ❌ vor Persistenz verloren |
@@ -293,7 +293,7 @@ Lineagepfad.
 
 Curation-Werte überschreiben relationale Fallbacks. Ein Gold Profile enthält
 unter anderem Nutzung, beheizte Fläche, PLZ, Verbrauch/Produktion, HWB,
-BenchmarkState und Klassifikationen.
+Gebäudezustand und Klassifikationen.
 
 ### 10.2 MeteringPointGoldProfile
 
@@ -456,7 +456,7 @@ DTOs oder Mapper.
 |---|---|---|
 | Management Dashboard | PortfolioSummaryProduct + ImportQualityProduct | Portfolio-KPIs, vorhandene Jahreswerte, Datenqualität, Readiness, Importstatus |
 | Kundenliste/-detail | CRUD ReadDtos; Detail zusätzlich CustomerSummaryProduct | Nummer, Name, Ort, Kontakte, Zählungen, aggregierte Gold-Reife |
-| Objektliste/-detail | CRUD ReadDtos; Detail zusätzlich BuildingSummaryProduct | Nummer, Name, Typ, Nutzung, Kunde, Meter, BenchmarkState, Reife |
+| Objektliste/-detail | CRUD ReadDtos; Detail zusätzlich BuildingSummaryProduct | Nummer, Name, Typ, Nutzung, Kunde, Meter, Gebäudezustand, Reife |
 | Zählpunktliste/-detail | CRUD ReadDtos; Detail zusätzlich MeterSummaryProduct | Nummer, als „Interne ID“ bezeichneter Name, Objekt/Kunde, Medium, Richtung, Jahreswert, Zeitraum, Messwerte, Gold/Readiness |
 | Messwerttabelle | MeterReading-CRUD-REST | Zeitpunkt, Wert mit Meter-Einheit, Qualität, DataOrigin |
 

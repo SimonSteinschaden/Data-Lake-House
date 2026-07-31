@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "tMzVecptdlU=",
+  "dgSpecHash": "58pfoWfoOlI=",
   "success": true,
   "projectFilePath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
   "expectedPackageFiles": [
@@ -51,69 +51,8 @@
     "C:\\Users\\rdpadmin\\.nuget\\packages\\system.composition.runtime\\9.0.0\\system.composition.runtime.9.0.0.nupkg.sha512",
     "C:\\Users\\rdpadmin\\.nuget\\packages\\system.composition.typedparts\\9.0.0\\system.composition.typedparts.9.0.0.nupkg.sha512",
     "C:\\Users\\rdpadmin\\.nuget\\packages\\system.io.packaging\\8.0.1\\system.io.packaging.8.0.1.nupkg.sha512",
-    "C:\\Users\\rdpadmin\\.nuget\\packages\\system.security.cryptography.pkcs\\9.0.15\\system.security.cryptography.pkcs.9.0.15.nupkg.sha512",
-    "C:\\Users\\rdpadmin\\.nuget\\packages\\system.security.cryptography.xml\\9.0.15\\system.security.cryptography.xml.9.0.15.nupkg.sha512"
+    "C:\\Users\\rdpadmin\\.nuget\\packages\\system.security.cryptography.pkcs\\9.0.18\\system.security.cryptography.pkcs.9.0.18.nupkg.sha512",
+    "C:\\Users\\rdpadmin\\.nuget\\packages\\system.security.cryptography.xml\\9.0.18\\system.security.cryptography.xml.9.0.18.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-23rf-6693-g89p.",
-      "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-8q5v-6pqq-x66h.",
-      "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-cvvh-rhrc-wg4q.",
-      "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-g8r8-53c2-pm3f.",
-      "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    },
-    {
-      "code": "NU1903",
-      "level": "Warning",
-      "message": "Das Paket \"System.Security.Cryptography.Xml\" 9.0.15 weist eine bekannte Hoch Schweregrad-Sicherheitsanfälligkeit auf, https://github.com/advisories/GHSA-mmjf-rqrv-855v.",
-      "projectPath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "warningLevel": 1,
-      "filePath": "C:\\Users\\rdpadmin\\Desktop\\Repositories\\Data Lake House\\Data-Lake-House-main\\Data-Lake-House\\src\\Enset.Infrastructure\\Enset.Infrastructure.csproj",
-      "libraryId": "System.Security.Cryptography.Xml",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  "logs": []
 }

@@ -1,4 +1,4 @@
-@startuml
+@startuml Web
 title React Web - implementierter Stand
 component AppRouter
 component MainLayout

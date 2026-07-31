@@ -163,7 +163,7 @@ public sealed class CRM_ExcelIntegrationTests
         var customer = await db.Customers.SingleAsync(
             item => item.CustomerNumber == "CUST-0001");
         var building = await db.Buildings.SingleAsync(
-            item => item.BuildingNumber == "BLD-0001");
+            item => item.ExternalIdentifier == "BLD-0001");
         var assignment = await db.CustomerBuildingAssignments.SingleAsync();
         var meter = await db.Meters.SingleAsync(
             item => item.MeterNumber == "AT001000000000000001");
@@ -171,6 +171,9 @@ public sealed class CRM_ExcelIntegrationTests
         Assert.Equal(customer.Id, assignment.CustomerId);
         Assert.Equal(building.Id, assignment.BuildingId);
         Assert.Equal(building.Id, meter.BuildingId);
+        Assert.Matches("^BLD-[0-9]{6,}$", building.BuildingNumber);
+        Assert.NotEqual(building.ExternalIdentifier, building.BuildingNumber);
+        var internalBuildingNumber = building.BuildingNumber;
         Assert.Equal(
             5,
             await db.MeterReadings.CountAsync(
@@ -184,6 +187,8 @@ public sealed class CRM_ExcelIntegrationTests
         Assert.True(secondResult.Succeeded);
         Assert.Equal(ImportStatus.Committed, secondResult.Report!.Status);
         Assert.Equal(countsAfterFirstCommit, await CountsAsync(db));
+        await db.Entry(building).ReloadAsync();
+        Assert.Equal(internalBuildingNumber, building.BuildingNumber);
         Assert.Equal(
             5,
             await db.MeterReadings

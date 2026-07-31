@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "../components/ui/Card";
 import { StatCard } from "../components/ui/StatCard";
+import { buildingCategoryOptions } from "../components/ui/enumOptions";
 import type {
   AnalyticsValue,
   ObjectAnalyticsProduct,
@@ -15,6 +16,9 @@ import {
 import "./AnalyticsPage.css";
 
 const year = new Date().getFullYear();
+const buildingCategoryLabels = new Map(
+  buildingCategoryOptions.map(option => [option.value, option.label]),
+);
 
 export function AnalyticsPage() {
   const [search, setSearch] = useState("");
@@ -57,7 +61,7 @@ export function AnalyticsPage() {
         setError("");
       })
       .catch(() => {
-        if (!controller.signal.aborted) setError("Objekte konnten nicht geladen werden.");
+        if (!controller.signal.aborted) setError("Gebäude konnten nicht geladen werden.");
       });
     return () => controller.abort();
   }, [filters, buildingId]);
@@ -77,20 +81,20 @@ export function AnalyticsPage() {
     <section className="object-analysis">
       <PageHeader
         title="Objektanalyse"
-        description="Interaktive, reproduzierbare Analyse auf Basis kanonischer Snapshots."
+        description="Interaktive, reproduzierbare Analyse auf Basis kanonischer Datenstände."
       />
       <Card title="Suche und Filter" className="object-analysis__filter-card">
         <div className="object-analysis__filters">
           <label>Globale Suche
             <input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Objekt, Kunde, Gemeinde, Adresse, Zählpunkt" />
+              placeholder="Gebäude, Kunde, Gemeinde, Adresse, Zähler" />
           </label>
-          <label>Objekt
+          <label>Gebäude
             <select value={buildingId} onChange={(e) => {
               setBuildingId(e.target.value);
               if (!e.target.value) setProduct(null);
             }}>
-              <option value="">Objekt auswählen</option>
+              <option value="">Gebäude auswählen</option>
               {objects.map((item) => (
                 <option key={item.buildingId} value={item.buildingId}>
                   {item.name} · {item.buildingNumber}
@@ -114,10 +118,13 @@ export function AnalyticsPage() {
               <option value="Bronze">Bronze</option>
             </select>
           </label>
-          <label>Objekttyp
+          <label>Gebäudetyp
             <select value={buildingType} onChange={(e) => setBuildingType(e.target.value)}>
               <option value="">Alle</option>
-              {buildingTypes.map((value) => <option key={value}>{value}</option>)}
+              {buildingTypes.map((value) =>
+                <option key={value} value={value}>
+                  {buildingCategoryLabels.get(value) ?? value}
+                </option>)}
             </select>
           </label>
           <label>Kunde
@@ -130,7 +137,7 @@ export function AnalyticsPage() {
           <label>Von<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
           <label>Bis<input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
         </div>
-        <small>{objects.length} passende Objekte · Filter werden serverseitig auf Snapshots angewendet.</small>
+        <small>{objects.length} passende Gebäude · Filter werden serverseitig auf kanonische Datenstände angewendet.</small>
         {error && <p className="object-analysis__filter-error">{error}</p>}
       </Card>
       {!product ? <Empty /> : <Workspace product={product} />}
@@ -154,7 +161,7 @@ function Workspace({ product }: { product: ObjectAnalyticsProduct }) {
       <div className="object-analysis__stats">
         {values.map(([title, value]) => (
           <StatCard key={title} title={title} value={format(value)}
-            subtitle={`${value.source} · Quality ${product.quality.level}`} />
+            subtitle={`${value.source} · Qualität ${product.quality.level}`} />
         ))}
       </div>
       <div className="object-analysis__panels">
@@ -211,8 +218,8 @@ function format(value: AnalyticsValue) {
 }
 
 function Empty() {
-  return <div className="object-analysis__empty"><strong>Kein Objekt ausgewählt</strong>
-    <p>Suche und Filter verwenden, anschließend ein Objekt auswählen.</p></div>;
+  return <div className="object-analysis__empty"><strong>Kein Gebäude ausgewählt</strong>
+    <p>Suche und Filter verwenden, anschließend ein Gebäude auswählen.</p></div>;
 }
 
 function NotAvailable() {

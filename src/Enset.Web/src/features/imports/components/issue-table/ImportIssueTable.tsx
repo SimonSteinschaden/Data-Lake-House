@@ -31,7 +31,7 @@ export function ImportIssueTable({
   if (issues.length === 0) {
     return (
       <div className="import-issue-table__empty">
-        Keine Issues erkannt.
+        Keine Prüfhinweise erkannt.
       </div>
     );
   }

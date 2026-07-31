@@ -2,22 +2,23 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { curationService } from "../../services/curationService";
 import type { CurationReadiness, MeteringPointGoldProfile } from "./types";
+import type { BuildingGoldAssessment } from "../internalDataProducts/types";
 
-export function CurationReadinessPanel({ entityType, id }: {
+export function CurationReadinessPanel({ entityType, id, buildingAssessment }: {
   entityType: "Building" | "MeteringPoint";
   id: string;
+  buildingAssessment?: BuildingGoldAssessment;
 }) {
   const [data, setData] = useState<CurationReadiness>();
   const [openTasks, setOpenTasks] = useState<number>();
   const [meterProfile, setMeterProfile] = useState<MeteringPointGoldProfile>();
   useEffect(() => {
     const controller = new AbortController();
-    const request = entityType === "Building"
-      ? curationService.buildingReadiness(id, controller.signal)
-      : curationService.meterReadiness(id, controller.signal);
-    request.then(setData).catch(() => setData(undefined));
-    if (entityType === "MeteringPoint")
+    if (entityType === "MeteringPoint") {
+      curationService.meterReadiness(id, controller.signal)
+        .then(setData).catch(() => setData(undefined));
       curationService.meterProfile(id, controller.signal).then(setMeterProfile).catch(() => setMeterProfile(undefined));
+    }
     const query = new URLSearchParams({
       entityType, status: "Open", page: "1", pageSize: "1",
       [entityType === "Building" ? "buildingId" : "meteringPointId"]: id,
@@ -26,7 +27,11 @@ export function CurationReadinessPanel({ entityType, id }: {
       .then((result) => setOpenTasks(result.totalCount)).catch(() => setOpenTasks(undefined));
     return () => controller.abort();
   }, [entityType, id]);
-  if (!data) return null;
+  if (entityType === "MeteringPoint" && !data) return null;
+  if (entityType === "Building" && !buildingAssessment) return null;
+  const maturityLevel = buildingAssessment?.maturityLevel ?? data!.maturityLevel;
+  const completenessPercent = buildingAssessment?.goldCompletenessPercentage ?? data!.readinessPercent;
+  const confirmationPercent = buildingAssessment?.goldConfirmationPercentage ?? data!.confirmationPercent;
   const curationUrl = `/tools/data-curation?entityType=${entityType}&${
     entityType === "Building" ? "buildingId" : "meteringPointId"}=${id}`;
   return <section className="detail-section">
@@ -34,11 +39,17 @@ export function CurationReadinessPanel({ entityType, id }: {
       <Link to={curationUrl}>Im Datenkurationscenter öffnen</Link>
     </div>
     <dl className="detail-grid">
-      <div><dt>Reifegrad</dt><dd>{data.maturityLevel}</dd></div>
-      <div><dt>Gold-Reife</dt><dd>{data.readinessPercent} %</dd></div>
+      <div><dt>Reifegrad</dt><dd><span
+        className={`quality-badge quality-badge--${maturityLevel.toLowerCase()}`}>
+        {maturityLevel}</span></dd></div>
+      <div><dt>Gold-Vollständigkeit</dt><dd>{completenessPercent} %
+        {buildingAssessment && <> · {buildingAssessment.goldPresentFieldCount} von{" "}
+          {buildingAssessment.goldRequiredFieldCount} Werten vorhanden</>}</dd></div>
+      {buildingAssessment && <div><dt>Fachlich bestätigt</dt><dd>{confirmationPercent} %
+        {" "}· {buildingAssessment.goldConfirmedFieldCount} von{" "}
+        {buildingAssessment.goldRequiredFieldCount} Werten bestätigt</dd></div>}
       <div><dt>Offene Kurationsvorschläge</dt><dd>{openTasks ?? "Nicht verfügbar"}</dd></div>
     </dl>
-    <progress max="100" value={data.readinessPercent}>{data.readinessPercent} %</progress>
     {meterProfile && <><h3>Profilqualität</h3><dl className="detail-grid">
       <div><dt>UsageType</dt><dd>{meterProfile.usageType ?? "Nicht angegeben"}</dd></div>
       <div><dt>Intervall</dt><dd>{meterProfile.intervalMinutes == null ? "Nicht erkannt" : `${meterProfile.intervalMinutes} Minuten`}</dd></div>
@@ -49,9 +60,23 @@ export function CurationReadinessPanel({ entityType, id }: {
       <div><dt>Geschätzte Werte</dt><dd>{meterProfile.estimatedValueCount}</dd></div>
       <div><dt>Interpolierte Werte</dt><dd>{meterProfile.interpolatedValueCount}</dd></div>
     </dl></>}
-    {data.blockingIssues.length > 0
-      ? <><h3>Fehlt für Gold</h3><ul>{data.blockingIssues.map((issue) =>
+    {buildingAssessment ? <>
+      {buildingAssessment.missingReasons.length > 0
+        ? <><h3>Fehlt für Gold</h3><ul>{buildingAssessment.missingReasons.map((issue) =>
+          <li key={issue}>{issue}</li>)}</ul></>
+        : <p>Alle Gold-relevanten Stammdaten sind vollständig.</p>}
+      {buildingAssessment.confirmationReasons.length > 0 &&
+        <><h3>Noch fachlich zu bestätigen</h3>
+          <ul>{buildingAssessment.goldFieldStates
+            .filter((item) => item.state === "PresentUnconfirmed")
+            .map((item) => <li key={item.fieldName}>{item.unfulfilledReason}{" "}
+              <Link to={`/tools/data-curation?entityType=Building&entityId=${id}&fieldName=${item.fieldName}&returnTo=${encodeURIComponent(`/buildings/${id}`)}`}>
+                In der Datenprüfung bestätigen
+              </Link>
+            </li>)}</ul></>}
+    </> : data!.blockingIssues.length > 0
+      ? <><h3>Fehlt für Gold</h3><ul>{data!.blockingIssues.map((issue) =>
         <li key={issue}>{issue}</li>)}</ul></>
-      : <p>Keine offenen Gold-Blocker.</p>}
+      : <p>Alle Gold-relevanten Stammdaten sind vollständig.</p>}
   </section>;
 }

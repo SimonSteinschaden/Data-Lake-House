@@ -49,12 +49,12 @@ const navigationGroups: NavigationGroup[] = [
       },
       {
         path: "/buildings",
-        label: "Objekte / Gebäude",
+        label: "Gebäude",
         //TODO: internalCustomerAdministration: true, Customers can only see their own products.
       },
       {
         path: "/meters",
-        label: "Zählpunkte",
+        label: "Zähler",
       },
       {
         path: "/metering-points",
@@ -77,7 +77,7 @@ const navigationGroups: NavigationGroup[] = [
       },
       {
         path: "/reports",
-        label: "Reports",
+        label: "Berichte",
       },
       {
         path: "/financials",
@@ -91,7 +91,7 @@ const navigationGroups: NavigationGroup[] = [
       },
       {
         path: "/data-products",
-        label: "Data Products",
+        label: "Datenprodukte",
       },
     ],
   },

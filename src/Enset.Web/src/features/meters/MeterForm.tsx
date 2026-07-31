@@ -5,12 +5,13 @@ import { buildingService } from "../../services/buildingService";
 import type { BuildingSummary } from "../buildings/types";
 import type { MeterWriteModel } from "./types";
 import {
+  meterDirectionOptions,
+  meterMediumOptions,
+  meterUnitOptions,
+} from "../../components/ui/enumOptions";
+import {
   Dialog, FormField, concurrencyMessage, fieldErrors, formError, useUnsavedChanges,
 } from "../crud/crudUi";
-
-const media = ["Electricity", "Gas", "Heat", "Cooling", "Water", "Steam", "Hydrogen", "Other"];
-const units = ["Wh", "KWh", "MWh", "W", "KW", "MW", "CubicMeter", "CubicMeterPerHour",
-  "Liter", "LiterPerSecond", "Celsius", "Kelvin", "Other"];
 
 export function MeterForm({ initial, entityId, onClose, onSaved, onReload }: {
   initial: MeterWriteModel; entityId?: string; onClose: () => void;
@@ -48,7 +49,7 @@ export function MeterForm({ initial, entityId, onClose, onSaved, onReload }: {
     } catch (value) { setError(formError(value)); setErrors(fieldErrors(value)); }
     finally { setBusy(false); }
   };
-  return <Dialog title={entityId ? "Zählpunkt bearbeiten" : "Zählpunkt anlegen"} onClose={close}>
+  return <Dialog title={entityId ? "Zähler bearbeiten" : "Zähler anlegen"} onClose={close}>
     <form className="crud-form" onSubmit={submit}>
       {error && <div className="form-error" role="alert"><p>{error}</p>
         {error === concurrencyMessage && <div className="conflict-actions">
@@ -82,20 +83,23 @@ export function MeterForm({ initial, entityId, onClose, onSaved, onReload }: {
       </div>
       <FormField label="Energieträger *" error={errors.medium}>
         <select required value={model.medium} onChange={(e) => set("medium", e.target.value)}>
-          <option value="">Auswählen</option>{media.map((x) => <option key={x}>{x}</option>)}
+          <option value="">Auswählen</option>
+          {meterMediumOptions.map((option) =>
+            <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </FormField>
       <FormField label="Einheit *" error={errors.unit}>
         <select required value={model.unit} onChange={(e) => set("unit", e.target.value)}>
-          <option value="">Auswählen</option>{units.map((x) => <option key={x}>{x}</option>)}
+          <option value="">Auswählen</option>
+          {meterUnitOptions.map((option) =>
+            <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </FormField>
       <FormField label="Richtung *" error={errors.direction}>
         <select required value={model.direction} onChange={(e) => set("direction", e.target.value)}>
           <option value="">Auswählen</option>
-          <option value="Consumption">Consumer</option>
-          <option value="Production">Producer</option>
-          <option value="Bidirectional">Prosumer</option>
+          {meterDirectionOptions.map((option) =>
+            <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </FormField>
       <FormField label="Jahreswert (optional)" error={errors.annualValue}>

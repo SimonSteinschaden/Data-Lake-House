@@ -1,4 +1,4 @@
-@startuml
+@startuml Worker
 title Worker - aktueller Entwicklungsflow
 component "Program.cs" as Program
 class ImportRunner

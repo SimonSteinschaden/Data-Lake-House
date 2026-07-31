@@ -2,7 +2,33 @@ export interface DataMaturitySummary {
   bronzeMaturity: number;
   silverMaturity: number;
   goldMaturity: number;
+  /** @deprecated Verteilungskennzahl; für Gebäude goldAssessment verwenden. */
   goldMaturityPercentage: number;
+}
+
+export interface BuildingGoldFieldAssessment {
+  fieldName: string;
+  label: string;
+  value: string | null;
+  hasValue: boolean;
+  isConfirmed: boolean;
+  isGoldRelevant: boolean;
+  state: "Missing" | "PresentUnconfirmed" | "Confirmed";
+  unfulfilledReason: string | null;
+}
+
+export interface BuildingGoldAssessment {
+  goldCompletenessPercentage: number;
+  goldConfirmationPercentage: number;
+  goldRequiredFieldCount: number;
+  goldPresentFieldCount: number;
+  goldConfirmedFieldCount: number;
+  maturityLevel: "Bronze" | "Silver" | "Gold";
+  isGoldReady: boolean;
+  goldFieldStates: BuildingGoldFieldAssessment[];
+  missingReasons: string[];
+  confirmationReasons: string[];
+  unfulfilledReasons: string[];
 }
 
 export interface ReadinessSummary {
@@ -106,6 +132,7 @@ export interface BuildingSummaryProduct {
   annualGeneration: number | null;
   unit: string | null;
   maturity: DataMaturitySummary;
+  goldAssessment: BuildingGoldAssessment;
   openCurationTaskCount: number;
   dataQualityWarnings: DataQualityWarning[];
 }

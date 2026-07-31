@@ -58,9 +58,6 @@ public class BuildingVersion : BaseEntity
     public decimal? CooledFloorAreaM2 { get; set; }
 
     public decimal? BuildingVolumeM3 { get; set; }
-    public decimal? Latitude { get; set; }
-    public decimal? Longitude { get; set; }
-
     public int? NumberOfFloors { get; set; }
 
     public int? NumberOfUsageUnits { get; set; }

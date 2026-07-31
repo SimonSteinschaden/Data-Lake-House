@@ -390,7 +390,7 @@ function Detail({ id }: { id: string }) {
           <div><dt>Jahreserzeugung</dt><dd>{summary.totalAnnualGeneration ??
             "Nicht einheitenrein summierbar"}</dd></div>
           <div><dt>Gold-Reife</dt><dd>{summary.averageMaturity.goldMaturityPercentage} %</dd></div>
-          <div><dt>Offene Curation Tasks</dt><dd>{summary.openCurationTaskCount}</dd></div>
+          <div><dt>Offene Kurationsaufgaben</dt><dd>{summary.openCurationTaskCount}</dd></div>
         </dl>
       </section>}
       <section className="detail-section">

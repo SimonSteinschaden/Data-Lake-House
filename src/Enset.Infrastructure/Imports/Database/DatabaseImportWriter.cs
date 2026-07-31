@@ -9,6 +9,8 @@ using Enset.Domain.Buildings;
 using Enset.Domain.Common;
 using Enset.Domain.Geography;
 using Enset.Infrastructure.Persistence;
+using Enset.Application.Crud;
+using Enset.Infrastructure.Crud;
 using Microsoft.EntityFrameworkCore;
 
 namespace Enset.Infrastructure.Imports.Database;
@@ -16,10 +18,15 @@ namespace Enset.Infrastructure.Imports.Database;
 public sealed class DatabaseImportWriter : IImportWriter
 {
     private readonly EnsetDbContext _dbContext;
+    private readonly IBuildingNumberGenerator _buildingNumbers;
 
-    public DatabaseImportWriter(EnsetDbContext dbContext)
+    public DatabaseImportWriter(
+        EnsetDbContext dbContext,
+        IBuildingNumberGenerator? buildingNumbers = null)
     {
         _dbContext = dbContext;
+        _buildingNumbers =
+            buildingNumbers ?? new EfBuildingNumberGenerator(dbContext);
     }
 
     public ImportWriterType WriterType => ImportWriterType.Database;
@@ -181,7 +188,7 @@ public sealed class DatabaseImportWriter : IImportWriter
         var result = new Dictionary<string, Building>(
             StringComparer.OrdinalIgnoreCase);
 
-        var buildingNumbers = source
+        var externalIdentifiers = source
             .Select(x => NormalizeRequired(
                 x.ExternalBuildingId,
                 "ExternalBuildingId"))
@@ -195,37 +202,40 @@ public sealed class DatabaseImportWriter : IImportWriter
             .Include(x => x.Versions)
                 .ThenInclude(x => x.Address)
                     .ThenInclude(x => x!.Country)
-            .Where(x => buildingNumbers.Contains(x.BuildingNumber))
+            .Where(x => x.ExternalIdentifier != null &&
+                externalIdentifiers.Contains(x.ExternalIdentifier))
             .ToDictionaryAsync(
-                x => x.BuildingNumber,
+                x => x.ExternalIdentifier!,
                 StringComparer.OrdinalIgnoreCase,
                 cancellationToken);
 
         foreach (var dto in source)
         {
-            var buildingNumber = NormalizeRequired(
+            var externalIdentifier = NormalizeRequired(
                 dto.ExternalBuildingId,
                 "ExternalBuildingId");
 
             if (!existingBuildings.TryGetValue(
-                    buildingNumber,
+                    externalIdentifier,
                     out var building))
             {
                 building = new Building
                 {
-                    BuildingNumber = buildingNumber
+                    BuildingNumber =
+                        await _buildingNumbers.NextAsync(cancellationToken),
+                    ExternalIdentifier = externalIdentifier
                 };
 
                 _dbContext.Buildings.Add(building);
-                existingBuildings[buildingNumber] = building;
+                existingBuildings[externalIdentifier] = building;
             }
 
             building.Name = FirstNonEmpty(
                 dto.BuildingName,
                 building.Name,
-                buildingNumber);
+                externalIdentifier);
 
-            building.ExternalIdentifier = buildingNumber;
+            building.ExternalIdentifier = externalIdentifier;
             building.IsActive = true;
 
             if (HasBuildingVersionData(dto))
@@ -237,7 +247,7 @@ public sealed class DatabaseImportWriter : IImportWriter
                     cancellationToken);
             }
 
-            result[buildingNumber] = building;
+            result[externalIdentifier] = building;
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -305,8 +315,6 @@ public sealed class DatabaseImportWriter : IImportWriter
                 dto.CooledFloorAreaM2 ?? previous?.CooledFloorAreaM2,
             BuildingVolumeM3 =
                 dto.BuildingVolumeM3 ?? previous?.BuildingVolumeM3,
-            Latitude = previous?.Latitude,
-            Longitude = previous?.Longitude,
             NumberOfFloors =
                 dto.NumberOfFloors ?? previous?.NumberOfFloors,
             NumberOfUsageUnits = previous?.NumberOfUsageUnits,
@@ -374,8 +382,6 @@ public sealed class DatabaseImportWriter : IImportWriter
                 NormalizeOptional(dto.AddressAddition) ??
                 previous?.AddressAddition,
             City = NormalizeOptional(dto.City) ?? previous?.City,
-            Latitude = previous?.Latitude,
-            Longitude = previous?.Longitude,
             DataOrigin = DataOrigin.Imported,
             LastModifiedSource = LastModifiedSource.Import
         };
@@ -575,12 +581,12 @@ public sealed class DatabaseImportWriter : IImportWriter
             return null;
         }
 
-        var buildingNumber = NormalizeRequired(
+        var externalBuildingId = NormalizeRequired(
             dto.ExternalBuildingId,
             $"ExternalBuildingId for meter '{dto.MeterNumber}'");
 
         if (importedBuildings.TryGetValue(
-                buildingNumber,
+                externalBuildingId,
                 out var importedBuilding))
         {
             return importedBuilding.Id;
@@ -588,12 +594,12 @@ public sealed class DatabaseImportWriter : IImportWriter
 
         var existingBuilding = await _dbContext.Buildings
             .SingleOrDefaultAsync(
-                x => x.BuildingNumber == buildingNumber,
+                x => x.ExternalIdentifier == externalBuildingId,
                 cancellationToken);
 
         return existingBuilding?.Id
             ?? throw new InvalidOperationException(
-                $"Building '{buildingNumber}' for meter " +
+                $"Building '{externalBuildingId}' for meter " +
                 $"'{dto.MeterNumber}' was not found.");
     }
 

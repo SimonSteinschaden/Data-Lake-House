@@ -1,4 +1,4 @@
-@startuml
+@startuml Application Architecture
 title ENSET 1.0 RC - Application
 package DataProducts {
   class GenerateDataProductCommand

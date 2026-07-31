@@ -28,18 +28,27 @@ public sealed record CurationTaskQuery(int Page = 1, int PageSize = 25,
     string? EntityType = null, string? FieldName = null,
     CurationTaskStatus? Status = null, DataMaturityLevel? MaturityLevel = null,
     int? MinimumConfidence = null, Guid? CustomerId = null, Guid? BuildingId = null,
-    Guid? MeteringPointId = null);
+    Guid? MeteringPointId = null, Guid? EntityId = null);
 public sealed record CurationTaskPage(IReadOnlyList<CurationTaskSummary> Items,
     int Page, int PageSize, int TotalCount, int TotalPages);
 public sealed record FieldReadiness(string FieldName, DataMaturityLevel MaturityLevel,
-    bool Required, bool Satisfied, string Explanation, string? Value, CurationSource? Source);
+    bool Required, bool Satisfied, string Explanation, string? Value, CurationSource? Source)
+{
+    public string Label { get; init; } = FieldName;
+    public bool HasValue { get; init; } = Satisfied;
+    public bool IsConfirmed { get; init; } = Satisfied;
+    public bool IsGoldRelevant { get; init; } = true;
+}
 public sealed record CurationReadiness(Guid EntityId, DataMaturityLevel MaturityLevel,
     int ReadinessPercent, bool IsGoldReady, IReadOnlyList<FieldReadiness> Fields,
-    IReadOnlyList<string> BlockingIssues);
+    IReadOnlyList<string> BlockingIssues)
+{
+    public int ConfirmationPercent { get; init; } = ReadinessPercent;
+}
 public sealed record BuildingGoldProfile(Guid BuildingId, Guid? CustomerId,
     string? UsageType, decimal? HeatedAreaSquareMeters, string? PostalCode,
     decimal? ElectricityConsumptionKwh, decimal? ProductionKwh,
-    decimal? HwbKwhPerSquareMeterYear, BenchmarkState BenchmarkState,
+    decimal? HwbKwhPerSquareMeterYear, BuildingState BuildingState,
     string? RenovationYear, string? BuildingType, string? Address,
     string? ConstructionYear, string? EnergyCarrier, string? ClimateRegion,
     string? AdditionalClassification, DataMaturityLevel MaturityLevel,
@@ -52,7 +61,7 @@ public sealed record MeteringPointGoldProfile(Guid MeteringPointId, Guid? Buildi
     long ActualValueCount, long MissingValueCount, long InvalidValueCount,
     long EstimatedValueCount, long InterpolatedValueCount,
     decimal CompletenessPercentage, decimal MeasuredPercentage,
-    decimal DerivedPercentage, string? PostalCode, BenchmarkState BenchmarkState,
+    decimal DerivedPercentage, string? PostalCode, BuildingState BuildingState,
     DataMaturityLevel MaturityLevel, string QualitySummary,
     IReadOnlyList<FieldReadiness> FieldMaturity);
 

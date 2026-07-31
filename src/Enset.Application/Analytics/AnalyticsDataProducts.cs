@@ -22,8 +22,6 @@ public sealed record RegionalBuildingDistributionItem(
     string? District,
     string? Municipality,
     string? PostalCode,
-    decimal? Latitude,
-    decimal? Longitude,
     int BuildingCount,
     int CustomerCount,
     int MeterCount);

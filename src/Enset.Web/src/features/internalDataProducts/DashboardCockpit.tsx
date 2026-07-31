@@ -116,7 +116,7 @@ export function BlockerList({ blockers }: { blockers: string[] }) {
 export function ImportQualityOverview({ data }: { data: ImportQualityProduct }) {
   return <div className="cockpit-table-wrap"><table className="cockpit-table">
     <thead><tr><th>Datei</th><th>Zeitpunkt</th><th>Status</th><th>Probleme</th>
-      <th>Warnungen</th><th>Commit</th></tr></thead>
+      <th>Warnungen</th><th>Übernommen am</th></tr></thead>
     <tbody>{data.latestImports.length === 0
       ? <tr><td colSpan={6}>Noch keine Importe vorhanden.</td></tr>
       : data.latestImports.map((item) => <tr key={item.importId}>
@@ -145,7 +145,7 @@ export function ErrorDashboardState({ retry }: { retry: () => void }) {
 }
 
 const product = (value: string) => ({
-  BuildingBenchmark: "Building Benchmark", EnergyBenchmark: "Energy Benchmark",
+  BuildingBenchmark: "Gebäudevergleich", EnergyBenchmark: "Energievergleich",
   NormalizedLoadProfile: "Normalisiertes Lastprofil",
   NormalizedGenerationProfile: "Normalisiertes Erzeugungsprofil",
 }[value] ?? value);

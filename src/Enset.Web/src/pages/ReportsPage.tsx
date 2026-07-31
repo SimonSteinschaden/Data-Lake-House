@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card } from "../components/ui/Card";
+import { formatUiValue } from "../components/ui/uiFormat";
 import type { BuildingSummary } from "../features/buildings/types";
 import { PageHeader } from "../layouts/PageHeader";
 import { buildingService } from "../services/buildingService";
@@ -30,13 +31,13 @@ export function ReportsPage() {
     setDefinitions(nextDefinitions);
     setReports(nextReports);
     setBuildings(nextBuildings.items);
-  }).catch(() => setError("Reports konnten nicht geladen werden."));
+  }).catch(() => setError("Berichte konnten nicht geladen werden."));
 
   useEffect(() => { void load(); }, []);
 
   const create = async () => {
     if (!buildingId || !recipient.trim()) {
-      setError("Objekt und Empfänger sind erforderlich.");
+      setError("Gebäude und Empfänger sind erforderlich.");
       return;
     }
     try {
@@ -49,38 +50,38 @@ export function ReportsPage() {
       setError("");
       await load();
     } catch {
-      setError("Report konnte nicht erzeugt werden.");
+      setError("Bericht konnte nicht erzeugt werden.");
     }
   };
 
   return <section className="page-stack">
-    <PageHeader title="Reports"
-      description="Versionierte Ergebnisdokumente aus demselben Object Analytics Data Product." />
-    <Card title="Report erzeugen">
+    <PageHeader title="Berichte"
+      description="Versionierte Ergebnisdokumente aus demselben Datenprodukt der Objektanalyse." />
+    <Card title="Bericht erzeugen">
       <div className="object-analysis__filters">
-        <label>Reporttyp<select value={type} onChange={(e) => setType(e.target.value)}>
+        <label>Berichtstyp<select value={type} onChange={(e) => setType(e.target.value)}>
           {definitions.map((x) => <option key={x.type} value={x.type}>{x.title}</option>)}
         </select></label>
-        <label>Objekt<select value={buildingId} onChange={(e) => setBuildingId(e.target.value)}>
-          <option value="">Objekt auswählen</option>
+        <label>Gebäude<select value={buildingId} onChange={(e) => setBuildingId(e.target.value)}>
+          <option value="">Gebäude auswählen</option>
           {buildings.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
         </select></label>
         <label>Von<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
         <label>Bis<input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
         <label>Empfänger<input value={recipient} onChange={(e) => setRecipient(e.target.value)} /></label>
       </div>
-      <button type="button" onClick={() => void create()}>Report erzeugen</button>
+      <button type="button" onClick={() => void create()}>Bericht erzeugen</button>
       {error && <p className="object-analysis__filter-error">{error}</p>}
     </Card>
-    <Card title="Reportliste">
-      {reports.length === 0 ? <p>Noch keine Reports vorhanden.</p> :
-        <table><thead><tr><th>Report</th><th>Objekt</th><th>Periode</th>
-          <th>Version</th><th>Quality</th><th>Status</th><th>Export</th></tr></thead>
+    <Card title="Berichtsliste">
+      {reports.length === 0 ? <p>Noch keine Berichte vorhanden.</p> :
+        <table><thead><tr><th>Bericht</th><th>Gebäude</th><th>Zeitraum</th>
+          <th>Version</th><th>Qualität</th><th>Status</th><th>Export</th></tr></thead>
           <tbody>{reports.map((report) => <tr key={report.reportId}>
             <td>{definitions.find((x) => x.type === report.type)?.title ?? report.type}</td>
             <td>{report.buildingName}</td>
             <td>{new Date(report.fromUtc).toLocaleDateString("de-AT")}–{new Date(report.toUtc).toLocaleDateString("de-AT")}</td>
-            <td>{report.version}</td><td>{report.qualityLevel}</td><td>{report.releaseStatus}</td>
+            <td>{report.version}</td><td>{formatUiValue(report.qualityLevel)}</td><td>{formatUiValue(report.releaseStatus)}</td>
             <td>{["pdf", "xlsx", "json"].map((format) =>
               <button key={format} type="button"
                 onClick={() => void reportService.download(report, format)}>{format.toUpperCase()}</button>)}</td>

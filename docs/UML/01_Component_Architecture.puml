@@ -1,4 +1,4 @@
-@startuml
+@startuml Component Architecture
 title ENSET 1.0 RC - Komponentenarchitektur (Ist-Stand)
 skinparam componentStyle rectangle
 actor User

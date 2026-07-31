@@ -213,12 +213,12 @@ public sealed class EfEntityReadService(
                 building.CustomerName,
                 portfolio.Meters.Count(x =>
                     x.BuildingId == building.BuildingId),
-                building.BuildingState ?? "NotAvailable",
-                building.Quality.Level.ToString(),
-                building.Quality.CompletenessPercentage,
+                building.BuildingState,
+                building.GoldAssessment.MaturityLevel.ToString(),
+                building.GoldAssessment.GoldCompletenessPercentage,
                 false)
             {
-                QualityLevel = building.Quality.Level.ToString(),
+                QualityLevel = building.GoldAssessment.MaturityLevel.ToString(),
                 PostalCode = building.PostalCode,
                 City = building.City,
                 MunicipalityId = building.MunicipalityId,
@@ -307,19 +307,17 @@ public sealed class EfEntityReadService(
             metadata.RowVersion,
             building.GrossFloorArea,
             building.ConstructionYear,
-            null,
-            null,
             building.BuildingType,
             building.UsageType,
             building.HeatedArea,
             building.RenovationYear,
-            building.BuildingState ?? "NotAvailable",
+            building.BuildingState,
             building.PostalCode,
             building.City,
             building.Street,
             building.HouseNumber)
         {
-            QualityLevel = building.Quality.Level.ToString(),
+            QualityLevel = building.GoldAssessment.MaturityLevel.ToString(),
             MunicipalityId = building.MunicipalityId,
             Municipality = building.MunicipalityName,
             ConditionedFloorArea = building.ConditionedFloorArea

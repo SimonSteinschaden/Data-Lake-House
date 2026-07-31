@@ -24,8 +24,8 @@ export interface CurationStatistics {
   taskGroups: CurationTaskGroup[];
 }
 export interface CurationTaskPage { items:CurationTask[];page:number;pageSize:number;totalCount:number;totalPages:number }
-export interface FieldReadiness { fieldName:string;maturityLevel:"Bronze"|"Silver"|"Gold";required:boolean;satisfied:boolean;explanation:string;value:string|null;source:CurationSource|null }
-export interface CurationReadiness { entityId:string;maturityLevel:"Bronze"|"Silver"|"Gold";readinessPercent:number;isGoldReady:boolean;fields:FieldReadiness[];blockingIssues:string[] }
+export interface FieldReadiness { fieldName:string;label:string;maturityLevel:"Bronze"|"Silver"|"Gold";required:boolean;satisfied:boolean;hasValue:boolean;isConfirmed:boolean;isGoldRelevant:boolean;explanation:string;value:string|null;source:CurationSource|null }
+export interface CurationReadiness { entityId:string;maturityLevel:"Bronze"|"Silver"|"Gold";readinessPercent:number;confirmationPercent:number;isGoldReady:boolean;fields:FieldReadiness[];blockingIssues:string[] }
 export interface MeteringPointGoldProfile {
   usageType: string | null; energyCarrier: string | null;
   measurementPeriodStart: string | null; measurementPeriodEnd: string | null;

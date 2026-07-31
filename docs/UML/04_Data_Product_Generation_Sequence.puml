@@ -1,4 +1,4 @@
-@startuml
+@startuml DataProduct Generation Sequence
 title Data Product Generation - Ist-Sequenz
 actor User
 participant DataProductsController as API

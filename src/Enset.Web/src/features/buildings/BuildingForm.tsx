@@ -3,16 +3,18 @@ import { Link } from "react-router";
 import { buildingService } from "../../services/buildingService";
 import { customerService } from "../../services/customerService";
 import type { CustomerSummary } from "../customers/types";
-import type { BuildingWriteModel } from "./types";
+import type { BuildingFormModel } from "./types";
+import {
+  buildingCategoryOptions,
+  buildingStateOptions,
+  primaryUseTypeOptions,
+} from "../../components/ui/enumOptions";
 import {
   Dialog, FormField, concurrencyMessage, fieldErrors, formError, useUnsavedChanges,
 } from "../crud/crudUi";
 
-const categories = ["Apartment", "House", "Office", "Hall", "School", "Retail", "Industry", "Other"];
-const uses = ["Residential", "Commercial", "Public", "Mixed"];
-
 export function BuildingForm({ initial, entityId, onClose, onSaved, onReload }: {
-  initial: BuildingWriteModel;
+  initial: BuildingFormModel;
   entityId?: string;
   onClose: () => void;
   onSaved: (id: string) => void;
@@ -41,9 +43,9 @@ export function BuildingForm({ initial, entityId, onClose, onSaved, onReload }: 
   const close = () => {
     if (!dirty || window.confirm("Ungespeicherte Änderungen verwerfen?")) onClose();
   };
-  const text = (key: keyof BuildingWriteModel, value: string) =>
+  const text = (key: keyof BuildingFormModel, value: string) =>
     setModel((x) => ({ ...x, [key]: value || null }));
-  const number = (key: keyof BuildingWriteModel, value: string) =>
+  const number = (key: keyof BuildingFormModel, value: string) =>
     setModel((x) => ({ ...x, [key]: value === "" ? null : Number(value) }));
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -58,7 +60,7 @@ export function BuildingForm({ initial, entityId, onClose, onSaved, onReload }: 
     } finally { setBusy(false); }
   };
 
-  return <Dialog title={entityId ? "Objekt bearbeiten" : "Objekt anlegen"} onClose={close}>
+  return <Dialog title={entityId ? "Gebäude bearbeiten" : "Gebäude anlegen"} onClose={close}>
     <form className="crud-form" onSubmit={submit}>
       {error && <div className="form-error" role="alert"><p>{error}</p>
         {error === concurrencyMessage && <div className="conflict-actions">
@@ -71,6 +73,7 @@ export function BuildingForm({ initial, entityId, onClose, onSaved, onReload }: 
         <input value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)}
           placeholder="Kundennummer oder Organisation" />
       </FormField>
+
       <FormField label="Kundenzuordnung *" error={errors.customerId}>
         <select required value={model.customerId ?? ""} onChange={(e) => text("customerId", e.target.value)}>
           <option value="">Kunde auswählen</option>
@@ -78,41 +81,37 @@ export function BuildingForm({ initial, entityId, onClose, onSaved, onReload }: 
             <option key={x.id} value={x.id}>{x.customerNumber} · {x.name}</option>)}
         </select>
       </FormField>
+      <FormField label="Externe Gebäude-ID (optional)" error={errors.externalIdentifier}>
+        <input maxLength={128} value={model.externalIdentifier ?? ""}
+          onChange={(e) => text("externalIdentifier", e.target.value)} />
+      </FormField>
       <div className="form-actions">
         <Link to="/customers?create=true" target="_blank">Neuen Kunden anlegen</Link>
         <button type="button" onClick={loadCustomers}>Kundenliste aktualisieren</button>
       </div>
       <h3 className="form-actions">Stammdaten</h3>
-      <FormField label="Gebäudenummer *" error={errors.buildingNumber}>
-        <input required maxLength={64} value={model.buildingNumber}
-          onChange={(e) => text("buildingNumber", e.target.value)} />
-      </FormField>
-      <FormField label="Objektname *" error={errors.name}>
+      <FormField label="Gebäudename *" error={errors.name}>
         <input required maxLength={256} value={model.name} onChange={(e) => text("name", e.target.value)} />
       </FormField>
-      <FormField label="Externe ID (optional)" error={errors.externalIdentifier}>
-        <input maxLength={128} value={model.externalIdentifier ?? ""}
-          onChange={(e) => text("externalIdentifier", e.target.value)} />
-      </FormField>
-      <FormField label="Gebäudetyp (optional)" error={errors.buildingCategory}>
+      <FormField label="Gebäudetyp (optional)" error={errors.buildingCategory} goldRelevant>
         <select value={model.buildingCategory ?? ""} onChange={(e) => text("buildingCategory", e.target.value)}>
           <option value="">Nicht angegeben</option>
-          {categories.map((x) => <option key={x}>{x}</option>)}
+          {buildingCategoryOptions.map((option) =>
+            <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </FormField>
-      <FormField label="Nutzungstyp (optional)" error={errors.primaryUseType}>
+      <FormField label="Nutzungstyp (optional)" error={errors.primaryUseType} goldRelevant>
         <select value={model.primaryUseType ?? ""} onChange={(e) => text("primaryUseType", e.target.value)}>
           <option value="">Nicht angegeben</option>
-          {uses.map((x) => <option key={x}>{x}</option>)}
+          {primaryUseTypeOptions.map((option) =>
+            <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </FormField>
-      <FormField label="Gebäudezustand (optional)" error={errors.benchmarkState}>
-        <select value={model.benchmarkState ?? ""} onChange={(e) => text("benchmarkState", e.target.value)}>
+      <FormField label="Gebäudezustand (optional)" error={errors.buildingState} goldRelevant>
+        <select value={model.buildingState ?? ""} onChange={(e) => text("buildingState", e.target.value)}>
           <option value="">Nicht angegeben</option>
-          <option value="Existing">Bestand</option>
-          <option value="Improved">Verbessert</option>
-          <option value="Planned">Saniert (geplant)</option>
-          <option value="Target">Zielzustand</option>
+          {buildingStateOptions.map((option) =>
+            <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </FormField>
       <FormField label="Bruttogrundfläche in m² (optional)" error={errors.grossFloorAreaM2}>
@@ -139,7 +138,7 @@ export function BuildingForm({ initial, entityId, onClose, onSaved, onReload }: 
         <input maxLength={32} value={model.houseNumber ?? ""}
           onChange={(e) => text("houseNumber", e.target.value)} />
       </FormField>
-      <FormField label="PLZ (optional)" error={errors.postalCode}>
+      <FormField label="PLZ (optional)" error={errors.postalCode} goldRelevant>
         <input inputMode="text" maxLength={32} value={model.postalCode ?? ""}
           onChange={(e) => text("postalCode", e.target.value)} />
       </FormField>

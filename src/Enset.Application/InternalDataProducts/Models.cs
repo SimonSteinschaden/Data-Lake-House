@@ -1,10 +1,14 @@
 using Enset.Application.GoldProfiles;
+using Enset.Application.CanonicalSnapshots;
 
 namespace Enset.Application.InternalDataProducts;
 
 public sealed record ReferencePeriod(DateTime? From, DateTime? To);
 public sealed record DataMaturitySummary(
     int BronzeMaturity, int SilverMaturity, int GoldMaturity,
+    [property: Obsolete(
+        "Diese Portfolio-Verteilungskennzahl ist keine Gold-Vollständigkeit. " +
+        "Für Gebäude ist GoldAssessment zu verwenden.")]
     decimal GoldMaturityPercentage);
 public sealed record ReadinessSummary(
     DataProductReadinessStatus Status, int Percentage,
@@ -24,7 +28,7 @@ public sealed record PortfolioReadinessSummary(
 public sealed record BuildingSummaryProduct(
     Guid BuildingId, string BuildingNumber, string Name,
     Guid? CustomerId, string? CustomerNumber, string? CustomerName,
-    string? BuildingType, string? UsageType, string? BenchmarkState,
+    string? BuildingType, string? UsageType, string? BuildingState,
     string? PostalCode, string? City, string? Address,
     decimal? GrossFloorArea, decimal? HeatedArea,
     int? ConstructionYear, int? RenovationYear,
@@ -32,7 +36,8 @@ public sealed record BuildingSummaryProduct(
     int BidirectionalMeterCount, decimal? AnnualConsumption,
     decimal? AnnualGeneration, string? Unit, string ValueOrigin,
     ReferencePeriod? ReferencePeriod, IReadOnlyList<EnergySummaryItem> EnergySummaries,
-    DataMaturitySummary Maturity, int OpenCurationTaskCount,
+    DataMaturitySummary Maturity, BuildingGoldAssessment GoldAssessment,
+    int OpenCurationTaskCount,
     IReadOnlyList<DataQualityWarning> DataQualityWarnings,
     GoldProfileSummary GoldProfile,
     ReadinessSummary BuildingBenchmarkReadiness,
@@ -40,7 +45,7 @@ public sealed record BuildingSummaryProduct(
     ReadinessSummary NormalizedLoadProfileReadiness,
     ReadinessSummary NormalizedGenerationProfileReadiness)
 {
-    public string QualityLevel => ResolveQualityLevel(Maturity);
+    public string QualityLevel => GoldAssessment.MaturityLevel.ToString();
     public IReadOnlyDictionary<string, ReadinessSummary> Suitability =>
         new Dictionary<string, ReadinessSummary>
         {
@@ -50,9 +55,6 @@ public sealed record BuildingSummaryProduct(
             ["navigatorGeneration"] = NormalizedGenerationProfileReadiness
         };
 
-    private static string ResolveQualityLevel(DataMaturitySummary value) =>
-        value.GoldMaturity > 0 ? "Gold" :
-        value.SilverMaturity > 0 ? "Silver" : "Bronze";
 }
 
 public sealed record MeterSummaryProduct(

@@ -15,7 +15,7 @@
           "Microsoft.EntityFrameworkCore.Design": "10.0.4",
           "Microsoft.Extensions.Hosting.Abstractions": "10.0.4",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.3",
-          "System.Security.Cryptography.Xml": "9.0.15"
+          "System.Security.Cryptography.Xml": "9.0.18"
         },
         "runtime": {
           "Enset.Infrastructure.dll": {}
@@ -721,11 +721,11 @@
           }
         }
       },
-      "System.Security.Cryptography.Pkcs/9.0.15": {
+      "System.Security.Cryptography.Pkcs/9.0.18": {
         "runtime": {
           "lib/net9.0/System.Security.Cryptography.Pkcs.dll": {
             "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1526.17522"
+            "fileVersion": "9.0.1826.31522"
           }
         },
         "runtimeTargets": {
@@ -733,18 +733,18 @@
             "rid": "win",
             "assetType": "runtime",
             "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1526.17522"
+            "fileVersion": "9.0.1826.31522"
           }
         }
       },
-      "System.Security.Cryptography.Xml/9.0.15": {
+      "System.Security.Cryptography.Xml/9.0.18": {
         "dependencies": {
-          "System.Security.Cryptography.Pkcs": "9.0.15"
+          "System.Security.Cryptography.Pkcs": "9.0.18"
         },
         "runtime": {
           "lib/net9.0/System.Security.Cryptography.Xml.dll": {
             "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1526.17522"
+            "fileVersion": "9.0.1826.31522"
           }
         }
       },
@@ -1091,19 +1091,19 @@
       "path": "system.io.packaging/8.0.1",
       "hashPath": "system.io.packaging.8.0.1.nupkg.sha512"
     },
-    "System.Security.Cryptography.Pkcs/9.0.15": {
+    "System.Security.Cryptography.Pkcs/9.0.18": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-ZqPer8QiXxMHnXbgaJkWlD6kit8biD09lWmYP2NM+pfoaGwLneVCa4WnOVUJnAoZQrNKO/zryC68H2+G8xQbNA==",
-      "path": "system.security.cryptography.pkcs/9.0.15",
-      "hashPath": "system.security.cryptography.pkcs.9.0.15.nupkg.sha512"
+      "sha512": "sha512-NKMKhUdLGNZryY9GXXTF5dXyP6S37EYXhiA2JYvwshJbd4DRq07IOS9it8Opi9atadvv5rlNkD76Mio+5Oo2aQ==",
+      "path": "system.security.cryptography.pkcs/9.0.18",
+      "hashPath": "system.security.cryptography.pkcs.9.0.18.nupkg.sha512"
     },
-    "System.Security.Cryptography.Xml/9.0.15": {
+    "System.Security.Cryptography.Xml/9.0.18": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-/DqMTgJ0lcxaLGNc5pHls1dCqQVbPRQwweTp79bwqw8T8+2V1NodLfAr8RlS8Q4W0qs5HzA6dcW2jHIQf1n95g==",
-      "path": "system.security.cryptography.xml/9.0.15",
-      "hashPath": "system.security.cryptography.xml.9.0.15.nupkg.sha512"
+      "sha512": "sha512-UoE37brJoIJPMds6wqDaweVrORmdM3XDPGLRU01Mg6Koh3SjgogSfz4+zDsriaEluHMRCx/Qc7yeEw7F9QMcJA==",
+      "path": "system.security.cryptography.xml/9.0.18",
+      "hashPath": "system.security.cryptography.xml.9.0.18.nupkg.sha512"
     },
     "Enset.Application/1.0.0": {
       "type": "project",

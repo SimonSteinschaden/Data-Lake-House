@@ -9,7 +9,7 @@ export interface BuildingSummary {
   customerNumber: string | null;
   customerName: string | null;
   meterCount: number;
-  benchmarkState: string;
+  buildingState: string | null;
   dataMaturity: "Bronze" | "Silver" | "Gold";
   goldReadinessPercent: number;
   isDeleted: boolean;
@@ -54,11 +54,9 @@ export interface BuildingDetail extends EntityMetadata {
   heatedFloorAreaM2: number | null;
   yearOfConstruction: number | null;
   yearOfLastMajorRenovation: number | null;
-  latitude: number | null;
-  longitude: number | null;
   buildingCategory: string | null;
   primaryUseType: string | null;
-  benchmarkState: string;
+  buildingState: string | null;
   postalCode: string | null;
   city: string | null;
   street: string | null;
@@ -71,8 +69,7 @@ export interface BuildingDetail extends EntityMetadata {
   meters: BuildingMeter[];
 }
 
-export interface BuildingWriteModel {
-  buildingNumber: string;
+export interface BuildingFormModel {
   name: string;
   externalIdentifier: string | null;
   customerId: string | null;
@@ -82,15 +79,16 @@ export interface BuildingWriteModel {
   yearOfLastMajorRenovation: number | null;
   buildingCategory: string | null;
   primaryUseType: string | null;
-  benchmarkState: string | null;
+  buildingState: string | null;
   postalCode: string | null;
   city: string | null;
   street: string | null;
   houseNumber: string | null;
-  latitude: number | null;
-  longitude: number | null;
   rowVersion: number;
 }
+
+export type BuildingCreateRequest = Omit<BuildingFormModel, "rowVersion">;
+export type BuildingUpdateRequest = BuildingFormModel;
 
 export interface BuildingListQuery {
   search?: string;

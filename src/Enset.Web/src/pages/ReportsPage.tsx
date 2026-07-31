@@ -10,7 +10,6 @@ import {
   type ReportInstance,
 } from "../services/reportService";
 
-const year = new Date().getFullYear();
 
 export function ReportsPage() {
   const [definitions, setDefinitions] = useState<ReportDefinition[]>([]);
@@ -18,8 +17,6 @@ export function ReportsPage() {
   const [buildings, setBuildings] = useState<BuildingSummary[]>([]);
   const [type, setType] = useState("ObjectEnergy");
   const [buildingId, setBuildingId] = useState("");
-  const [from, setFrom] = useState(`${year}-01-01`);
-  const [to, setTo] = useState(`${year + 1}-01-01`);
   const [recipient, setRecipient] = useState("");
   const [error, setError] = useState("");
 
@@ -43,9 +40,7 @@ export function ReportsPage() {
     try {
       await reportService.create({
         type, buildingId,
-        fromUtc: new Date(from).toISOString(),
-        toUtc: new Date(to).toISOString(),
-        recipient,
+        recipient
       });
       setError("");
       await load();
@@ -86,8 +81,6 @@ export function ReportsPage() {
           <option value="">Gebäude auswählen</option>
           {buildings.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
         </select></label>
-        <label>Von<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
-        <label>Bis<input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
         <label>Empfänger<input value={recipient} onChange={(e) => setRecipient(e.target.value)} /></label>
       </div>
       <button type="button" onClick={() => void create()}>Bericht erzeugen</button>

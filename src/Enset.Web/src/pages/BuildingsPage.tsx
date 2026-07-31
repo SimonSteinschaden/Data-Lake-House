@@ -256,7 +256,11 @@ function Detail({ id }: { id: string }) {
               {systemQuality.qualityLevel}</span>}</td>
           <td>{systemQuality?.missingRequirements.length ? systemQuality.missingRequirements.join(", ") : "–"}</td>
           <td>{systemQuality?.confirmationStatus ?? "–"}</td>
-          <td>{systemQuality?.nextActions[0] ?? "–"}</td>
+          <td>{systemQuality && systemQuality.warnings.length > 0
+            ? <Link to={`/tools/data-review?entityType=EnergySystem&entityId=${system.id}&returnTo=${encodeURIComponent(`/buildings/${id}`)}`}>
+              In der Datenprüfung bestätigen
+            </Link>
+            : systemQuality?.nextActions[0] ?? "–"}</td>
           <td><button onClick={() => setSystemForm(system)}>Öffnen</button></td>
         </tr>;
       })}</tbody></table></div>}</section>

@@ -21,6 +21,8 @@ const fields: Record<string, string> = {
   BuildingId: "Gebäudezuordnung",
   HeatedAreaSquareMeters: "Beheizte Fläche",
   PostalCode: "Postleitzahl",
+  Type: "Anlagentyp",
+  RatedPowerKw: "Leistung",
 };
 
 export function CurationCenterPage() {
@@ -106,6 +108,7 @@ export function CurationCenterPage() {
           <select value={entity} onChange={(event) => { setEntity(event.target.value); setPage(1); }}>
             <option value="">Alle Entitäten</option><option value="Building">Gebäude</option>
             <option value="MeteringPoint">Zähler</option>
+            <option value="EnergySystem">Anlage</option>
           </select>
           <input placeholder="Feld" value={field}
             onChange={(event) => { setField(event.target.value); setPage(1); }} />

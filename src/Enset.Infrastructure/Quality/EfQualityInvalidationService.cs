@@ -49,6 +49,18 @@ public sealed class EfQualityInvalidationService(EnsetDbContext db, ICurrentUser
         if (values.Count > 0) await db.SaveChangesAsync(ct);
     }
 
+    public async Task InvalidateEnergySystemConfirmations(Guid energySystemId, string reason, CancellationToken ct)
+    {
+        var values = await db.CuratedFieldValues
+            .Where(x => x.EntityType == "EnergySystem" && x.EntityId == energySystemId &&
+                x.ValidToUtc == null && x.Confirmed)
+            .ToListAsync(ct);
+        if (values.Count == 0) return;
+        foreach (var value in values) value.Confirmed = false;
+        Audit("EnergySystem", energySystemId, "FieldConfirmationsAutoReset", reason);
+        await db.SaveChangesAsync(ct);
+    }
+
     private void Audit(string entityType, Guid entityId, string action, string reason) =>
         db.EntityAuditEntries.Add(new EntityAuditEntry
         {

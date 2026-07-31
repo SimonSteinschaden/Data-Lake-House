@@ -37,4 +37,5 @@ public interface IQualityInvalidationService
     Task InvalidateBuildingInventory(Guid buildingId, string reason, CancellationToken ct);
     Task InvalidateMeterAnalysis(Guid meterId, string reason, CancellationToken ct);
     Task InvalidateBuildingConfirmations(Guid buildingId, string reason, CancellationToken ct);
+    Task InvalidateEnergySystemConfirmations(Guid energySystemId, string reason, CancellationToken ct);
 }

@@ -227,20 +227,26 @@ public sealed class EfEntityCrudService(
         if (!await Buildings().AnyAsync(x => x.Id == m.BuildingId, ct))
             throw Invalid(nameof(m.BuildingId), "Das angegebene Gebäude existiert nicht.");
         var assignment = e.BuildingAssignments.FirstOrDefault(x => x.ValidTo == null);
-        if (assignment is not null && assignment.BuildingId != m.BuildingId)
+        var buildingChanged = assignment is not null && assignment.BuildingId != m.BuildingId;
+        if (buildingChanged)
         {
             if (await db.Meters.AnyAsync(x => x.EnergySystemId == id, ct))
                 throw new CrudConflictException("Die Gebäudezuordnung einer Anlage mit Zählpunkten kann nicht geändert werden.");
-            assignment.ValidTo = DateTime.UtcNow;
+            assignment!.ValidTo = DateTime.UtcNow;
             db.EnergySystemBuildingAssignments.Add(new EnergySystemBuildingAssignment
                 { EnergySystemId = id, BuildingId = m.BuildingId, Role = EnergySystemBuildingRole.LocatedAt });
         }
-        e.Name = m.Name.Trim(); e.Type = Parse<EnergySystemType>(m.Type, nameof(m.Type));
+        var newType = Parse<EnergySystemType>(m.Type, nameof(m.Type));
+        var goldRelevantChanged = buildingChanged || e.Type != newType || e.RatedPowerKw != m.RatedPowerKw;
+        e.Name = m.Name.Trim(); e.Type = newType;
         e.RatedPowerKw = m.RatedPowerKw; e.CommissionedAt = m.CommissionedAt;
         e.DecommissionedAt = m.DecommissionedAt; Manual(e);
         await Save(ct);
         await _qualityInvalidation.InvalidateBuildingInventory(
             m.BuildingId, "Anlagendaten oder Zuordnung wurden geändert.", ct);
+        if (goldRelevantChanged)
+            await _qualityInvalidation.InvalidateEnergySystemConfirmations(
+                id, "Gold-relevante Anlagendaten oder die Gebäudezuordnung wurden geändert.", ct);
         return Result(e);
     }
     public async Task<EntityMutationResult> DeleteEnergySystemAsync(Guid id, uint v, CancellationToken ct)

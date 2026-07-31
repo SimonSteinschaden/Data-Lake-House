@@ -199,8 +199,12 @@ public sealed record EnergySystemCanonicalSnapshot(
     SnapshotSuitability Suitability,
     CanonicalVersion Version)
 {
+    public string? EnergySystemNumber { get; init; }
+    public string? Name { get; init; }
     public DateTime? ValidFrom { get; init; }
     public DateTime? ValidTo { get; init; }
+    public EnergySystemGoldAssessment GoldAssessment { get; init; } =
+        EnergySystemGoldDefinition.Evaluate(null, EnergySystemType.Unknown, null, false);
     public EnergySystemQualityAssessment? QualityAssessment { get; init; }
     public DataMaturityLevel QualityLevel =>
         QualityAssessment?.QualityLevel ?? Quality.Level;

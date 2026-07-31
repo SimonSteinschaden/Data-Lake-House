@@ -13,8 +13,6 @@ export interface ReportInstance {
   type: string;
   buildingId: string;
   buildingName: string;
-  fromUtc: string;
-  toUtc: string;
   version: number;
   createdAtUtc: string;
   recipient: string;
@@ -41,8 +39,6 @@ export const reportService = {
   create: (request: {
     type: string;
     buildingId: string;
-    fromUtc: string;
-    toUtc: string;
     recipient: string;
   }) => apiPost<ReportInstance, typeof request>("/api/v1/reports", request),
   release: (reportId: string, releasedBy: string) =>

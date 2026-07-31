@@ -399,6 +399,8 @@ public sealed class EfCanonicalSnapshotReader(
             .Select(x => new
             {
                 x.Id,
+                x.EnergySystemNumber,
+                x.Name,
                 x.Type,
                 x.RatedPowerKw,
                 x.CommissionedAt,
@@ -409,6 +411,7 @@ public sealed class EfCanonicalSnapshotReader(
                     .FirstOrDefault()
             })
             .ToListAsync(ct);
+        var allCurated = await Fields("EnergySystem", idSet, ct);
         var energySystems = systems.Select(x =>
         {
             var quality = Quality(
@@ -419,6 +422,12 @@ public sealed class EfCanonicalSnapshotReader(
                     Invariant(x.RatedPowerKw)
                 ],
                 EmptyFields);
+            var curated = allCurated.GetValueOrDefault(x.Id, EmptyFields);
+            var confirmations = curated.ToDictionary(
+                entry => entry.Key, entry => entry.Value.Confirmed);
+            var goldAssessment = EnergySystemGoldDefinition.Evaluate(
+                x.EnergySystemNumber, x.Type, x.RatedPowerKw,
+                x.BuildingId.HasValue, confirmations);
             return new EnergySystemCanonicalSnapshot(
                 x.Id,
                 x.Type == EnergySystemType.Unknown
@@ -433,6 +442,9 @@ public sealed class EfCanonicalSnapshotReader(
                 Suitability(x.Type, x.RatedPowerKw),
                 TechnicalVersion("EnergySystem", x.Id))
             {
+                EnergySystemNumber = x.EnergySystemNumber,
+                Name = x.Name,
+                GoldAssessment = goldAssessment,
                 ValidFrom = x.CommissionedAt,
                 ValidTo = x.DecommissionedAt
             };

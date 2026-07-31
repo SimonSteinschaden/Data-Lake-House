@@ -20,9 +20,13 @@ public sealed class EfCurationService(
         await DiscoverTasksAsync(ct);
         var buildingIds = scope.ApplyBuildingScope(db.Buildings).Select(x => x.Id);
         var meterIds = scope.ApplyMeterScope(db.Meters).Select(x => x.Id);
+        var energySystemIds = db.EnergySystemBuildingAssignments
+            .Where(a => a.ValidTo == null && buildingIds.Contains(a.BuildingId))
+            .Select(a => a.EnergySystemId);
         var query = db.CurationTasks.AsNoTracking().Where(x =>
             (x.EntityType == "Building" && buildingIds.Contains(x.EntityId)) ||
-            (x.EntityType == "MeteringPoint" && meterIds.Contains(x.EntityId)));
+            (x.EntityType == "MeteringPoint" && meterIds.Contains(x.EntityId)) ||
+            (x.EntityType == "EnergySystem" && energySystemIds.Contains(x.EntityId)));
         if (!string.IsNullOrWhiteSpace(request.EntityType)) query = query.Where(x => x.EntityType == request.EntityType);
         if (!string.IsNullOrWhiteSpace(request.FieldName)) query = query.Where(x => x.FieldName == request.FieldName);
         if (request.Status.HasValue) query = query.Where(x => x.Status == request.Status);
@@ -189,8 +193,8 @@ public sealed class EfCurationService(
                 null, usage.Value, usage.Confidence, usage.Reason);
         }
 
-        var canonicalBuildings = (await snapshots.GetPortfolio(ct)).Buildings;
-        foreach (var building in canonicalBuildings)
+        var portfolio = await snapshots.GetPortfolio(ct);
+        foreach (var building in portfolio.Buildings)
         {
             foreach (var field in building.GoldAssessment.GoldFieldStates
                          .Where(item =>
@@ -203,6 +207,28 @@ public sealed class EfCurationService(
                     "Building",
                     building.BuildingId,
                     $"{building.BuildingNumber} · {building.Name}",
+                    field.FieldName,
+                    field.Value,
+                    field.Value!,
+                    100,
+                    $"{field.Label} ist vorhanden und muss fachlich bestätigt werden.");
+            }
+        }
+
+        foreach (var system in portfolio.EnergySystems)
+        {
+            foreach (var field in system.GoldAssessment.GoldFieldStates
+                         .Where(item =>
+                             item.IsConfirmable &&
+                             item.State ==
+                             EnergySystemGoldFieldState.PresentUnconfirmed))
+            {
+                Add(
+                    additions,
+                    tasks,
+                    "EnergySystem",
+                    system.EnergySystemId,
+                    $"{system.EnergySystemNumber} · {system.Name}",
                     field.FieldName,
                     field.Value,
                     field.Value!,
@@ -363,7 +389,17 @@ public sealed class EfCurationService(
     private Task<bool> IsVisible(CurationTask task, CancellationToken ct) =>
         task.EntityType == "Building" ? scope.CanReadBuilding(task.EntityId, ct) :
         task.EntityType == "MeteringPoint" ? scope.CanReadMeter(task.EntityId, ct) :
+        task.EntityType == "EnergySystem" ? IsEnergySystemVisible(task.EntityId, ct) :
         Task.FromResult(currentUser.IsEnsetEmployee);
+
+    private async Task<bool> IsEnergySystemVisible(Guid energySystemId, CancellationToken ct)
+    {
+        var buildingId = await db.EnergySystemBuildingAssignments
+            .Where(a => a.EnergySystemId == energySystemId && a.ValidTo == null)
+            .Select(a => (Guid?)a.BuildingId)
+            .FirstOrDefaultAsync(ct);
+        return buildingId.HasValue && await scope.CanReadBuilding(buildingId.Value, ct);
+    }
     private static string? Value(IEnumerable<CuratedFieldValue> fields, string name, string? fallback = null) =>
         fields.FirstOrDefault(x => x.FieldName == name)?.NormalizedValue ?? fallback;
     private static CurationReadiness BuildReadiness(Guid id, string type,

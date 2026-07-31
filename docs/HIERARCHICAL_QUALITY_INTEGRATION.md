@@ -23,6 +23,58 @@ damit Gebäudedetail und Reports keine eigene Aggregation vornehmen müssen.
 `ICanonicalSnapshotReader` bietet zusätzlich eine batchfähige
 `GetEnergySystems`-Methode analog zu `GetBuildings`/`GetMeters`.
 
+## Fachlicher Bestätigungspfad für Anlagen (EnergySystem)
+
+Anlagen erreichen Silver/Gold über denselben Mechanismus wie Gebäude:
+zentrale Felddefinition, bestehende `CuratedFieldValues`-Persistenz,
+bestehende `CurationTask`/`CurationDecision`-Infrastruktur. Keine neue
+Bestätigungstabelle.
+
+**Zentrale Felddefinition** (`EnergySystemGoldDefinition`,
+`src/Enset.Application/CanonicalSnapshots/EnergySystemGoldAssessment.cs`):
+
+- **Technische Vollständigkeitsvoraussetzungen** (nicht kuratierbar, nur
+  `Missing`/`Confirmed`, erzeugen nie einen `CurationTask`):
+  `EnergySystemNumber` (systemseitig erzeugt, keine fachliche Bestätigung
+  sinnvoll) und `BuildingAssignment` (Beziehung über
+  `EnergySystemBuildingAssignment`, nicht als beliebiges `CuratedFieldValue`
+  behandelt, sondern als eigener, klar gekennzeichneter, nicht-kuratierbarer
+  Statuswert).
+- **Kuratierbare Gold-Felder** (`Missing`/`PresentUnconfirmed`/`Confirmed`):
+  `Type` (Anlagentyp) immer, `RatedPowerKw` (Leistung) nur für Anlagentypen,
+  bei denen eine Leistungsangabe fachlich sinnvoll ist
+  (`EnergySystemGoldDefinition.RequiresRatedPower`: Photovoltaic, HeatPump,
+  Boiler, BatteryStorage, ChargingInfrastructure, Cooling — nicht für
+  DistrictHeating, Ventilation, Other/Unknown).
+
+**Datenfluss**: `EnergySystem` (Stammdaten + `EnergySystemBuildingAssignment`)
+→ `CuratedFieldValues` (`EntityType="EnergySystem"`, geschrieben ausschließlich
+über `EfCurationService.DecideAsync`, denselben Pfad wie Building/Meter) →
+`EfCanonicalSnapshotReader.GetEnergySystems` (setzt `GoldAssessment` auf
+`EnergySystemCanonicalSnapshot`) **und** unabhängig
+`EfHierarchicalQualityAssessmentService.AssessEnergySystems` (setzt
+`EnergySystemQualityAssessment`, dieselbe zentrale `EnergySystemGoldDefinition`-
+Berechnung wie der Snapshot-Reader) → `OperationalBuildingQualityAssessment`
+(Building fasst die Kind-Anlagen über `EnergySystemQualities`/
+`EnergySystemAssessments` zusammen; eine Anlage mit Bronze-Status blockiert
+die Gebäude-Gesamtbewertung, Silver begrenzt sie) → Internal Data Products,
+APIs, UI.
+
+**Kuration**: `EfCurationService.DiscoverTasksAsync` legt für jede Anlage mit
+`PresentUnconfirmed`-Feldern automatisch offene `CurationTask`s an
+(`EntityType="EnergySystem"`), idempotent über den bestehenden
+`Add()`-Mechanismus (Schlüssel `EntityType|EntityId|FieldName`, höchstens ein
+aktiver Task je Kombination). Bestätigen/Korrigieren läuft über die
+bestehende Datenprüfung (`/tools/data-review?entityType=EnergySystem`,
+Filteroption "Anlage"); Kunden können nicht final entscheiden
+(`CurationController` ist vollständig auf `EnsetEmployee` beschränkt).
+
+**Invalidierung**: `EfEntityCrudService.UpdateEnergySystemAsync` vergleicht
+alte und neue Werte und ruft `InvalidateEnergySystemConfirmations` **nur**
+auf, wenn sich Anlagentyp, Leistung oder die Gebäudezuordnung tatsächlich
+geändert haben. Änderungen an Name, Kommissionierungsdatum oder anderen nicht
+Gold-relevanten Feldern setzen bestehende Bestätigungen nicht zurück.
+
 ## Invalidierung
 
 Gebäudeänderungen heben fachliche Feldbestätigungen und die aktuelle
@@ -132,10 +184,12 @@ verändert.
 
 ## Bekannte Einschränkungen
 
-- Keine EnergySystem-Feldbestätigung im Kurationsfluss verdrahtet: `AssessEnergySystems`
-  liest `CuratedFieldValues` mit `EntityType == "EnergySystem"`, es gibt aber
-  aktuell keinen produktiven Schreibpfad, der solche Werte bestätigt — Anlagen
-  können dadurch in der Praxis kaum Gold erreichen.
+- EnergySystem-Feldbestätigung ist über die bestehende Datenprüfung verdrahtet
+  (siehe Abschnitt "Fachlicher Bestätigungspfad für Anlagen"). Nicht
+  abgedeckt: eine dedizierte Sichtprüfung je Bestätigungshistorie einer
+  einzelnen Anlage in der UI (aktuell nur über die allgemeine Datenprüfungs-
+  Filterung nach `entityId` erreichbar, kein eigener Anlagendetail-Bereich
+  analog zum Zählpunktdetail).
 - `ResolvedIssueCount` wird in Reports bewusst nicht eingefroren, da keine
   verlässliche, bereits zentral berechnete Quelle ohne zusätzliche
   Direktabfrage existiert.

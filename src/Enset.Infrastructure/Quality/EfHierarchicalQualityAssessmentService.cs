@@ -103,36 +103,33 @@ public sealed class EfHierarchicalQualityAssessmentService(EnsetDbContext db)
             x.Id, x.EnergySystemNumber, x.Type, x.RatedPowerKw,
             Assigned = x.BuildingAssignments.Any(a => a.ValidTo == null)
         }).ToListAsync(ct);
-        var confirmed = (await db.CuratedFieldValues.AsNoTracking()
-            .Where(x => x.EntityType == "EnergySystem" && set.Contains(x.EntityId) &&
-                x.ValidToUtc == null && x.Confirmed)
-            .Select(x => x.EntityId).Distinct().ToListAsync(ct)).ToHashSet();
+        var curatedRows = await db.CuratedFieldValues.AsNoTracking()
+            .Where(x => x.EntityType == "EnergySystem" && set.Contains(x.EntityId) && x.ValidToUtc == null)
+            .ToListAsync(ct);
+        var curatedByEntity = curatedRows.GroupBy(x => x.EntityId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyDictionary<string, bool>)g.ToDictionary(x => x.FieldName, x => x.Confirmed));
 
         return rows.ToDictionary(x => x.Id, x =>
         {
-            var missing = new List<string>();
-            if (string.IsNullOrWhiteSpace(x.EnergySystemNumber)) missing.Add("Anlagennummer fehlt.");
-            if (x.Type.ToString() == "Unknown") missing.Add("Anlagentyp fehlt.");
-            if (!x.Assigned) missing.Add("Gebäudezuordnung fehlt.");
-            if (x.RatedPowerKw is null) missing.Add("Leistung fehlt.");
+            var confirmations = curatedByEntity.GetValueOrDefault(x.Id, EmptyConfirmations);
+            var assessment = EnergySystemGoldDefinition.Evaluate(
+                x.EnergySystemNumber, x.Type, x.RatedPowerKw, x.Assigned, confirmations);
 
-            var isConfirmed = confirmed.Contains(x.Id);
-            var level = missing.Count > 0 ? DataMaturityLevel.Bronze
-                : isConfirmed ? DataMaturityLevel.Gold : DataMaturityLevel.Silver;
-
-            var warnings = level == DataMaturityLevel.Silver
-                ? new List<string> { "Anlagendaten sind vorhanden, aber noch nicht fachlich bestätigt." }
-                : [];
+            var missing = assessment.MissingReasons;
+            var warnings = assessment.ConfirmationReasons;
 
             var nextActions = new List<string>();
             if (missing.Count > 0) nextActions.AddRange(missing.Select(m => $"{m.TrimEnd('.')} ergänzen."));
-            else if (!isConfirmed) nextActions.Add("Anlagendaten fachlich bestätigen.");
+            else if (warnings.Count > 0) nextActions.Add("Anlagendaten fachlich bestätigen.");
 
             return new EnergySystemQualityAssessment(
-                x.Id, level, isConfirmed ? "Bestätigt" : "Unbestätigt",
+                x.Id, assessment.MaturityLevel, assessment.IsGoldReady ? "Bestätigt" : "Unbestätigt",
                 missing, missing, warnings, nextActions);
         });
     }
+
+    private static readonly IReadOnlyDictionary<string, bool> EmptyConfirmations =
+        new Dictionary<string, bool>();
 
     public async Task<IReadOnlyDictionary<Guid, OperationalBuildingQualityAssessment>> AssessBuildings(
         IReadOnlyCollection<Guid> ids, CancellationToken ct)

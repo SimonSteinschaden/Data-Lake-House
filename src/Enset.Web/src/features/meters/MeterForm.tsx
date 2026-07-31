@@ -61,8 +61,12 @@ export function MeterForm({ initial, entityId, onClose, onSaved, onReload }: {
         <input required maxLength={128} value={model.meterNumber}
           onChange={(e) => set("meterNumber", e.target.value)} />
       </FormField>
-      <FormField label="Interne ID / Bezeichnung (optional)" error={errors.name}>
+      <FormField label="Bezeichnung (optional)" error={errors.name}>
         <input maxLength={256} value={model.name} onChange={(e) => set("name", e.target.value)} />
+      </FormField>
+      <FormField label="Externe Referenz (optional)" error={errors.externalIdentifier}>
+        <input maxLength={256} value={model.externalIdentifier ?? ""}
+          onChange={(e) => set("externalIdentifier", e.target.value || null)} />
       </FormField>
       <h3 className="form-actions">Objektzuordnung</h3>
       <FormField label="Objekt suchen">
@@ -109,10 +113,6 @@ export function MeterForm({ initial, entityId, onClose, onSaved, onReload }: {
       <FormField label="Beschreibung (optional)" error={errors.description}>
         <textarea maxLength={1000} value={model.description ?? ""}
           onChange={(e) => set("description", e.target.value || null)} />
-      </FormField>
-      <FormField label="Externe Referenz (optional)" error={errors.externalIdentifier}>
-        <input maxLength={256} value={model.externalIdentifier ?? ""}
-          onChange={(e) => set("externalIdentifier", e.target.value || null)} />
       </FormField>
       <footer className="form-actions"><button type="button" onClick={close}>Abbrechen</button>
         <button className="primary-button" disabled={busy}>{busy ? "Speichert …" : "Speichern"}</button>

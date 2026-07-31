@@ -1,0 +1,90 @@
+const uiLabels: Record<string, string> = {
+  Active: "Aktiv",
+  Inactive: "Inaktiv",
+  Draft: "Entwurf",
+  Released: "Freigegeben",
+  Archived: "Archiviert",
+  Ready: "Bereit",
+  ReadyWithWarnings: "Bereit mit Hinweisen",
+  PartiallyReady: "Teilweise bereit",
+  NotReady: "Nicht bereit",
+  Completed: "Abgeschlossen",
+  Committed: "Übernommen",
+  Failed: "Fehlgeschlagen",
+  Cancelled: "Abgebrochen",
+  Interrupted: "Unterbrochen",
+  Warning: "Warnung",
+  Information: "Information",
+  Blocking: "Blockierend",
+  Gold: "Gold",
+  Silver: "Silber",
+  Bronze: "Bronze",
+  Unknown: "Unbekannt",
+  Created: "Erstellt",
+  Updated: "Aktualisiert",
+  Deleted: "Gelöscht",
+  Restored: "Wiederhergestellt",
+  Accepted: "Angenommen",
+  Rejected: "Abgelehnt",
+  Suitable: "Geeignet",
+  NotSuitable: "Nicht geeignet",
+  Customer: "Kunde",
+  Building: "Gebäude",
+  Meter: "Zählpunkt",
+  MeteringPoint: "Messwert",
+  EnergySystem: "Energiesystem",
+  NotAvailable: "Nicht verfügbar",
+  IncompleteYear: "Unvollständiges Jahr",
+  CompleteYear: "Vollständiges Jahr",
+  Estimated: "Geschätzt",
+  Confirmed: "Bestätigt",
+  NotAnalyzed: "Nicht analysiert",
+  Running: "Analyse läuft",
+  RequiresReview: "Prüfung erforderlich",
+  Curated: "Kuriert",
+  MissingTimestamp: "Zeitstempel fehlt",
+  Gap: "Lücke",
+  Duplicate: "Dublette",
+  InvalidTimestamp: "Ungültiger Zeitstempel",
+  MixedInterval: "Uneinheitliches Intervall",
+  UnknownUnit: "Unbekannte Einheit",
+  NegativeValue: "Negativer Wert",
+  ImplausibleValue: "Unplausibler Wert",
+  Outlier: "Ausreißer",
+  ZeroSequence: "Nullwertfolge",
+  SuddenJump: "Plötzlicher Sprung",
+  IncompletePeriod: "Unvollständiger Zeitraum",
+  MissingAssignment: "Fehlende Zuordnung",
+  Other: "Sonstiges",
+  Open: "Offen",
+  UnderReview: "In Prüfung",
+  Corrected: "Korrigiert",
+  IgnoredWithReason: "Ignoriert (mit Begründung)",
+  Resolved: "Erledigt",
+  ConfirmAsCorrect: "Als korrekt bestätigen",
+  CorrectValue: "Wert korrigieren",
+  MarkInvalid: "Als ungültig markieren",
+  AcceptGap: "Lücke akzeptieren",
+  AddManualValue: "Ersatzwert manuell erfassen",
+  GenerateEstimatedValue: "Ersatzwert erzeugen",
+  MarkForObservation: "Zur Beobachtung markieren",
+  IgnoreWithReason: "Ignorieren mit Begründung",
+  Reopen: "Wieder öffnen",
+};
+
+export function formatUiValue(value?: string | null, fallback = "–"): string {
+  if (!value) return fallback;
+  return uiLabels[value] ?? value;
+}
+
+export function formatUiDateTime(value?: string | null): string {
+  if (!value) return "–";
+  return new Intl.DateTimeFormat("de-AT", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+export function formatUiNumber(value: number): string {
+  return new Intl.NumberFormat("de-AT").format(value);
+}

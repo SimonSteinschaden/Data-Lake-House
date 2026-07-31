@@ -1,0 +1,68 @@
+using Enset.Application.Imports.Decisions;
+using Enset.Application.Imports.DTOs;
+using Enset.Application.Imports.Enums;
+
+namespace Enset.Api.Contracts.Imports.Responses;
+
+public sealed class ImportReportResponse
+{
+    public Guid ImportId { get; init; }
+    public Guid? AssignedMeterId { get; init; }
+    public string? DefaultMeterNumber { get; init; }
+
+    public ImportStatus Status { get; init; }
+
+    public ImportSourceFileResponse? SourceFile { get; init; }
+
+    public IReadOnlyList<CustomerImportDto> Customers { get; init; } = [];
+
+    public IReadOnlyList<ImportSourceColumnResponse> SourceColumns { get; init; } = [];
+
+    public IReadOnlyList<ImportIssueResponse> Issues { get; init; } = [];
+
+    public IReadOnlyList<ImportAuditEntryResponse> AuditTrail { get; init; } = [];
+
+    public ImportDecision Decision { get; init; } = new();
+
+    public DateTime CreatedAt { get; init; }
+
+    public DateTime UpdatedAt { get; init; }
+
+    public int CustomerCount { get; init; }
+
+    public int BuildingCount { get; init; }
+
+    public int MeterCount { get; init; }
+
+    public int MeterReadingCount { get; init; }
+    public DateTime? MeasurementPeriodStart { get; init; }
+    public DateTime? MeasurementPeriodEnd { get; init; }
+    public int? IntervalSeconds { get; init; }
+    public int ValidReadingCount { get; init; }
+    public int InvalidReadingCount { get; init; }
+    public int ExpectedIntervalCount { get; init; }
+    public int MissingIntervalCount { get; init; }
+    public int DuplicateReadingCount { get; init; }
+
+    public int IssueCount { get; init; }
+
+    public int ReturnedIssueCount { get; init; }
+
+    public bool HasMoreIssues { get; init; }
+
+    public int UnresolvedIssueCount { get; init; }
+
+    public int OpenIssueCount { get; init; }
+
+    public int BlockingOpenIssueCount { get; init; }
+
+    public int AutomaticallyResolvedIssueCount { get; init; }
+
+    public int ManuallyResolvedIssueCount { get; init; }
+
+    public string? ReadinessMessage { get; init; }
+
+    public int ErrorCount { get; init; }
+
+    public int WarningCount { get; init; }
+}

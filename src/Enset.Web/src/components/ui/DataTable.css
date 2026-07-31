@@ -1,0 +1,228 @@
+
+.data-table {
+  overflow: hidden;
+  border: 1px solid var(--enset-border);
+  border-radius: var(--enset-radius-lg);
+  background: #ffffff;
+  box-shadow: var(--enset-shadow-sm);
+}
+
+.data-table__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5eaee;
+}
+
+.data-table__search {
+  width: min(22rem, 100%);
+  min-height: 2.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #cbd5df;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.data-table__search:focus {
+  border-color: var(--enset-red);
+  outline: 3px solid rgb(200 16 46 / 12%);
+}
+
+.data-table__result-count {
+  color: #64748b;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.data-table__container {
+  position: relative;
+  overflow-x: auto;
+}
+
+.data-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.data-table__head {
+  background: #f7f9fa;
+}
+
+.data-table__header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #dbe2e8;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.data-table__header--center,
+.data-table__cell--center {
+  text-align: center;
+}
+
+.data-table__header--right,
+.data-table__cell--right {
+  text-align: right;
+}
+
+.data-table__sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.data-table__sort-indicator {
+  color: var(--enset-red);
+  font-size: 0.65rem;
+}
+
+.data-table__row {
+  border-bottom: 1px solid #edf1f4;
+}
+
+.data-table__row:last-child {
+  border-bottom: 0;
+}
+
+.data-table__row--clickable {
+  cursor: pointer;
+}
+
+.data-table__row--clickable:hover {
+  background: var(--enset-red-faint);
+}
+
+.data-table__row--clickable:focus-visible {
+  outline: 2px solid var(--enset-red);
+  outline-offset: -2px;
+}
+
+.data-table__cell {
+  padding: 0.875rem 1rem;
+  color: #334155;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.data-table__empty {
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.data-table__empty-title {
+  margin: 0;
+  color: #172033;
+  font-size: 1rem;
+}
+
+.data-table__empty-description {
+  margin: 0.5rem 0 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.data-table__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  border-top: 1px solid #e5eaee;
+  background: #fafbfc;
+}
+
+.data-table__pagination-info {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.data-table__pagination-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.data-table__pagination-button {
+  min-height: 2.25rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5df;
+  border-radius: 0.375rem;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.data-table__pagination-button:hover:not(:disabled) {
+  border-color: var(--enset-red);
+  background: var(--enset-red-faint);
+  color: var(--enset-red);
+}
+
+.data-table__pagination-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.data-table__skeleton {
+  display: block;
+  width: 100%;
+  height: 1rem;
+  border-radius: 0.25rem;
+  background: linear-gradient(
+    90deg,
+    #edf1f4 25%,
+    #f7f9fa 50%,
+    #edf1f4 75%
+  );
+  background-size: 200% 100%;
+  animation: data-table-skeleton 1.2s infinite;
+}
+
+@keyframes data-table-skeleton {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 48rem) {
+  .data-table__toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .data-table__search {
+    width: 100%;
+  }
+
+  .data-table__pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .data-table__pagination-actions {
+    justify-content: flex-end;
+  }
+}

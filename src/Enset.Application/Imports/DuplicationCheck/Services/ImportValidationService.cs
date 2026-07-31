@@ -1,0 +1,39 @@
+using Enset.Application.Imports.DTOs;
+using Enset.Application.Imports.DuplicationCheck.Validation;
+using Enset.Application.Imports.Issues;
+using Enset.Application.Imports.DuplicationCheck.Abstractions;
+
+namespace Enset.Application.Imports.DuplicationCheck.Services;
+
+public class ImportValidationService : IImportValidationService
+{
+    private readonly CustomerDuplicateValidator _customerDuplicateValidator;
+
+    public ImportValidationService()
+    {
+        _customerDuplicateValidator = new CustomerDuplicateValidator();
+    }
+
+    public List<ImportIssue> ValidateCustomers(
+        IEnumerable<CustomerImportDto> customers)
+    {
+        var issues = new List<ImportIssue>();
+
+        var duplicates = _customerDuplicateValidator.FindDuplicates(customers);
+
+        foreach (var duplicate in duplicates)
+        {
+            issues.Add(new ImportIssue
+            {
+                Type = ImportIssueType.DuplicateCustomer,
+                Severity = ImportIssueSeverity.Warning,
+                Message =
+                    $"Mögliche Kundendublette: {duplicate.First.CompanyName} / {duplicate.Second.CompanyName}",
+                SimilarityScore = duplicate.SimilarityScore,
+                RequiresUserDecision = duplicate.SimilarityScore < 0.98
+            });
+        }
+
+        return issues;
+    }
+}

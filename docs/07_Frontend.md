@@ -1,0 +1,27 @@
+# Frontend
+
+## Aktueller Stand
+
+Im Repository existiert keine Benutzeroberfläche. Es gibt weder ein React-/Next.js-Projekt noch WinUI, Blazor oder einen anderen UI-Client. `Enset.Worker` ist ein Konsolen-Testpfad und keine UI.
+
+## Für den Import Wizard bereits verfügbare Modelle
+
+- `ImportReport` mit Import-ID, Zeitpunkt, Customers, Issues, Decision und Statistiken;
+- stabile `ImportIssue.IssueId` zur Zuordnung von Entscheidungen;
+- ResolutionActions und benutzerdefinierte Resolution-Werte;
+- Request-/Response-DTOs;
+- REST-Endpunkte für Analyze, Reportabruf, Resolutions und Commit.
+
+## Noch offen gemäß Baseline v1.0
+
+- React Import Wizard für Upload, Analyse, Issue-Prüfung und Bestätigung;
+- Anzeige von Severity, Entscheidungsbedarf und ResolutionActions;
+- Fehler-, Lade- und Wiederaufnahmezustände;
+- Authentifizierung und rollenbasierte Freigabe;
+- API-Client und robuste Fehlerverträge;
+- UI-, Accessibility- und End-to-End-Tests.
+
+Die konkrete UX und technische Frontend-Ausgestaltung sind noch nicht implementiert.
+# Data Products UI
+
+Der MVP ergänzt die Routen `/data-products`, `/data-products/:id` und `/buildings/:buildingId/energy`. Die Detailseite prüft Availability, startet die Generierung, lädt anschließend die neueste Version und zeigt die Versionshistorie. Das Building-Dashboard stellt ausschließlich die serverseitig berechneten KPIs dar und verwendet für Zahlen und Zeitstempel das Gebietsschema `de-AT`.

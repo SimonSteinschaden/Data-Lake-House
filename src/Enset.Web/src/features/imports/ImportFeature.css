@@ -1,0 +1,24 @@
+.import-feature {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.import-feature__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.import-feature__header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.import-feature__header p {
+  max-width: 46rem;
+  margin: 0.5rem 0 0;
+  color: #64748b;
+  line-height: 1.5;
+}

@@ -1,215 +1,128 @@
 # Architekturüberblick
 
-Die aktuelle Repository-Implementierung umfasst den Backend-Kern mit Domain, Application und Infrastructure.
-Geplante Komponenten wie UI, API und Worker sind im Architekturdiagramm beschrieben, sind aber im Code bisher nicht enthalten.
+Dieses Dokument beschreibt ausschließlich die aktuell implementierte Architektur. Zielvorgaben bleiben in `Decisions/ARCHITECTURE_REVIEW_V1_0.md` verbindlich.
 
-```plantuml
+## Analytics als Data-Product-Schicht
 
-'--------------------------------------------------------------------------------------
-'UML COMPONENTS DIAGRAM
-'--------------------------------------------------------------------------------------
-@startuml
-title ENSET Data Lake House MVP - Komponentenarchitektur
+Die fachliche Leserichtung für Auswertungen ist:
 
-actor "Interner Nutzer\nEnergieberatung" as User
-
-package "Application Layer" {
-  [WinUI3 Desktop MVP] as WinUI
-  [Später: React/Next.js Portal] as WebUI
-}
-
-package "Access Layer" {
-  [ASP.NET Core Web API] as API
-  [OpenAPI / Swagger] as Swagger
-}
-
-package "Application / Domain Layer" {
-  [Project Service] as ProjectService
-  [Building Service] as BuildingService
-  [Import Service] as ImportService
-  [Calculation Service] as CalcService
-  [Benchmark Service] as BenchmarkService
-  [Validation Service] as ValidationService
-}
-
-package "Ingestion / Worker Layer" {
-  [CSV Import Worker] as CsvWorker
-  [Excel Import Worker] as ExcelWorker
-  [PDF Intake Worker] as PdfWorker
-  [Scheduled ETL Worker] as EtlWorker
-}
-
-package "Storage Layer" {
-  database "PostgreSQL\nStammdaten, Projekte,\nGebäude, Metadaten" as PostgreSQL
-  database "TimescaleDB\nZeitreihen / Messwerte" as Timescale
-  folder "Raw Zone\nOriginaldateien" as Raw
-  folder "Silver/Gold Zone\nkuratierte Daten" as Curated
-}
-
-package "Infrastructure" {
-  [Docker Compose] as Docker
-  [Synology Backup] as Synology
-  [Azure Data Lake Gen2\nspäter skalierbar] as AzureLake
-  [Azure Blob Backup] as AzureBackup
-}
-
-User --> WinUI
-User --> WebUI
-
-WinUI --> API
-WebUI --> API
-API --> Swagger
-
-API --> ProjectService
-API --> BuildingService
-API --> ImportService
-API --> CalcService
-API --> BenchmarkService
-
-ImportService --> ValidationService
-CsvWorker --> ImportService
-ExcelWorker --> ImportService
-PdfWorker --> ImportService
-EtlWorker --> CalcService
-
-ProjectService --> PostgreSQL
-BuildingService --> PostgreSQL
-ImportService --> PostgreSQL
-ImportService --> Timescale
-ImportService --> Raw
-CalcService --> Timescale
-CalcService --> Curated
-BenchmarkService --> Curated
-BenchmarkService --> PostgreSQL
-
-Raw --> AzureLake
-Curated --> AzureLake
-PostgreSQL --> Synology
-Timescale --> Synology
-Synology --> AzureBackup
-
-Docker .. API
-Docker .. CsvWorker
-Docker .. ExcelWorker
-Docker .. PdfWorker
-Docker .. PostgreSQL
-Docker .. Timescale
-
-@enduml
-
-'--------------------------------------------------------------------------------------
-'DATA FLOW
-'--------------------------------------------------------------------------------------
-@startuml
-title ENSET eKUT Data Lake House MVP - Datenfluss
-
-actor "Energieberater" as User
-
-participant "UI\nWinUI3/Blazor/React" as UI
-participant "ASP.NET Core API" as API
-participant "Import Service" as Import
-participant "Validation Service" as Validation
-database "PostgreSQL" as PG
-database "TimescaleDB" as TS
-collections "Raw Zone" as Raw
-collections "Gold Zone" as Gold
-participant "Calculation Service" as Calc
-participant "Benchmark Service" as Bench
-
-User -> UI: Projekt/Gebäude anlegen
-UI -> API: POST /projects, /buildings
-API -> PG: Stammdaten speichern
-
-User -> UI: Datei importieren
-UI -> API: POST /imports/files
-API -> Import: ImportJob erstellen
-Import -> Raw: Originaldatei speichern
-Import -> Validation: Daten prüfen und normalisieren
-
-Validation -> PG: Metadaten speichern
-Validation -> TS: Messwerte speichern
-
-Calc -> TS: Messdaten lesen
-Calc -> PG: Gebäudedaten lesen
-Calc -> Gold: Kennzahlen speichern
-
-Bench -> Gold: Kennzahlen lesen
-Bench -> PG: Vergleichsgruppen lesen
-Bench -> API: Benchmark-Ergebnis
-
-API -> UI: Dashboarddaten
-UI -> User: Auswertung anzeigen
-
-@enduml
-
-'--------------------------------------------------------------------------------------
-'Data Marketplace
-'--------------------------------------------------------------------------------------
-@startuml
-title ENSET Data Marketplace Erweiterung
-
-package "Data Lake House" {
-  [Raw Data]
-  [Processed Data]
-  [KPI / Benchmark Engine]
-}
-
-package "Data Product Layer" {
-  [Anonymization Service]
-  [Aggregation Service]
-  [Data Product Service]
-  [Pricing Service]
-  [Export Service]
-}
-
-package "Marketplace" {
-  [Marketplace API]
-  [Download / Purchase API]
-}
-
-package "Customers" {
-  [eKUT Projects]
-  [External Buyers]
-}
-
-[Processed Data] --> [Anonymization Service]
-[Anonymization Service] --> [Aggregation Service]
-[Aggregation Service] --> [Data Product Service]
-[Data Product Service] --> [Pricing Service]
-[Data Product Service] --> [Export Service]
-
-[Export Service] --> [Marketplace API]
-[Marketplace API] --> [External Buyers]
-
-@enduml
+```text
+Quellsysteme
+  → Import
+  → kanonisches Data Lake House
+  → Analytics Application Port
+  → serverseitig berechnete Data Products
+  → Dashboard, Objektanalyse, Reports, Business Modules und APIs
 ```
 
-# Aktuelle Projektstruktur
+Konsumenten greifen nicht direkt auf interne Tabellen oder Repositorys zu.
+Management-Produkte sind als getrennte, fachlich benannte API-Ressourcen
+modelliert. Details, Berechnungsregeln und offene Annahmen stehen in
+`15_Analytics_Data_Products.md`.
 
-Die Implementierung wurde sauber nach Clean Architecture aufgeteilt:
+## Projekt- und Abhängigkeitsstruktur
 
-- `src/Enset.Domain/`
-  - Enthält ausschließlich Domain-Entities, Enums und reine Business-Logik.
-  - Keine Abhängigkeit auf EF Core, Infrastructure oder Application.
-  - Packages: `Common`, `Customers`, `Projects`, `Buildings`, `Energy`, `Documents`, `Analytics`, `Geography`, `Data`.
+```text
+Enset.Domain
+    ^
+Enset.Application
+    ^
+Enset.Infrastructure
+    ^
+Enset.Worker (Composition Root)
+```
 
-- `src/Enset.Application/`
-  - Referenziert `Enset.Domain`.
-  - Enthält Import-DTOs, Abstraktionen, Enums und Prozessmodelle.
-  - Packages: `Imports/DTOs`, `Imports/Abstractions`, `Imports/Enums`, `Imports/Models`.
+Der Worker referenziert für die Komposition alle drei Bibliotheken. Die fachliche Importorchestrierung liegt dagegen in `Enset.Application`.
 
-- `src/Enset.Infrastructure/`
-  - Referenziert `Enset.Domain` und `Enset.Application`.
-  - Enthält EF Core `EnsetDbContext`, TimescaleDB-/PostgreSQL-Persistenz, Reader-Implementierungen, Mapper-Implementierungen und konkrete Services.
-  - Importlogik und Datenzugriff sind hier implementiert.
+### Domain
 
-## Wichtige Punkte
+- reine Domain-Entities und Enums;
+- keine Projekt- oder Package-Abhängigkeiten;
+- keine EF-Core-, ClosedXML- oder Dateisystemlogik;
+- zentrale Modelle: `Customer`, `Project`, `Building`, `Meter`, `MeterReading`, `CalculationResult` und `BenchmarkDataset`.
 
-- `MeterReading` ist ein Domain-Zeitreihenobjekt und erbt nicht von `BaseEntity`.
-- `MeterReading` verwendet den Composite Key `MeterId + Timestamp`.
-- `Meter` erbt von `BaseEntity` und verwendet `MeterNumber` als fachliche Identität.
-- `MeterId` bleibt die technische interne GUID.
-- Import-Dateien arbeiten mit `MeterNumber`, nicht mit der internen `MeterId`.
-- `EnsetDbContext` liegt ausschließlich in `src/Enset.Infrastructure/DBContext.cs`.
-- `ImportJob` und `DataSource` sind aktuell nicht als `DbSet` im DbContext enthalten.
+### Application
 
+- referenziert ausschließlich `Enset.Domain`;
+- enthält Ports wie `IImportReader`, `IImportWriter`, `IImportCoordinator`, `IImportWriteGate` und `IImportLogger`;
+- enthält den Analyse-Use-Case `ImportCoordinator`;
+- enthält Mapping, Validierung, DuplicationCheck, Reports, Entscheidungen, Resolution und WriteGate;
+- kennt weder ClosedXML noch konkrete Excel-Arbeitsmappen.
+
+### Infrastructure
+
+- referenziert Domain und Application;
+- enthält `EnsetDbContext`, EF Core und Npgsql;
+- enthält die konkreten Excel-Adapter und ausschließlich hier die ClosedXML-Abhängigkeit;
+- enthält weitere CSV-, Mapping- und Lookup-Bausteine, die nicht Teil des aktiven Excel-Analysepfads sind.
+
+### Worker
+
+- Konsolenanwendung und Composition Root;
+- erzeugt Reader, Mapper, Validator, DuplicationCheck, Logger und Coordinator;
+- `ImportRunner` delegiert an `IImportCoordinator`;
+- gibt den `ImportReport` aus;
+- schreibt im aktuellen Programmpfad keine Importdaten;
+- verwendet noch einen hart codierten lokalen Entwicklungspfad und ist kein produktiver Hosted Worker.
+
+## Aktive Importarchitektur
+
+```text
+IImportReader / ExcelImportReader
+    -> IImportMapper / CustomerImportMapper
+    -> IImportValidator / ExcelImportValidator
+    -> IDuplicationCheckService / DuplicationCheckService
+    -> ImportDecisionEngine
+    -> ImportReport
+```
+
+`ImportCoordinator` orchestriert diese Komponenten. Er enthält weder `IImportWriteGate` noch `IImportWriter` und führt keine Benutzerentscheidung oder Persistenz aus.
+
+## Freigabe- und Schreibpfad
+
+```text
+ImportReport
+    -> IApplyResolutionService / ApplyResolutionService
+    -> persistierter ImportReport
+    -> IImportCommitService / ImportCommitService
+    -> ImportWriteContext
+    -> IImportWriteGate / ImportWriteGate
+    -> IImportWriter
+    -> z. B. ExcelImportWriter
+```
+
+API und `DuplicationResolutionRunner` verwenden denselben Application-Pfad. Nur `ImportCommitService` löst nach erfolgreichem Gate einen `IImportWriter` auf. Der Excel-Writer ist funktionsfähig, der Database-Writer verweigert Schreibzugriffe bis ein fachliches Mapping implementiert ist. Optional archiviert `FileSystemRawZoneWriter` die Originaldatei eindeutig nach `ImportId`.
+
+## REST API und Persistenz
+
+- `Enset.Api` stellt Analyze-, GET-, Resolution- und Commit-Endpunkte bereit.
+
+Die zusätzliche, fachlich getrennte Importquelle Landesenergiebuchhaltung ist
+in [14_Landesenergiebuchhaltung_Import.md](14_Landesenergiebuchhaltung_Import.md)
+beschrieben.
+- `JsonImportReportRepository` speichert Reports dateibasiert und atomar austauschbar über `IImportReportRepository`.
+- Uploads werden gestaged, per SHA-256 identifiziert und als Source-Metadaten am Report gespeichert.
+- Interne Staging-/Raw-Pfade werden nicht im API-Response veröffentlicht.
+
+## Durchgesetzte Architekturentscheidungen
+
+- Der Coordinator orchestriert ausschließlich die Analyse.
+- `ImportIssue` ist das zentrale Workflowmodell für Validierungs- und Dublettenprobleme.
+- `DuplicateCandidate<T>` bleibt intern im DuplicationCheck und wird vor Verlassen des Moduls in `ImportIssue` überführt.
+- Excel und ClosedXML bleiben in Infrastructure.
+- Reader und Writer folgen derselben Port-/Adapterstruktur: Application-Port, Infrastructure-Adapter, technische Workbook-Komponente.
+- Logging im Use Case erfolgt über `IImportLogger`; der Worker stellt `ConsoleImportLogger` bereit.
+- `ImportWriteGate` bewertet ausschließlich `ImportWriteContext`, Reportstatus, User-Kontext und Issue-Zustände.
+
+## Noch nicht implementierte Architekturteile
+
+- React Import Wizard
+- produktives fachliches Mapping im `DatabaseImportWriter`
+- Datenbankpersistenz für Reports und Import History
+- Background Jobs und Import History
+- Authentifizierung/Autorisierung
+- Data-Product-Ports und produktive Zonenpipeline
+- OpenAPI sowie breitere Integrations-, Sicherheits- und End-to-End-Tests
+# Architecture Freeze 1.0 RC
+
+Für implementierte Komponenten, Abhängigkeiten und Grenzen gilt die [Architecture Baseline 1.0 RC](ARCHITECTURE_BASELINE_V1_0_RC.md). Die zugehörigen Ist-Diagramme liegen unter [UML](UML/). Abweichende Aussagen in diesem älteren Dokument sind Zielbild, nicht Implementierungsnachweis.

@@ -1,0 +1,152 @@
+TODO:
+
+Aggregation über die vier Schalen:
+Objekt:
+Gebäudenergiekosten
+Einspeiseerlös
+Maßnahmenamortisation
+Sanierungswirtschaftlichkeit
+
+Quartier:
+Quartiersenergiekosten
+gemeinschaftliche Einsparung
+lokale Energieerlöse
+Investitionsbedarf
+
+Gemeinde:
+kommunale Energiekosten
+Einsparpotenzial des Gebäudebestands
+Investitions- und Förderbedarf
+regionale Wertschöpfung
+
+Region:
+regionale Energieausgaben
+Importkosten
+regionale Erzeugungserlöse
+Wertschöpfungs- und Investitionspotenziale
+
+Mobilität:
+ChargingCostSummary
+ChargingCostPerVehicle
+ChargingCostPerSession
+ChargingInfrastructureBusinessCase
+PVChargingSavings
+SmartChargingSavings
+MobilityEnergyCostForecast
+ChargingTariffComparison
+
+EEGs:
+EnergyCommunityCostBalance
+EnergyCommunityRevenueBalance
+InternalEnergyPrice
+MemberEnergyCost
+MemberSavings
+CommunitySavings
+EnergyAllocationValue
+SurplusRevenueForecast
+CommunityBusinessCase
+
+Marktpreisprodukte für Strom, Wärme und Gas:
+ElectricityMarketPrice
+HeatMarketPrice
+GasMarketPrice
+FeedInTariff
+GridTariff
+EnergyPriceIndex
+RegionalEnergyPrice
+EnergyCommunityInternalPrice
+
+Preisprognosen:
+ElectricityPriceForecast
+HeatPriceForecast
+GasPriceForecast
+FeedInPriceForecast
+EnergyCostForecast
+EnergyRevenueForecast
+
+Mögliche Einflussgrößen:
+Wetterprognose
+Temperatur
+Globalstrahlung
+Wind
+Wochentag
+Uhrzeit
+Feiertag
+Jahreszeit
+historische Preise
+Lastprognose
+Erzeugungsprognose
+Brennstoffpreise
+
+Investitions- und Amortisationsprodukte:
+InvestmentCostSummary
+OperationalCostSummary
+EnergyCostSavings
+SimplePaybackPeriod
+DiscountedPaybackPeriod
+NetPresentValue
+InternalRateOfReturn
+ReturnOnInvestment
+LevelizedCostOfEnergy
+TotalCostOfOwnership
+
+Kosten- und Erlösprodukte:
+EnergyCostSummary
+ElectricityCost
+HeatCost
+GasCost
+GridCost
+FeedInRevenue
+EnergyCommunityRevenue
+MobilityChargingCost
+TotalEnergyCost
+SpecificEnergyCost
+
+Zielarchitektur
+Data Sources
+    │
+    ▼
+Validated Domain Data
+    │
+    ▼
+Data Product Generation
+    │
+    ├── Basisprodukte
+    ├── Gebäudeprodukte
+    ├── Mobilitätsprodukte
+    ├── Energiegemeinschaftsprodukte
+    └── 4-Schalen-Aggregationen
+    │
+    ├───────────────────────┐
+    ▼                       ▼
+Energy Monitoring    Energy Management
+(Zeitkritisch)              │
+    │                       │
+    ├── Dashboards          ├── Optimierung
+    ├── Live-Zustände       ├── Empfehlungen
+    ├── Alarme              ├── Fahrpläne
+    └── Abweichungen        └── Maßnahmen
+
+
+Produktkatalog für MVP:
+METER_CONSUMPTION_SUMMARY
+METER_GENERATION_SUMMARY
+LOAD_PROFILE
+PEAK_LOAD
+DATA_QUALITY_REPORT
+
+BUILDING_ENERGY_PROFILE
+BUILDING_CO2_BALANCE
+BUILDING_BENCHMARK
+
+ENERGY_BALANCE
+ANNUAL_ENERGY_CONSUMPTION
+MONTHLY_ENERGY_CONSUMPTION
+
+ENERGY_COST_SUMMARY
+ENERGY_PRICE_FORECAST
+
+ENERGY_COMMUNITY_BALANCE
+QUARTER_ENERGY_BALANCE
+MUNICIPALITY_ENERGY_BALANCE
+REGIONAL_ENERGY_BALANCE

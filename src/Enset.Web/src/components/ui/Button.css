@@ -1,0 +1,144 @@
+.button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.25;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+/* Wichtigste Aktion – ENSET-Rot */
+
+.button--primary {
+  border-color: var(--enset-red);
+  background: var(--enset-red);
+  color: #ffffff;
+}
+
+.button--primary:hover:not(:disabled) {
+  border-color: var(--enset-red-dark);
+  background: var(--enset-red-dark);
+  box-shadow: 0 7px 16px rgba(200, 16, 46, 0.22);
+  transform: translateY(-1px) scale(1.01);
+}
+
+.button--primary:active:not(:disabled) {
+  border-color: #8d0b22;
+  background: #8d0b22;
+}
+
+/* Neutrale Aktion */
+
+.button--secondary {
+  border-color: var(--enset-red);
+  background: #ffffff;
+  color: var(--enset-red);
+}
+
+.button--secondary:hover:not(:disabled) {
+  border-color: var(--enset-red-dark);
+  background: var(--enset-red-faint);
+  color: var(--enset-red-dark);
+}
+
+.button--secondary:active:not(:disabled) {
+  background: var(--enset-red-soft);
+}
+
+/* Toolbar- und Listenaktion */
+
+.button--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--enset-red);
+}
+
+.button--ghost:hover:not(:disabled) {
+  background: var(--enset-red-faint);
+  color: var(--enset-red-dark);
+}
+
+.button--ghost:active:not(:disabled) {
+  background: var(--enset-red-soft);
+}
+
+/* Destruktive Aktion */
+
+.button--danger {
+  border-color: #b42318;
+  background: #ffffff;
+  color: #b42318;
+}
+
+.button--danger:hover:not(:disabled) {
+  background: #fff1f0;
+  color: #912018;
+}
+
+.button--danger:active:not(:disabled) {
+  background: #fee4e2;
+}
+
+/* Gemeinsame Zustände */
+
+.button:focus-visible {
+  outline: 3px solid rgb(200 16 46 / 22%);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button--full-width {
+  width: 100%;
+}
+
+.button__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.button__icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.button__label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.button__spinner {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: button-spinner 700ms linear infinite;
+}
+
+@keyframes button-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}

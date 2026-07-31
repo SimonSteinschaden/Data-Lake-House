@@ -13,12 +13,17 @@ public static class CustomerExcelRowMapper
 
         return new CustomerImportDto
         {
+            SourceRowNumber = row.RowNumber,
             ExternalCustomerId = row.InternalCustomerId,
             CompanyName = companyName,
+            VatNumber = row.VatNumber,
+            CompanyRegistrationNumber = row.CompanyRegistrationNumber,
+            ContactPerson = row.ContactPerson,
             Street = row.Street,
             HouseNumber = row.HouseNumber,
             PostalCode = row.PostalCode,
             City = row.City,
+            Country = row.Country,
             Email = row.Email,
             Phone = row.PhoneNumber
         };

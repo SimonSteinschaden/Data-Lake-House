@@ -13,6 +13,9 @@ public sealed class ImportReportEntityConfiguration
 
         builder.HasKey(report => report.ImportId);
 
+        builder.HasIndex(report => report.CreatedByUserId);
+        builder.HasIndex(report => report.CustomerId);
+
         builder.Property(report => report.Status)
             .IsRequired()
             .HasMaxLength(64);

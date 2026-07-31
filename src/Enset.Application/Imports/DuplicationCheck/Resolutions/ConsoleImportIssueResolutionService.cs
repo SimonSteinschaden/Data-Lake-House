@@ -31,25 +31,36 @@ public class ConsoleImportIssueResolutionService
             switch (input)
             {
                 case "1":
-                    issue.ResolutionAction = ImportResolutionAction.KeepFirst;
-                    issue.IsResolved = true;
+                    issue.ResolveManually(
+                        ImportResolutionAction.KeepFirst,
+                        null,
+                        "console-user",
+                        DateTime.UtcNow);
                     break;
 
                 case "2":
-                    issue.ResolutionAction = ImportResolutionAction.KeepSecond;
-                    issue.IsResolved = true;
+                    issue.ResolveManually(
+                        ImportResolutionAction.KeepSecond,
+                        null,
+                        "console-user",
+                        DateTime.UtcNow);
                     break;
 
                 case "3":
                     Console.Write("Eigene Bezeichnung: ");
-                    issue.CustomResolvedValue = Console.ReadLine();
-                    issue.ResolutionAction = ImportResolutionAction.UseCustomValue;
-                    issue.IsResolved = true;
+                    issue.ResolveManually(
+                        ImportResolutionAction.UseCustomValue,
+                        Console.ReadLine(),
+                        "console-user",
+                        DateTime.UtcNow);
                     break;
 
                 case "4":
-                    issue.ResolutionAction = ImportResolutionAction.KeepSeparate;
-                    issue.IsResolved = true;
+                    issue.ResolveManually(
+                        ImportResolutionAction.KeepSeparate,
+                        null,
+                        "console-user",
+                        DateTime.UtcNow);
                     break;
 
                 case "x":

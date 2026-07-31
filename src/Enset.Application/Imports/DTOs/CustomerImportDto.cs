@@ -2,6 +2,8 @@ namespace Enset.Application.Imports.DTOs;
 
 public class CustomerImportDto
 {
+    public int SourceRowNumber { get; set; }
+
     // Externe Referenzen
     public string? ExternalCustomerId { get; set; } //TODO: SQL Injection prevention, Input validation, restliche Inputs ergänzen - zb: Notes
 

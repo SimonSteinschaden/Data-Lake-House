@@ -22,7 +22,13 @@ public class BuildingExcelRow
     public string? MainUsage { get; set; }
     public string? AdditionalNote { get; set; }
     public string? FloorArea { get; set; }
+    public string? NetFloorArea { get; set; }
+    public string? ConditionedFloorArea { get; set; }
     public string? HeatedFloorArea { get; set; }
+    public string? CooledFloorArea { get; set; }
+    public string? BuildingVolume { get; set; }
+    public string? NumberOfFloors { get; set; }
+    public string? BuildingState { get; set; }
     public string? HeatedFloorAreaMainUsage { get; set; }
     public string? HeatedFloorAreaSecondUsage { get; set; }
     public string? HeatConsumptionKWhPerYear { get; set; }
@@ -41,4 +47,5 @@ public class BuildingExcelRow
     public string? SecondaryUsage { get; set; }
     public string? SecondaryUsageSharePercent { get; set; }
     public string? Notes { get; set; }
+    public string? BuildingName { get; set; }
 }

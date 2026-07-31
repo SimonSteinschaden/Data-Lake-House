@@ -4,6 +4,10 @@ public sealed class ImportReportEntity
 {
     public Guid ImportId { get; set; }
 
+    public Guid? CreatedByUserId { get; set; }
+
+    public Guid? CustomerId { get; set; }
+
     public string Status { get; set; } = string.Empty;
 
     public string? SourceFileName { get; set; }

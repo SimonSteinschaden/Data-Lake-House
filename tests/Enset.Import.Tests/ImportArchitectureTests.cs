@@ -11,12 +11,32 @@ using Enset.Application.Imports.Reports;
 using Enset.Application.Imports.Resolution;
 using Enset.Application.Imports.WriteGate;
 using Enset.Infrastructure.Imports.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace Enset.Import.Tests;
 
 public sealed class ImportArchitectureTests
 {
+    [Fact]
+    public void Infrastructure_ContainsSingleCanonicalDbContext()
+    {
+        var infrastructureAssembly =
+            typeof(Enset.Infrastructure.Persistence.EnsetDbContext).Assembly;
+
+        var contextTypes = infrastructureAssembly
+            .GetTypes()
+            .Where(type =>
+                !type.IsAbstract &&
+                typeof(DbContext).IsAssignableFrom(type))
+            .ToList();
+
+        var contextType = Assert.Single(contextTypes);
+        Assert.Equal(
+            typeof(Enset.Infrastructure.Persistence.EnsetDbContext),
+            contextType);
+    }
+
     [Fact]
     public async Task ImportCoordinator_RemainsAnalyzeOnly()
     {
@@ -140,6 +160,112 @@ public sealed class ImportArchitectureTests
     }
 
     [Fact]
+    public void DatabaseWriteGate_BlocksMissingEnsetReferencesBeforeWriter()
+    {
+        var report = new ImportReport
+        {
+            Status = ImportStatus.ReadyToCommit,
+            Decision = new ImportDecision
+            {
+                Type = ImportDecisionType.Continue,
+                Reason = "Test"
+            },
+            Customers =
+            [
+                new CustomerImportDto
+                {
+                    CompanyName = "Customer without external id"
+                }
+            ],
+            Buildings =
+            [
+                new BuildingImportDto
+                {
+                    ExternalBuildingId = "BUILDING-1",
+                    BuildingName = "Building without customer reference"
+                }
+            ]
+        };
+        var context = new ImportWriteContext
+        {
+            ImportId = report.ImportId,
+            Report = report,
+            TargetMode = ImportTargetMode.Upsert,
+            TargetWriter = ImportWriterType.Database,
+            UserId = "tester"
+        };
+
+        var result = new ImportWriteGate().Evaluate(context);
+
+        Assert.False(result.IsAllowed);
+        Assert.Contains(
+            result.Errors,
+            error => error.Contains(
+                "ExternalCustomerId",
+                StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void DatabaseWriteGate_AllowsConsistentEnsetReferences()
+    {
+        var report = new ImportReport
+        {
+            Status = ImportStatus.ReadyToCommit,
+            Decision = new ImportDecision
+            {
+                Type = ImportDecisionType.Continue,
+                Reason = "Test"
+            },
+            Customers =
+            [
+                new CustomerImportDto
+                {
+                    ExternalCustomerId = "CUSTOMER-1",
+                    CompanyName = "Customer"
+                }
+            ],
+            Buildings =
+            [
+                new BuildingImportDto
+                {
+                    ExternalBuildingId = "BUILDING-1",
+                    ExternalCustomerId = "CUSTOMER-1",
+                    BuildingName = "Building"
+                }
+            ],
+            Meters =
+            [
+                new MeterImportDto
+                {
+                    MeterNumber = "METER-1",
+                    ExternalBuildingId = "BUILDING-1"
+                }
+            ],
+            MeterReadings =
+            [
+                new MeterReadingImportDto
+                {
+                    MeterNumber = "METER-1",
+                    Timestamp = DateTime.UtcNow,
+                    Value = 1
+                }
+            ]
+        };
+        var context = new ImportWriteContext
+        {
+            ImportId = report.ImportId,
+            Report = report,
+            TargetMode = ImportTargetMode.Upsert,
+            TargetWriter = ImportWriterType.Database,
+            UserId = "tester"
+        };
+
+        var result = new ImportWriteGate().Evaluate(context);
+
+        Assert.True(result.IsAllowed);
+    }
+
+    [Fact]
     public async Task Commit_InvokesWriterOnlyAfterSuccessfulGate()
     {
         var blockedReport = CreateReport(ImportStatus.AwaitingResolution, resolved: false);
@@ -223,9 +349,9 @@ public sealed class ImportArchitectureTests
         };
     }
 
-    private static ImportCommitRequest CreateCommitRequest(Guid importId)
+    private static ImportCommitCommand CreateCommitRequest(Guid importId)
     {
-        return new ImportCommitRequest
+        return new ImportCommitCommand
         {
             ImportId = importId,
             UserId = "tester",
@@ -252,7 +378,10 @@ public sealed class ImportArchitectureTests
     {
         public ImportReport Validate(
             IReadOnlyList<CustomerExcelRow> customers,
-            IReadOnlyList<BuildingExcelRow> buildings) => new();
+            IReadOnlyList<BuildingExcelRow> buildings,
+            IReadOnlyList<MeterExcelRow> meters,
+            IReadOnlyList<MeterReadingExcelRow> meterReadings,
+            ImportSourceType sourceType = ImportSourceType.Excel) => new();
     }
 
     private sealed class StubDuplicationCheck : IDuplicationCheckService

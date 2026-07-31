@@ -10,4 +10,10 @@ public interface IApplyResolutionService
         IReadOnlyCollection<ImportIssueResolution> resolutions,
         string userId,
         DateTime timestamp);
+
+    ApplyResolutionRuleResult ApplyRule(
+        ImportReport report,
+        ApplyResolutionRuleCommand command,
+        string userId,
+        DateTime timestamp);
 }

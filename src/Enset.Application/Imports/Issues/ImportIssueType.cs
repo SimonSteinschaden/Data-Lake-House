@@ -15,7 +15,15 @@ public enum ImportIssueType
     InvalidMeterNumber = 52,
 
     InvalidValue = 100,
-    InvalidTimestamp = 101
+    InvalidTimestamp = 101,
+    SourceColumnMappingRequired = 102,
+    MissingData = 103,
+    InvalidNumberFormat = 104,
+    InvalidDateFormat = 105,
+    StructuralError = 106,
+    TimestampColumnSelectionRequired = 107,
+    ValueColumnSelectionRequired = 108,
+    AssignMeterRequired = 109
 }
 
 /*DuplicateCustomer

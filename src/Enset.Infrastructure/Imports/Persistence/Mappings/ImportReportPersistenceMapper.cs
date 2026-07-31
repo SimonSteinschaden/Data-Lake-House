@@ -14,6 +14,8 @@ public static class ImportReportPersistenceMapper
         return new ImportReportEntity
         {
             ImportId = report.ImportId,
+            CreatedByUserId = report.CreatedByUserId,
+            CustomerId = report.CustomerId,
             Status = report.Status.ToString(),
             SourceFileName = report.SourceFile?.FileName,
             SourceFileContentType = report.SourceFile?.ContentType,
@@ -41,6 +43,8 @@ public static class ImportReportPersistenceMapper
         var report = new ImportReport
         {
             ImportId = entity.ImportId,
+            CreatedByUserId = entity.CreatedByUserId,
+            CustomerId = entity.CustomerId,
             Status = ParseEnum(entity.Status, ImportStatus.Pending),
             SourceFile = CreateSourceFileMetadata(entity),
             CustomerCount = entity.CustomerCount,
@@ -82,7 +86,10 @@ public static class ImportReportPersistenceMapper
             SecondValue = issue.SecondValue,
             ResolutionAction = issue.ResolutionAction.ToString(),
             CustomResolvedValue = issue.CustomResolvedValue,
-            IsResolved = issue.IsResolved
+            IsResolved = issue.IsResolved,
+            ResolutionSource = issue.ResolutionSource.ToString(),
+            ResolvedAt = issue.ResolvedAt,
+            ResolvedBy = issue.ResolvedBy
         };
     }
 
@@ -108,7 +115,7 @@ public static class ImportReportPersistenceMapper
 
     private static ImportIssue ToIssueModel(ImportIssueEntity entity)
     {
-        return new ImportIssue
+        var issue = new ImportIssue
         {
             IssueId = entity.IssueId,
             EntityId = entity.EntityId,
@@ -126,6 +133,13 @@ public static class ImportReportPersistenceMapper
             CustomResolvedValue = entity.CustomResolvedValue,
             IsResolved = entity.IsResolved
         };
+
+        issue.RestoreResolutionMetadata(
+            ParseEnum(entity.ResolutionSource, ImportResolutionSource.None),
+            entity.ResolvedAt,
+            entity.ResolvedBy);
+
+        return issue;
     }
 
     private static ImportAuditEntry ToAuditModel(ImportAuditEntryEntity entity)

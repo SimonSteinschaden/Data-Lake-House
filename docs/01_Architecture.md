@@ -2,6 +2,24 @@
 
 Dieses Dokument beschreibt ausschließlich die aktuell implementierte Architektur. Zielvorgaben bleiben in `Decisions/ARCHITECTURE_REVIEW_V1_0.md` verbindlich.
 
+## Analytics als Data-Product-Schicht
+
+Die fachliche Leserichtung für Auswertungen ist:
+
+```text
+Quellsysteme
+  → Import
+  → kanonisches Data Lake House
+  → Analytics Application Port
+  → serverseitig berechnete Data Products
+  → Dashboard, Objektanalyse, Reports, Business Modules und APIs
+```
+
+Konsumenten greifen nicht direkt auf interne Tabellen oder Repositorys zu.
+Management-Produkte sind als getrennte, fachlich benannte API-Ressourcen
+modelliert. Details, Berechnungsregeln und offene Annahmen stehen in
+`15_Analytics_Data_Products.md`.
+
 ## Projekt- und Abhängigkeitsstruktur
 
 ```text
@@ -78,6 +96,10 @@ API und `DuplicationResolutionRunner` verwenden denselben Application-Pfad. Nur 
 ## REST API und Persistenz
 
 - `Enset.Api` stellt Analyze-, GET-, Resolution- und Commit-Endpunkte bereit.
+
+Die zusätzliche, fachlich getrennte Importquelle Landesenergiebuchhaltung ist
+in [14_Landesenergiebuchhaltung_Import.md](14_Landesenergiebuchhaltung_Import.md)
+beschrieben.
 - `JsonImportReportRepository` speichert Reports dateibasiert und atomar austauschbar über `IImportReportRepository`.
 - Uploads werden gestaged, per SHA-256 identifiziert und als Source-Metadaten am Report gespeichert.
 - Interne Staging-/Raw-Pfade werden nicht im API-Response veröffentlicht.
@@ -101,3 +123,6 @@ API und `DuplicationResolutionRunner` verwenden denselben Application-Pfad. Nur 
 - Authentifizierung/Autorisierung
 - Data-Product-Ports und produktive Zonenpipeline
 - OpenAPI sowie breitere Integrations-, Sicherheits- und End-to-End-Tests
+# Architecture Freeze 1.0 RC
+
+Für implementierte Komponenten, Abhängigkeiten und Grenzen gilt die [Architecture Baseline 1.0 RC](ARCHITECTURE_BASELINE_V1_0_RC.md). Die zugehörigen Ist-Diagramme liegen unter [UML](UML/). Abweichende Aussagen in diesem älteren Dokument sind Zielbild, nicht Implementierungsnachweis.

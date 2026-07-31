@@ -2,6 +2,8 @@
 
 Die Roadmap konkretisiert ausschließlich die noch offenen Arbeiten der verbindlichen Architecture Baseline v1.0. Sie definiert keine neue Zielarchitektur.
 
+> Für Phase 3 ist `12_Phase_3_Data_Platform.md` der verbindliche technische Blueprint. Der Schwerpunkt liegt auf der operativen PostgreSQL-/TimescaleDB-Plattform; der Import ist nur ein Zuführungsweg.
+
 ## Meilenstein 1: Importworkflow absichern
 
 - [x] Application-gesteuerten `ImportCoordinator` einführen
@@ -58,3 +60,25 @@ Die Roadmap konkretisiert ausschließlich die noch offenen Arbeiten der verbindl
 - [ ] vorhandene Kern- und Architekturtests um Integrations-, Sicherheits- und End-to-End-Tests erweitern
 - [ ] API- und Betriebsdokumentation fertigstellen
 - [ ] Abschlussreview gegen `ARCHITECTURE_REVIEW_V1_0.md` durchführen
+# Architecture Freeze 1.0 RC
+
+Die verbindliche offene Arbeitsliste wurde nach [IMPLEMENTATION_ROADMAP_V1_0_RC.md](IMPLEMENTATION_ROADMAP_V1_0_RC.md) konsolidiert. Dieses Dokument bleibt als historische Langfrist-Roadmap erhalten.
+
+## Architecture Freeze 2.0 RC
+
+# POST-MVP-Roadmap
+
+MVP v2.0 – Architecture Freeze
+│
+├── Asset Layer
+├── Grid Layer
+├── Time Series Engine
+├── Benchmark Engine
+│
+└── Data Products V2
+    ├── Benchmarks
+    ├── normalisierte Last- und Erzeugungsprofile
+    ├── Producer-Consumer-Matching
+    ├── EEG-Analysen
+    ├── P2P-Analysen
+    └── Wirtschaftlichkeitsszenarien

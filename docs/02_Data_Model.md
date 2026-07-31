@@ -45,3 +45,6 @@ Fast alle Domain-Entities erben von `BaseEntity` mit GUID, `CreatedAt` und optio
 - kein persistentes Raw-/Curated-/Data-Product-Domänenmodell;
 - keine Data-Product-Verträge oder Provenance-Kette;
 - keine vollständige Importabbildung auf alle Domain-Entities.
+# Stand 1.0 RC
+
+Das verbindliche persistierte Modell ergibt sich aus `EnsetDbContext`, den EF-Konfigurationen und dem Snapshot. Das aktuelle ER-Diagramm liegt in [10_Database_ER.puml](UML/10_Database_ER.puml). Nicht im DbContext oder Snapshot enthaltene Konzepte sind nicht als persistiert zu betrachten.

@@ -1,0 +1,202 @@
+:root {
+  --enset-red: #c8102e;
+  --enset-red-dark: #9f0c24;
+  --enset-red-soft: #fff0f3;
+  --enset-red-faint: #fff8f9;
+  --enset-petrol: #176b79;
+  --enset-orange: #d97706;
+  --enset-green: #16805b;
+  --enset-ink: #172033;
+  --enset-muted: #667085;
+  --enset-border: #e3e7ec;
+  --enset-surface: #ffffff;
+  --enset-canvas: #f7f8fa;
+  --enset-beige: #d6c5a7;
+  --quality-bronze: #9a5f2e;
+  --quality-silver: #667085;
+  --quality-gold: #a66f00;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 4%), 0 8px 24px rgb(16 24 40 / 5%);
+  --shadow-lift: 0 12px 32px rgb(16 24 40 / 10%);
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  color: var(--enset-ink);
+  background: var(--enset-canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+.quality-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: var(--enset-surface);
+  font-weight: 700;
+}
+
+.quality-badge--bronze { color: var(--quality-bronze); }
+.quality-badge--silver { color: var(--quality-silver); }
+.quality-badge--gold { color: var(--quality-gold); }
+
+.quality-badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.quality-badge-info {
+  color: var(--enset-muted);
+  font-size: 0.85rem;
+}
+
+.quality-detail-popover {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--enset-border);
+  border-radius: var(--radius-md);
+  background: var(--enset-canvas);
+}
+
+.quality-detail-popover h3,
+.quality-detail-popover h4 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.quality-detail-popover ul {
+  margin: 0 0 0.5rem;
+  padding-left: 1.1rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 20rem;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--enset-canvas);
+  line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a { color: var(--enset-red); text-underline-offset: 0.18em; }
+a:hover { color: var(--enset-red-dark); }
+
+:focus-visible { outline: 3px solid rgb(200 16 46 / 20%); outline-offset: 2px; }
+
+input,
+select,
+textarea {
+  border-color: #cfd6df;
+  accent-color: var(--enset-red);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--enset-red) !important;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgb(200 16 46 / 12%);
+}
+input[type="checkbox"],
+input[type="radio"] { accent-color: var(--enset-red); }
+
+button {
+  border-radius: var(--radius-sm);
+  transition: color 170ms ease, background-color 170ms ease, border-color 170ms ease,
+    box-shadow 170ms ease, transform 170ms ease;
+}
+button:hover:not(:disabled) { transform: translateY(-1px); }
+button:active:not(:disabled) { transform: translateY(0) scale(0.985); }
+
+.primary-button,
+button[type="submit"] {
+  border: 1px solid var(--enset-red);
+  background: var(--enset-red);
+  color: #fff;
+}
+.primary-button:hover,
+button[type="submit"]:hover:not(:disabled) {
+  border-color: var(--enset-red-dark);
+  background: var(--enset-red-dark);
+  color: #fff;
+}
+.danger-button { border-color: var(--enset-red); color: var(--enset-red); }
+
+.status-badge--active { background: var(--enset-red-soft) !important; color: var(--enset-red) !important; }
+.status-badge--inactive { background: #eef1f4 !important; color: #667085 !important; }
+.status-badge--warning { background: #fff4e5; color: var(--enset-orange); }
+.status-badge--success { background: #eaf8f2; color: var(--enset-green); }
+.status-badge--info { background: #e9f5f7; color: var(--enset-petrol); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+.crud-field__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.55rem;
+}
+
+.crud-field__gold-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.3rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid #c58b16;
+  border-radius: 999px;
+  color: #75500b;
+  background: #fff5d8;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.crud-field--gold select,
+.crud-field--gold input {
+  border-color: #c58b16;
+  box-shadow: inset 3px 0 0 #d6a52f;
+}
+
+.crud-field--gold select:focus,
+.crud-field--gold input:focus {
+  border-color: var(--enset-petrol);
+  box-shadow:
+    inset 3px 0 0 #d6a52f,
+    0 0 0 3px rgb(22 104 115 / 14%);
+}
+
+::selection { background: rgb(200 16 46 / 18%); }

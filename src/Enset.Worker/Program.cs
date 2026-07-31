@@ -24,19 +24,9 @@ if (!File.Exists(sourceFile))
     return;
 }
 
-var reader = new ExcelImportReader(
-    new ExcelWorkbookReader(),
-    sourceFile);
-
-var coordinator = new ImportCoordinator(
-    reader,
-    new CustomerImportMapper(),
-    new ExcelImportValidator(),
-    new DuplicationCheckService(),
-    new ConsoleImportLogger());
-
+var reader = new ExcelImportReader(new ExcelWorkbookReader(),sourceFile);
+var coordinator = new ImportCoordinator(reader,new CustomerImportMapper(),new ExcelImportValidator(),new DuplicationCheckService(),new ConsoleImportLogger());
 var runner = new ImportRunner(coordinator);
-
 var report = await runner.RunAsync();
 
 Console.WriteLine();
@@ -44,9 +34,7 @@ Console.WriteLine($"ImportId: {report.ImportId}");
 Console.WriteLine($"CreatedAt: {report.CreatedAt:O}");
 Console.WriteLine($"Decision: {report.Decision.Type} ({report.Decision.Reason})");
 Console.WriteLine($"Customers: {report.CustomerCount}");
-Console.WriteLine(
-    $"Issues: {report.IssueCount} " +
-    $"({report.ErrorCount} errors, {report.WarningCount} warnings)");
+Console.WriteLine( $"Issues: {report.IssueCount} " +$"({report.ErrorCount} errors, {report.WarningCount} warnings)");
 
 foreach (var issue in report.Issues)
 {

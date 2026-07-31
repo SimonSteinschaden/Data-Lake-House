@@ -1,0 +1,33 @@
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.page-header__content {
+  min-width: 0;
+}
+
+.page-header__title {
+  margin: 0;
+  color: #172033;
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  font-weight: 760;
+  letter-spacing: -0.025em;
+}
+
+.page-header__description {
+  margin: 0.5rem 0 0;
+  max-width: 60rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.page-header__actions {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    align-items: center;
+}

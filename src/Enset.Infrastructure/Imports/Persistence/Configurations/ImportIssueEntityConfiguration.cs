@@ -42,5 +42,12 @@ public sealed class ImportIssueEntityConfiguration
 
         builder.Property(issue => issue.CustomResolvedValue)
             .HasMaxLength(4000);
+
+        builder.Property(issue => issue.ResolutionSource)
+            .IsRequired()
+            .HasMaxLength(64);
+
+        builder.Property(issue => issue.ResolvedBy)
+            .HasMaxLength(256);
     }
 }

@@ -1,0 +1,90 @@
+.management-dashboard { display: grid; gap: 2rem; }
+.cockpit-section { display: grid; gap: 1rem; padding-top: 1.1rem; border-top: 1px solid #cbd5da; }
+.cockpit-section__header h2 { margin: 0; color: #172033; font-size: 1.3rem; }
+.cockpit-section__header p { max-width: 55rem; margin: .35rem 0 0; color: #64748b; }
+.cockpit-section__eyebrow { margin: 0 0 .25rem !important; color: var(--enset-red) !important;
+  font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+
+.cockpit-kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.cockpit-kpi-grid--energy { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cockpit-kpi { display: flex; min-height: 7.3rem; flex-direction: column; padding: 1.1rem;
+  border: 1px solid var(--enset-border); border-top: 3px solid var(--enset-red); border-radius: var(--enset-radius-lg); color: inherit;
+  text-decoration: none; background: #fff; box-shadow: var(--enset-shadow-sm); transition: border-color .18s, transform .18s, box-shadow .18s; }
+a.cockpit-kpi:hover { border-color: var(--enset-red); box-shadow: var(--enset-shadow-md); transform: translateY(-3px); }
+.cockpit-kpi--attention { border-left-color: #b46822; background: #fffaf4; }
+.cockpit-kpi--positive { border-top-color: var(--enset-green); background: #f7fbf9; }
+.cockpit-kpi__title { color: #64748b; font-size: .72rem; font-weight: 750;
+  letter-spacing: .06em; text-transform: uppercase; }
+.cockpit-kpi__value { margin-top: .65rem; color: var(--enset-ink); font-size: 1.9rem; font-weight: 750;
+  line-height: 1.1; font-variant-numeric: tabular-nums; }
+.cockpit-kpi__hint { margin-top: auto; padding-top: .75rem; color: #65757d; font-size: .78rem; }
+
+.cockpit-panel { padding: 1.15rem; border: 1px solid var(--enset-border); border-radius: var(--enset-radius-lg); background: #fff; box-shadow: var(--enset-shadow-sm); }
+.cockpit-panel > h3, .cockpit-panel__heading h3 { margin: 0 0 1rem; font-size: .95rem; }
+.cockpit-panel__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.cockpit-panel__heading a, .cockpit-action, .cockpit-table a { color: var(--enset-red); font-weight: 700; }
+
+.energy-charts { display: grid; gap: 1.25rem; }
+.energy-chart h3 { margin: 0 0 .8rem; color: #526271; font-size: .82rem; }
+.energy-chart__rows { display: grid; gap: .75rem; }
+.energy-chart__row { display: grid; grid-template-columns: minmax(10rem, 1.1fr) minmax(10rem, 3fr) auto;
+  align-items: center; gap: .75rem; font-size: .82rem; }
+.energy-chart__track { height: .7rem; overflow: hidden; background: #e6ece9; }
+.energy-chart__track span { display: block; height: 100%; background: var(--enset-red); }
+.energy-chart__row strong { min-width: 8rem; text-align: right; font-variant-numeric: tabular-nums; }
+
+.cockpit-table-wrap { max-width: 100%; overflow-x: auto; }
+.cockpit-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.cockpit-table th { color: #64748b; font-size: .68rem; letter-spacing: .05em;
+  text-align: left; text-transform: uppercase; }
+.cockpit-table th, .cockpit-table td { padding: .7rem .6rem; border-bottom: 1px solid #e4eaed; }
+.cockpit-table td { color: #394a52; }
+.action-table td:nth-child(2) { font-variant-numeric: tabular-nums; }
+
+.cockpit-warning { display: flex; gap: .65rem; padding: .75rem 1rem;
+  border-left: 3px solid #b46822; color: #65461f; background: #fff8ee; font-size: .84rem; }
+.cockpit-inline-state { margin: 0; padding: .8rem 1rem; border: 1px dashed #cad5da;
+  color: #65757d; background: #fafcfc; }
+
+.readiness-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.readiness-card { display: grid; gap: .9rem; padding: 1rem; border: 1px solid var(--enset-border); border-radius: var(--enset-radius-lg); background: #fff; box-shadow: var(--enset-shadow-sm); }
+.readiness-card header { display: flex; justify-content: space-between; gap: 1rem; }
+.readiness-card h3 { margin: 0 0 .45rem; color: #263933; font-size: 1rem; }
+.readiness-card header > strong { color: var(--enset-red); font-size: 1.3rem; }
+.readiness-badge { display: inline-block; padding: .2rem .45rem; border-radius: .15rem;
+  color: #71511f; background: #fff2d8; font-size: .7rem; font-weight: 750; }
+.readiness-badge--ready { color: #205a43; background: #e4f4ec; }
+.readiness-badge--notready { color: #7b382e; background: #fae9e6; }
+.readiness-progress { height: .55rem; overflow: hidden; background: #e5ebe8; }
+.readiness-progress span { display: block; height: 100%; background: var(--enset-red); }
+.readiness-card__note, .readiness-card__clear { margin: 0; color: #65757d; font-size: .8rem; }
+.readiness-card dl { display: grid; grid-template-columns: 1fr 1fr; margin: 0; }
+.readiness-card dl div { padding: .6rem; border: 1px solid #e1e7ea; }
+.readiness-card dt { color: #64748b; font-size: .72rem; }
+.readiness-card dd { margin: .2rem 0 0; font-size: 1.15rem; font-weight: 750; }
+.blocker-list strong, .readiness-card__recommendations strong { font-size: .75rem; }
+.blocker-list ul, .readiness-card__recommendations ul { margin: .4rem 0 0; padding-left: 1.15rem;
+  color: #526271; font-size: .8rem; }
+.cockpit-action { justify-self: start; font-size: .8rem; }
+
+.dashboard-state { padding: 2rem; border: 1px dashed #bdcbd1; text-align: center; background: #fafcfc; }
+.dashboard-state p { margin: .5rem 0 0; color: #64748b; }
+.dashboard-state--error { border-color: #d7ada7; background: #fff8f7; }
+.dashboard-state button { margin-top: 1rem; padding: .55rem .9rem; border: 0;
+  color: #fff; background: var(--enset-red); cursor: pointer; }
+.dashboard-skeleton { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
+.dashboard-skeleton__card { min-height: 7rem; background: linear-gradient(90deg,#eef2f3,#f8fafb,#eef2f3);
+  background-size: 200% 100%; animation: cockpit-pulse 1.2s infinite; }
+@keyframes cockpit-pulse { to { background-position: -200% 0; } }
+
+@media (max-width: 70rem) {
+  .cockpit-kpi-grid, .cockpit-kpi-grid--energy { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .energy-chart__row { grid-template-columns: minmax(8rem, 1fr) minmax(8rem, 2fr) auto; }
+}
+@media (max-width: 48rem) {
+  .cockpit-kpi-grid, .cockpit-kpi-grid--energy, .readiness-grid,
+  .dashboard-skeleton { grid-template-columns: 1fr; }
+  .energy-chart__row { grid-template-columns: 1fr; gap: .35rem; }
+  .energy-chart__row strong { text-align: left; }
+  .cockpit-panel__heading { align-items: flex-start; flex-direction: column; }
+}

@@ -22,3 +22,6 @@ Im Repository existiert keine Benutzeroberfläche. Es gibt weder ein React-/Next
 - UI-, Accessibility- und End-to-End-Tests.
 
 Die konkrete UX und technische Frontend-Ausgestaltung sind noch nicht implementiert.
+# Data Products UI
+
+Der MVP ergänzt die Routen `/data-products`, `/data-products/:id` und `/buildings/:buildingId/energy`. Die Detailseite prüft Availability, startet die Generierung, lädt anschließend die neueste Version und zeigt die Versionshistorie. Das Building-Dashboard stellt ausschließlich die serverseitig berechneten KPIs dar und verwendet für Zahlen und Zeitstempel das Gebietsschema `de-AT`.

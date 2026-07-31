@@ -37,3 +37,6 @@ Die vorhandenen Entities sind vorbereitete Analyseergebnisse. Sie dürfen nicht 
 ## Datenschutzanforderung
 
 Aggregierte oder extern bereitgestellte Ergebnisse dürfen keine Rückschlüsse auf einzelne Customers, Adressen, Gebäude oder Zählpunkte ermöglichen. Die konkrete Anonymisierungs- und Freigabelogik ist noch offen und bleibt Teil der Baseline-Umsetzung.
+# Stand 1.0 RC
+
+Produktiv implementiert sind derzeit ausschließlich die Outputs von `METER_CONSUMPTION_SUMMARY` und `BUILDING_ENERGY_PROFILE`. Weitere KPI-Bezeichnungen in diesem Dokument sind Katalog beziehungsweise Roadmap und kein Implementierungsnachweis.

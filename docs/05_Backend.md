@@ -84,3 +84,19 @@ Aktueller Nachweis: API-Build erfolgreich; 7 von 7 Tests bestanden.
 - ältere bereits versionierte `bin`-/`obj`-Artefakte; neue Artefakte werden durch `.gitignore` ausgeschlossen;
 - uneinheitliche Formatierung und teilweise ältere Encoding-Artefakte im Quellcode;
 - keine CI/CD- oder Docker-Konfiguration.
+# Data-Product-Vertical-Slice
+
+Data Products entstehen aus dem qualitätsgesicherten, einem fachlichen Scope zugeordneten Datenbestand des Data Lake House. Ein Dateiimport ist lediglich ein möglicher Ingestion-Weg. Generatoren kennen weder CSV, Excel, Uploads noch EF Core.
+
+Der Datenfluss lautet:
+
+```text
+Data Lake → scope-bezogener EF Reader → Application Generator
+          → GenerationRun → DataProductVersion + Values → REST API → React
+```
+
+`MeterReading.Value` wird gemeinsam mit `Meter.Quantity`, `Meter.Unit`, `ReadingType`, `Direction`, `IntervalSeconds` und `QualityFlag` interpretiert. `IntervalValue` mit Quantity `Energy` ist Intervallenergie. `CumulativeValue` ist ein kumulativer Zählerstand. `Instantaneous` mit Quantity `Power` ist ein Leistungswert. Verbrauch und Erzeugung werden über `Meter.Direction` unterschieden; Zeitstempel sind UTC.
+
+`METER_CONSUMPTION_SUMMARY` summiert Intervallenergie beziehungsweise positive Differenzen kumulativer Zählerstände und liefert Gesamtverbrauch, Messwertanzahl, Zähleranzahl und Datenqualität. `BUILDING_ENERGY_PROFILE` liefert Gesamtverbrauch, fünftes Leistungsperzentil als Grundlast, maximale Leistung, Zähleranzahl und Datenqualität.
+
+Bekannte MVP-Einschränkung: Das Modell besitzt noch keine Haupt-/Unterzählerhierarchie. Eine automatische Vermeidung entsprechender Doppelzählungen ist daher nicht möglich.

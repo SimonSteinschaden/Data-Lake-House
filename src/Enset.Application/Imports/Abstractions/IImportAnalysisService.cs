@@ -1,4 +1,5 @@
 using Enset.Application.Imports.Reports;
+using Enset.Application.Imports.Enums;
 
 namespace Enset.Application.Imports.Abstractions;
 
@@ -9,5 +10,8 @@ public interface IImportAnalysisService
         string fileName,
         string? contentType,
         string userId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        ImportSourceType sourceType = ImportSourceType.CRM_Excel,
+        ImportMedium? medium = null,
+        string? defaultMeterNumber = null);
 }

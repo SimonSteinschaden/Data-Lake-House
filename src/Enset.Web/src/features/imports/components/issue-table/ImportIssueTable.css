@@ -1,0 +1,83 @@
+.import-issue-table__container {
+  overflow-x: auto;
+  border: 1px solid #dbe2e8;
+  border-radius: 0.5rem;
+}
+
+.import-issue-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.import-issue-table th,
+.import-issue-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.import-issue-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.import-issue-table td {
+  font-size: 0.875rem;
+}
+
+.import-issue-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.import-issue-table__empty {
+  padding: 1.5rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 0.5rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.issue-severity {
+  display: inline-flex;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.issue-severity--error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.issue-severity--warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.issue-severity--information,
+.issue-severity--info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.resolution-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 12rem;
+}
+
+.resolution-selector select,
+.resolution-selector input {
+  min-height: 2.375rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.375rem;
+  background: #ffffff;
+}
